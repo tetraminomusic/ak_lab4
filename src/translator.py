@@ -6,7 +6,7 @@ from parser import tokenize, parse, StringLiteral
 
 current_reg = 1
 label_counter = 0
-data_address_counter = 100
+data_address_counter = 1000
 
 available_ports = [0, 1]
 
@@ -21,17 +21,14 @@ INVERSE_JUMPS = {
     '=':  Opcode.JNZ,
     '!=': Opcode.JZ,
     '<':  Opcode.JGE,
-    '<=': Opcode.JG,
-    '>':  Opcode.JLE,
     '>=': Opcode.JL,
 }
 
 BINARY_OPS = {
             '+', '-', '*', '/', '%', 
             'and', 'or', 'xor', 
-            'lsl', 'lsr', 'asr', 'rol', 'ror', '<<', '>>'
+            'lsl', 'lsr', 'asr', 'rol', 'ror', '<<', '>>', 'asl'
 }
-
 
 RESERVED_KEYWORDS = {
     'if', 'defun', 'setq', 'progn', 
@@ -39,7 +36,8 @@ RESERVED_KEYWORDS = {
     '=', '!=', '<', '<=', '>', '>=',
     'in', 'out',
     'and', 'or', 'xor', 'not',
-    'lsl', 'lsr', 'asr', 'rol', 'ror', '<<', '>>'
+    'lsl', 'lsr', 'asr', 'rol', 'ror', '<<', '>>',
+    'inc', 'dec'
 }
 
 # Размещает Pascal строку в памяти данных и возвращает её начальный адрес
@@ -137,18 +135,32 @@ def compile_condition(condition_node: list) -> Opcode:
     left = condition_node[1]
     right = condition_node[2]
 
+    if op == '>':
+        reg_right = compile_expr(right)
+        reg_left = compile_expr(left)
+        program.append(Instruction(Opcode.CMP, [reg_right, reg_left]))
+        free_reg()
+        free_reg()
+        return Opcode.JGE
+
+    elif op == '<=':
+        reg_right = compile_expr(right)
+        reg_left = compile_expr(left)
+        program.append(Instruction(Opcode.CMP, [reg_right, reg_left]))
+        free_reg()
+        free_reg()
+        return Opcode.JL
+
     if op not in INVERSE_JUMPS:
         raise ValueError(f"Неизвестный оператор сравнения: {op}")
 
     reg_left = compile_expr(left)
     reg_right = compile_expr(right)
-
     program.append(Instruction(Opcode.CMP, [reg_left, reg_right]))
-
     free_reg()
     free_reg()
 
-    return INVERSE_JUMPS[op]
+    return INVERSE_JUMPS[op]    
 
 def compile_expr(node) -> str:
     global local_vars
@@ -207,6 +219,14 @@ def compile_expr(node) -> str:
             raise SyntaxError("Пустые скобки '()' не являются допустимым выражением")
 
         op = node[0]
+
+        if op == 'ei':
+            program.append(Instruction(Opcode.EI))
+            return None
+
+        if op == 'di':
+            program.append(Instruction(Opcode.DI))
+            return None
 
         # Если это команда на последовательное выполнение progn
 
@@ -429,6 +449,16 @@ def compile_expr(node) -> str:
             program.append(Instruction(Opcode.NOT, [arg_reg, arg_reg]))
             return arg_reg
 
+        if op == 'inc':
+            arg_reg = compile_expr(node[1])
+            program.append(Instruction(Opcode.INC, [arg_reg]))
+            return arg_reg
+
+        if op == 'dec':
+            arg_reg = compile_expr(node[1])
+            program.append(Instruction(Opcode.DEC, [arg_reg]))
+            return arg_reg
+
         # Арифметика
 
         if op in BINARY_OPS:
@@ -467,6 +497,8 @@ def compile_expr(node) -> str:
                 program.append(Instruction(Opcode.LSL, [left_reg, left_reg, right_reg]))
             elif op in ('lsr', '>>'):
                 program.append(Instruction(Opcode.LSR, [left_reg, left_reg, right_reg]))
+            elif op == 'asl':
+                program.append(Instruction(Opcode.ASL, [left_reg, left_reg, right_reg]))
             elif op == 'asr':
                 program.append(Instruction(Opcode.ASR, [left_reg, left_reg, right_reg]))
             elif op == 'rol':
