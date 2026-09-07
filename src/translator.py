@@ -277,10 +277,6 @@ def compile_expr(node) -> str:
 
             program.append(f"{func_name}:")
 
-            # Закидываем адрес возврата в стек, дабы можно было адекватно реализовать рекурсию
-
-            program.append(Instruction(Opcode.PUSH, ["LR"]))
-
             # Настраиваем аргументы (первый аргумент в R1, второй в R2 и так далее)
 
             old_locals = local_vars.copy()
@@ -293,7 +289,6 @@ def compile_expr(node) -> str:
             if result_reg != "R1":
                 program.append(Instruction(Opcode.ADD, ["R1", result_reg, "R0"]))
 
-            program.append(Instruction(Opcode.POP, ["LR"]))
             program.append(Instruction(Opcode.RET))
 
             local_vars = old_locals

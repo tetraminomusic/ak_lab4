@@ -16,8 +16,6 @@ class DataPath:
 
         self.status_register = 0                                # Регистр состояния процессора
 
-        self.saved_status_register = 0                          # Регистр для сохранения флагов при уходе в прерывание
-
         self.port_0_in = []                                     # Буфер входных символов
         self.port_1_out = []                                    # Буфер вывода на экран
 
@@ -25,20 +23,31 @@ class DataPath:
 
         self.dev_signal = 0                                     # Сигнал о запросе прывания от ВУ
 
-        self.flag_run = 1                                       # Процессора работает
+        self.flag_w = 1                                         # Процессор находится в непрерывном режиме
+        self.flag_p = 1                                         # Процессора работает
         self.flag_ie = 1                                        # Прерывания по дефолту разрешены
 
 
-    # Флажки
+    # Регистр состояния
 
-    @property                                                   # N
-    def flag_n(self) -> int:
-        return (self.status_register >> 3) & 1
+    @property                                                   # C
+    def flag_c(self) -> int:
+        return (self.status_register >> 0) & 1
 
-    @flag_n.setter
-    def flag_n(self, val: int):
-        if val: self.status_register |= (1 << 3)
-        else: self.status_register &= ~(1 << 3)
+    @flag_c.setter
+    def flag_c(self, val: int):
+        if val: self.status_register |= (1 << 0)
+        else: self.status_register &= ~(1 << 0)
+
+
+    @property                                                   # V
+    def flag_v(self) -> int:
+        return (self.status_register >> 1) & 1
+
+    @flag_v.setter
+    def flag_v(self, val: int):
+        if val: self.status_register |= (1 << 1)
+        else: self.status_register &= ~(1 << 1)
 
 
     @property                                                   # Z
@@ -50,54 +59,58 @@ class DataPath:
         if val: self.status_register |= (1 << 2)
         else: self.status_register &= ~(1 << 2)
 
-    
-    @property                                                   # C
-    def flag_c(self) -> int:
-        return (self.status_register >> 1) & 1
 
-    @flag_c.setter
-    def flag_c(self, val: int):
-        if val: self.status_register |= (1 << 1)
-        else: self.status_register &= ~(1 << 1)
+    @property                                                   # N
+    def flag_n(self) -> int:
+        return (self.status_register >> 3) & 1
 
-    
-    @property                                                   # V
-    def flag_v(self) -> int:
-        return (self.status_register) & 1
-
-    @flag_v.setter
-    def flag_v(self, val: int):
-        if val: self.status_register |= (1 << 0)
-        else: self.status_register &= ~(1 << 0)
+    @flag_n.setter
+    def flag_n(self, val: int):
+        if val: self.status_register |= (1 << 3)
+        else: self.status_register &= ~(1 << 3)
 
 
-    # Прерывания
+                                                                # 0 - резерв
 
-    @property                                                   # IE
+
+    @property                                                   # IE - запрет/разрешения прерывания
     def flag_ie(self) -> int:
-        return (self.status_register >> 4) & 1
-
-    @flag_ie.setter
-    def flag_ie(self, val: int):
-        if val: self.status_register |= (1 << 4)
-        else:   self.status_register &= ~(1 << 4)
-
-    @property                                                   # RUN
-    def flag_run(self) -> int:
         return (self.status_register >> 5) & 1
 
-    @flag_run.setter
-    def flag_run(self, val: int):
+    @flag_ie.setter
+    def flag_ie(self, val: int): 
         if val: self.status_register |= (1 << 5)
         else:   self.status_register &= ~(1 << 5)
 
     @property                                                   # IRQ
     def irq(self) -> int:
        return 1 if (self.dev_signal and self.flag_ie) else 0    
+    
+
+    @property                                                   # W (1 - непрерывный режим, 0 - потактовый режим)
+    def flag_w(self) -> int:
+        return (self.status_register >> 7) & 1
+
+    @flag_w.setter
+    def flag_w(self, val: int):
+        if val: self.status_register |= (1 << 7)
+        else:   self.status_register &= ~(1 << 7)
+
+
+    @property                                                   # P (Работа/Останов)                    
+    def flag_p(self) -> int:
+        return (self.status_register >> 8) & 1
+
+    @flag_p.setter
+    def flag_p(self, val: int):
+        if val: self.status_register |= (1 << 8)
+        else:   self.status_register &= ~(1 << 8)
+
 
     # Регистровые файлы
 
     def get_reg_idx(self, reg_name: str) -> int:                # Преврщает имя регистра в нужный нам индекс
+        if reg_name in ("PS", "SR"): return 11
         if reg_name == "SP": return 12
         if reg_name == "LR": return 13
         if reg_name == "IRA": return 14
@@ -117,6 +130,15 @@ class DataPath:
             return
 
         self.registers[idx] = value & 0xFFFF_FFFF
+
+
+    @property                                                   # Регистр состояния (Поменял, так как раньше предполагал, что PS будет все регистрового файла)
+    def status_register(self) -> int:
+        return self.registers[11]
+
+    @status_register.setter
+    def status_register(self, val: int):
+        self.registers[11] = val & 0xFFFF_FFFF
 
     # АЛУ
 
@@ -326,12 +348,16 @@ class ControlUnit:
         # Функции + Стек
 
         elif op == Opcode.CALL:
-            self.dp.write_reg("LR", next_pc)
+            sp = self.dp.read_reg("SP")
+            self.dp.memory[sp] = next_pc
+            self.dp.write_reg("SP", sp - 1)
             next_pc = args[0]
             self.tick()
 
         elif op == Opcode.RET:
-            next_pc = self.dp.read_reg("LR")
+            sp = self.dp.read_reg("SP") + 1
+            self.dp.write_reg("SP", sp)
+            next_pc = self.dp.memory[sp]
             self.tick()
 
         elif op == Opcode.PUSH:
@@ -364,8 +390,12 @@ class ControlUnit:
         # Прерывания
 
         elif op == Opcode.IRET:
-            next_pc = self.dp.read_reg("IRA")
-            self.dp.status_register = self.dp.saved_status_register
+            sp = self.dp.read_reg("SP")
+            sp += 1
+            self.dp.status_register = self.dp.memory[sp]
+            sp += 1
+            next_pc = self.dp.memory[sp]
+            self.dp.write_reg("SP", sp)
             self.tick()
 
         elif op == Opcode.EI:
@@ -379,7 +409,7 @@ class ControlUnit:
         # Иное
 
         elif op == Opcode.HLT:
-            self.dp.flag_run = 0
+            self.dp.flag_p = 0
             self.is_halted = True
             self.tick()
 
@@ -393,29 +423,36 @@ class ControlUnit:
         if self.dp.irq:
             self.handle_interrupt()
 
-# Обработка прерывания
+    # Обработка прерывания
 
-def handle_iterrupt(self, vector_address: int = 1):
+    def handle_interrupt(self, vector_address: int = 1):
 
-    # Сохраняем текущий адрес возврата в IRA
+        sp = self.dp.read_reg("SP")
 
-    current_pc = self.dp.read_reg("PC")
-    self.dp.write_reg("IRA", current_pc)
+        # Сохраняем текущий адрес возврата в стек
 
-    self.dp.saved_status_register = self.dp.status_register
+        current_pc = self.dp.read_reg("PC")
+        self.dp.memory[sp] = current_pc
+        sp -= 1
 
-    # Аппаратно запрещаем новые прерывания
+        # Кладём регистр состояния PS со всеми флагами в стек
 
-    self.dp.flag_ie = 0
+        self.dp.memory[sp] = self.dp.status_register
+        sp -= 1
+        self.dp.write_reg("SP", sp)
 
-    # Сбрасываем "готовность" со стороны ВУ
+        # Аппаратно запрещаем новые прерывания
 
-    self.dp.dev_signal = 0
+        self.dp.flag_ie = 0
 
-    # Переключаемся на адрес вектора прерывания
+        # Сбрасываем "готовность" со стороны ВУ
 
-    self.dp.write_reg("PC", vector_address)
-    self.tick()
+        self.dp.dev_signal = 0
+
+        # Переключаемся на адрес вектора прерывания
+
+        self.dp.write_reg("PC", vector_address)
+        self.tick()
 
 
 
