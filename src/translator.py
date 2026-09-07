@@ -10,6 +10,8 @@ data_address_counter = 1000
 
 available_ports = [0, 1]
 
+interrupt_handler = None
+
 symbol_table = {}
 data_memory = {}
 functions = {}                  # {"add_two", "Collatz"} - таблица зарегистрированных функций
@@ -37,7 +39,7 @@ RESERVED_KEYWORDS = {
     'in', 'out',
     'and', 'or', 'xor', 'not',
     'lsl', 'lsr', 'asr', 'rol', 'ror', '<<', '>>',
-    'inc', 'dec'
+    'inc', 'dec', 'print', 'aref', 'aset', 'definterrupt'
 }
 
 # Размещает Pascal строку в памяти данных и возвращает её начальный адрес
@@ -88,13 +90,30 @@ def free_reg():
 # Компоновщик, нужный для замены символических метов на числовые адреса памяти
 
 def link_program(raw_program: list) -> list:
-    labels_map = {}
-    clean_instructions = []
+    
+    # Сначала разбираемся с таблицей векторов прерывания
+
+    vector_table = [
+        Instruction(Opcode.JMP, ["_start"]),
+    ]
+
+    if interrupt_handler:
+        initial_isr_ps = (1 << 8) | (1 << 7)
+        vector_table.append(interrupt_handler)
+        vector_table.append(initial_isr_ps)
+    else:
+        vector_table.append(0)
+        vector_table.append(0)
+
+    full_program = vector_table + ["_start:"] + raw_program
 
     # певрый проход: находим адреса всех метов и собираем чистый список команд
+
+    labels_map = {}
+    clean_instructions = []
     current_address = 0
 
-    for item in raw_program:
+    for item in full_program :
         if isinstance(item, str) and item.endswith(':'):
             label_name = item[:-1]
             labels_map[label_name] = current_address
@@ -104,13 +123,13 @@ def link_program(raw_program: list) -> list:
 
     # второй проход: подставляем числовые адреса заместо текстовых
 
-    for instr in clean_instructions:
-        for i, arg in enumerate(instr.args):
-
-            # Если аргумент был названием какой нибудь метки, которую мы использовали
-
-            if isinstance(arg, str) and arg in labels_map:
-                instr.args[i] = labels_map[arg]
+    for idx, instr in enumerate(clean_instructions):
+        if isinstance(instr, Instruction):
+            for i, arg in enumerate(instr.args):
+                if isinstance(arg, str) and arg in labels_map:
+                    instr.args[i] = labels_map[arg]
+        elif isinstance(instr, str) and instr in labels_map:
+            clean_instructions[idx] = labels_map[instr]
 
     # Кек, забыл добавить HLT
 
@@ -131,36 +150,39 @@ def make_label(prefix: str = "L") -> str:
 # Компилирует нужное условие сравнения под знак сравнения + генерирует команду CMP и возвращает опкод прыжка в ELSE
 
 def compile_condition(condition_node: list) -> Opcode:
-    op = condition_node[0]
-    left = condition_node[1]
-    right = condition_node[2]
 
-    if op == '>':
-        reg_right = compile_expr(right)
+    if isinstance(condition_node, list) and len(condition_node) == 3 and condition_node[0] in ('=', '!=', '<', '<=', '>', '>='):
+        op = condition_node[0]
+        left = condition_node[1]
+        right = condition_node[2]
+
+        if op == '>':
+            reg_right = compile_expr(right)
+            reg_left = compile_expr(left)
+            program.append(Instruction(Opcode.CMP, [reg_right, reg_left]))
+            free_reg()
+            free_reg()
+            return Opcode.JGE
+
+        elif op == '<=':
+            reg_right = compile_expr(right)
+            reg_left = compile_expr(left)
+            program.append(Instruction(Opcode.CMP, [reg_right, reg_left]))
+            free_reg()
+            free_reg()
+            return Opcode.JL
+
         reg_left = compile_expr(left)
-        program.append(Instruction(Opcode.CMP, [reg_right, reg_left]))
-        free_reg()
-        free_reg()
-        return Opcode.JGE
-
-    elif op == '<=':
         reg_right = compile_expr(right)
-        reg_left = compile_expr(left)
-        program.append(Instruction(Opcode.CMP, [reg_right, reg_left]))
+        program.append(Instruction(Opcode.CMP, [reg_left, reg_right]))
         free_reg()
         free_reg()
-        return Opcode.JL
+        return INVERSE_JUMPS[op]
 
-    if op not in INVERSE_JUMPS:
-        raise ValueError(f"Неизвестный оператор сравнения: {op}")
-
-    reg_left = compile_expr(left)
-    reg_right = compile_expr(right)
-    program.append(Instruction(Opcode.CMP, [reg_left, reg_right]))
+    cond_reg = compile_expr(condition_node)
+    program.append(Instruction(Opcode.CMP, [cond_reg, "R0"]))
     free_reg()
-    free_reg()
-
-    return INVERSE_JUMPS[op]    
+    return Opcode.JZ
 
 def compile_expr(node) -> str:
     global local_vars
@@ -220,23 +242,90 @@ def compile_expr(node) -> str:
 
         op = node[0]
 
+        # Разрешение прерывания
+
         if op == 'ei':
             program.append(Instruction(Opcode.EI))
             return None
+
+        # Запрет прерывания
 
         if op == 'di':
             program.append(Instruction(Opcode.DI))
             return None
 
+        # Чтение элемента массива по нужному индексу
+
+        if op == 'aref':
+            if len(node) != 3:
+                raise SyntaxError("Команда 'aref' требует 2 аргумента: (aref массив индекс)")
+            
+            base_expr = node[1]
+            idx_expr = node[2]
+
+            base_reg = compile_expr(base_expr)
+            idx_reg = compile_expr(idx_expr)
+
+            program.append(Instruction(Opcode.ADD, [base_reg, base_reg, idx_reg]))
+            free_reg()  
+
+            program.append(Instruction(Opcode.LD, [base_reg, base_reg, 0]))
+            return base_reg
+
+        # Запись в массив/строку по индексу
+
+        if op == 'aset':
+            if len(node) != 4:
+                raise SyntaxError("Команда 'aset' требует 3 аргумента: (aset массив индекс значение)")
+
+            base_expr = node[1]
+            idx_expr = node[2]
+            val_expr = node[3]
+
+            base_reg = compile_expr(base_expr)
+            idx_reg = compile_expr(idx_expr)
+            val_reg = compile_expr(val_expr)
+
+            program.append(Instruction(Opcode.ADD, [base_reg, base_reg, idx_reg]))
+            free_reg()  
+
+            program.append(Instruction(Opcode.ST, [val_reg, base_reg, 0]))
+            free_reg()  
+
+            return val_reg
+
         # Если это команда на последовательное выполнение progn
 
         if op == 'progn':
             last_reg = None
-            for expr in node [1:]:
+            for expr in node[1:]:
                 if last_reg is not None:
                     free_reg()
                 last_reg = compile_expr(expr)
             return last_reg
+
+        # Объявление обработчика прерывания
+
+        if op == 'definterrupt':
+            if len(node) != 4:
+                raise SyntaxError("Конструкция 'definterrupt' требует: (definterrupt имя () тело)")
+
+            handler_name = node[1]
+            body_expr = node[3]
+
+            global interrupt_handler
+            interrupt_handler = handler_name
+
+            label_skip = make_label(f"skip_intr_{handler_name}")
+            program.append(Instruction(Opcode.JMP, [label_skip]))
+
+            program.append(f"{handler_name}:")
+            compile_expr(body_expr)
+
+            program.append(Instruction(Opcode.IRET))
+
+            program.append(f"{label_skip}:")
+            return None
 
         # Если это команда создания новой функции
 
@@ -297,8 +386,17 @@ def compile_expr(node) -> str:
 
             return None
 
-        # Присваивание setq
+        # Вывод на печать (аналог out 1 x)
 
+        if op == 'print':
+            if len(node) != 2:
+                raise SyntaxError("Команда 'print' требует 1 аргумент: (print значение)")
+            val_reg = compile_expr(node[1])
+            program.append(Instruction(Opcode.OUT, [1, val_reg]))
+            return val_reg
+
+        # Присваивание setq
+        
         if op == 'setq':
 
             if len(node) != 3:
@@ -456,6 +554,26 @@ def compile_expr(node) -> str:
 
         # Арифметика
 
+        # Добавляем реализацию (+ 1 2 3...)
+
+        if op in ('+', '*'):
+            if len(node) < 3:
+                raise SyntaxError(f"Операция '{op}' требует как минимум 2 операнда")
+
+            # 1. Вычисляем первый операнд (аккумулятор)
+            accum_reg = compile_expr(node[1])
+
+            # 2. В цикле по очереди прибавляем (или умножаем) все остальные операнды!
+            for next_expr in node[2:]:
+                next_reg = compile_expr(next_expr)
+                if op == '+':
+                    program.append(Instruction(Opcode.ADD, [accum_reg, accum_reg, next_reg]))
+                elif op == '*':
+                    program.append(Instruction(Opcode.MUL, [accum_reg, accum_reg, next_reg]))
+                free_reg()
+
+            return accum_reg
+
         if op in BINARY_OPS:
             if len(node) != 3:
                 raise SyntaxError(f"Операция '{op}' требует ровно 2 операнда, получено: {len(node) - 1}")
@@ -466,12 +584,8 @@ def compile_expr(node) -> str:
             left_reg = compile_expr(left)
             right_reg = compile_expr(right)
 
-            if op == '+':
-                program.append(Instruction(Opcode.ADD, [left_reg, left_reg, right_reg]))
-            elif op == '-':
+            if op == '-':
                 program.append(Instruction(Opcode.SUB, [left_reg, left_reg, right_reg]))
-            elif op == '*':
-                program.append(Instruction(Opcode.MUL, [left_reg, left_reg, right_reg]))
             elif op == '/':
                 program.append(Instruction(Opcode.DIV, [left_reg, left_reg, right_reg]))
             elif op == '%':
@@ -519,10 +633,13 @@ def compile_expr(node) -> str:
 def generate_listing(instructions: list) -> str:
     lines = []
     for addr, instr in enumerate(instructions):
-        hex_code = f"0x{instr.encode():08X}"
-        lines.append(f"{addr:04d} - {hex_code} - {instr}")
+        if isinstance(instr, Instruction):
+            hex_code = f"0x{instr.encode():08X}"
+            lines.append(f"{addr:04d} - {hex_code} - {instr}")
+        elif isinstance(instr, int):
+            hex_code = f"0x{instr:08X}"
+            lines.append(f"{addr:04d} - {hex_code} - VECTOR_DATA 0x{instr:04X}")
     return "\n".join(lines)
-
 # читает исходный файл lisp, компилирует и сохраняет в выходной файл
 
 def compile_file(source_file: str, target_file: str, listing_file: str = None):
@@ -530,7 +647,7 @@ def compile_file(source_file: str, target_file: str, listing_file: str = None):
     # Делаем программу реентерабельной
 
     global program, symbol_table, data_memory, functions, local_vars
-    global current_reg, label_counter, data_address_counter
+    global current_reg, label_counter, data_address_counter, interrupt_handler
     program = []
     symbol_table = {}
     data_memory = {}
@@ -538,7 +655,8 @@ def compile_file(source_file: str, target_file: str, listing_file: str = None):
     local_vars = {}
     current_reg = 1
     label_counter = 0
-    data_address_counter = 100
+    data_address_counter = 1000
+    interrupt_handler = None
 
     with open(source_file, "r", encoding="utf-8") as f:
         code_text = f.read()
