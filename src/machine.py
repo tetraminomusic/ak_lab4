@@ -112,8 +112,7 @@ class DataPath:
     def get_reg_idx(self, reg_name: str) -> int:                # Преврщает имя регистра в нужный нам индекс
         if reg_name in ("PS", "SR"): return 11
         if reg_name == "SP": return 12
-        if reg_name == "LR": return 13
-        if reg_name == "IRA": return 14
+        if reg_name in ("CR", "IR"): return 14
         if reg_name == "PC": return 15
         return int(reg_name.replace("R", ""))
 
@@ -139,6 +138,14 @@ class DataPath:
     @status_register.setter
     def status_register(self, val: int):
         self.registers[11] = val & 0xFFFF_FFFF
+
+    @property                                                   # Регистр команд
+    def cr(self):
+        return self.registers[14]
+
+    @cr.setter
+    def cr(self, instr):
+        self.registers[14] = instr
 
     # АЛУ
 
@@ -200,9 +207,9 @@ class DataPath:
 
         self.flag_c = 1 if (res > 0xFFFF_FFFF) else 0           # C
 
-        if op == Opcode.ADD:                                    # V
+        if op in (Opcode.ADD, Opcode.INC):                      # V
             self.flag_v = 1 if (~(src1 ^ src2) & (src1 ^ res) & 0x80000000) != 0 else 0
-        elif op in (Opcode.SUB, Opcode.CMP):
+        elif op in (Opcode.SUB, Opcode.CMP, Opcode.DEC):
             self.flag_v = 1 if ((src1 ^ src2) & (src1 ^ res) & 0x80000000) != 0 else 0
         else:
             self.flag_v = 0
@@ -218,6 +225,7 @@ class ControlUnit:
         self.current_tick = 0                                   # Счётчик прошедших тактов
         self.instruction_counter = 0                            # Сколько инструкций выполнили
         self.is_halted = False                                  # Флаг остановки для команды HLT
+        self.dp.cr = None                                       # CR
 
     def tick(self):                                             # Один такт тактового генератора
         self.current_tick += 1
@@ -229,22 +237,22 @@ class ControlUnit:
         # Instruction Fetch
 
         pc = self.dp.read_reg("PC")                             # Узнаём текущий адрес
-        instr = self.dp.memory[pc]                              # Достаём команду из памяти
+        self.dp.cr = self.dp.memory[pc]                         # Достаём команду из памяти
         self.tick()                                             # На выборку уходит один такт
 
         # Если дошли до пустой ячейки/команда HLT - останавливаемся
-        if instr == 0 or instr is None or (isinstance(instr, Instruction) and instr.opcode == Opcode.HLT):
+        if self.dp.cr == 0 or self.dp.cr is None or (isinstance(self.dp.cr, Instruction) and self.dp.cr.opcode == Opcode.HLT):
             self.is_halted = True
             return
 
         # Decode
 
-        # Execute. На данный момент мы получаем две переменные - класс команды + аргументы команды.
-        
-        op = instr.opcode
-        args = instr.args
+        op = self.dp.cr.opcode
+        args = self.dp.cr.args
         next_pc = pc + 1
 
+        # Execute. На данный момент мы получаем две переменные - класс команды + аргументы команды.
+        
         # Работа с памятью и константами
 
         if op == Opcode.LDI:
@@ -441,6 +449,14 @@ class ControlUnit:
         sp -= 1
         self.dp.write_reg("SP", sp)
 
+        # Аппаратно загружаем новый контекст из двухсловного вектора памяти:
+
+        new_pc = self.dp.memory[vector_address]
+        new_ps = self.dp.memory[vector_address + 1]
+
+        self.dp.write_reg("PC", new_pc)
+        self.dp.status_register = new_ps
+
         # Аппаратно запрещаем новые прерывания
 
         self.dp.flag_ie = 0
@@ -451,7 +467,6 @@ class ControlUnit:
 
         # Переключаемся на адрес вектора прерывания
 
-        self.dp.write_reg("PC", vector_address)
         self.tick()
 
 
