@@ -1,6 +1,6 @@
 import sys
 import argparse
-import pickle
+import struct
 from isa import Opcode, Instruction
 from parser import tokenize, parse, StringLiteral
 
@@ -674,17 +674,33 @@ def compile_file(source_file: str, target_file: str, listing_file: str = None):
 
     machine_code = link_program(program)
 
-    # Сохраняем в бинарник
+    # Создаём виртуальную память
     
-    payload = {
-        "code": machine_code,
-        "data_memory": data_memory,
-        "symbol_table": symbol_table
-    }
+    memory_dump = [0] * 4096
+
+    # Размещаем инструкции
+
+    for addr, instr in enumerate(machine_code):
+        if isinstance(instr, Instruction):
+            memory_dump[addr] = instr.encode()
+        elif isinstance(instr, int):
+
+            # Вектор прерывания
+
+            memory_dump[addr] = instr
+
+    # Размещаем статические данные
+
+    for addr, val in data_memory.items():
+        memory_dump[addr] = val
 
     with open(target_file, "wb") as f:
-        pickle.dump(payload, f)
+        for word in memory_dump:
 
+            # Пишем Big_Endian как беззнаковое 32 битное число
+
+            f.write(struct.pack(">I", word & 0xFFFF_FFFF))
+        
     print(f"Машинный код записан в: {target_file}")
 
     # Сохраняем отладочный файл/листинг
