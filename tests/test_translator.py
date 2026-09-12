@@ -1,14 +1,15 @@
 # tests/test_translator.py
-import sys
 import os
+import sys
+
 import pytest
 
 # Добавляем папку src в путь поиска
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
-from parser import tokenize, parse, StringLiteral
-from isa import Opcode
 import translator
+from isa import Opcode
+from parser import StringLiteral, parse, tokenize
 
 
 @pytest.fixture(autouse=True)
@@ -22,6 +23,7 @@ def reset_translator():
     translator.label_counter = 0
     translator.data_address_counter = 100
     translator.interrupt_handler = None
+
 
 def test_unclosed_parenthesis():
     """Ошибка: забытая закрывающая скобка."""
@@ -62,7 +64,9 @@ def test_deeply_nested_expressions():
     code = "(+ 1 (+ 2 (+ 3 (+ 4 5))))"
     ast = parse(tokenize(code))
     res_reg = translator.compile_expr(ast)
-    assert res_reg == "R1"  # Благодаря освобождению регистров всё должно свернуться в R1
+    assert (
+        res_reg == "R1"
+    )  # Благодаря освобождению регистров всё должно свернуться в R1
 
 
 def test_if_with_variable_predicate():
@@ -78,7 +82,11 @@ def test_if_with_variable_predicate():
     clean_code = translator.link_program(translator.program)
 
     # Проверяем, что сгенерировалась команда сравнения переменной с нулем R0: CMP reg, R0
-    cmp_with_zero = [instr for instr in clean_code if instr.opcode == Opcode.CMP and "R0" in instr.args]
+    cmp_with_zero = [
+        instr
+        for instr in clean_code
+        if instr.opcode == Opcode.CMP and "R0" in instr.args
+    ]
     assert len(cmp_with_zero) == 1, "Ожидалось сравнение переменной p с нулем R0"
 
     # Проверяем, что для перехода в else используется команда JZ
@@ -89,7 +97,7 @@ def test_if_with_variable_predicate():
 def test_if_with_number_literal_predicate():
     code = "(if 1 100 200)"
     ast = parse(tokenize(code))
-    res_reg = translator.compile_expr(ast)
+    _ = translator.compile_expr(ast)
     clean_code = translator.link_program(translator.program)
 
     # Условие-число должно сравниться с нулем и сгенерировать JZ
@@ -97,16 +105,18 @@ def test_if_with_number_literal_predicate():
     assert Opcode.JZ in [instr.opcode for instr in clean_code]
     assert clean_code[-1].opcode == Opcode.HLT
 
+
 def test_variadic_addition():
     code = "(+ 1 2 3 4 5)"
     ast = parse(tokenize(code))
     res_reg = translator.compile_expr(ast)
     clean_code = translator.link_program(translator.program)
-    
+
     # Должно сгенерироваться 4 инструкции ADD
     adds = [instr for instr in clean_code if instr.opcode == Opcode.ADD]
     assert len(adds) == 4
     assert res_reg == "R1"
+
 
 def test_binary_op_wrong_arity():
     code = "(- 1 2 3)"  # Заменили '+' на '-'
@@ -185,7 +195,7 @@ def test_vector_table_fallback_iret():
     translator.compile_expr(ast)
     clean_code = translator.link_program(translator.program)
 
-    assert clean_code[0].opcode == Opcode.JMP   # Вектор 0: JMP _start
+    assert clean_code[0].opcode == Opcode.JMP  # Вектор 0: JMP _start
     assert clean_code[1].opcode == Opcode.IRET  # Вектор 1: безопасная заглушка IRET
 
 

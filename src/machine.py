@@ -1,17 +1,19 @@
-import sys
-import struct
-import logging
 import argparse
-from datapath import DataPath
+import logging
+import struct
+import sys
+
 from controlunit import ControlUnit
+from datapath import DataPath
 
 # Загружает бинарник с диска и запускает процессор
+
 
 def run_simulation(binary_file: str, schedule: list, max_ticks: int = 2000):
     dp = DataPath(4096)
 
     # Читаем 32-битные слова из файла обратно в память
-    
+
     with open(binary_file, "rb") as f:
         for i in range(4096):
             chunk = f.read(4)
@@ -67,41 +69,51 @@ def run_simulation(binary_file: str, schedule: list, max_ticks: int = 2000):
     logging.info("Выполнено инструкций: %d", cu.instruction_counter)
     logging.info("Вывод в порт 1:")
 
-    print("\n" + "="*40)
+    print("\n" + "=" * 40)
     print(output_chars)
-    print("="*40 + "\n")
+    print("=" * 40 + "\n")
 
     total_requests = cu.cache.hits + cu.cache.misses
     hit_rate = (cu.cache.hits / total_requests * 100) if total_requests > 0 else 0
     logging.info("Статистика кеш-попаданий:")
-    logging.info("Попаданий (Hits): %d | Промахов (Misses): %d | Hit Rate: %.2f%%", 
-                 cu.cache.hits, cu.cache.misses, hit_rate)
+    logging.info(
+        "Попаданий (Hits): %d | Промахов (Misses): %d | Hit Rate: %.2f%%",
+        cu.cache.hits,
+        cu.cache.misses,
+        hit_rate,
+    )
 
     return output_chars, cu.current_tick
 
 
 # Точка входа в программу
 
+
 def main():
-    parser = argparse.ArgumentParser(description="Симулятор RISC-процессора by tetramino")
+    parser = argparse.ArgumentParser(
+        description="Симулятор RISC-процессора by tetramino"
+    )
 
     parser.add_argument(
-        "-c", "--code",
+        "-c",
+        "--code",
         required=True,
-        help="Путь к бинарному файлу с машинным кодом (.bin)"
+        help="Путь к бинарному файлу с машинным кодом (.bin)",
     )
 
     parser.add_argument(
-        "-i", "--input",
+        "-i",
+        "--input",
         default=None,
-        help="Путь к текстовому файлу с входными данными (опционально)"
+        help="Путь к текстовому файлу с входными данными (опционально)",
     )
 
     parser.add_argument(
-        "-t", "--ticks",
+        "-t",
+        "--ticks",
         type=int,
         default=5000,
-        help="Лимит тактов симуляции (по умолчанию 5000)"
+        help="Лимит тактов симуляции (по умолчанию 5000)",
     )
 
     args = parser.parse_args()
@@ -118,6 +130,7 @@ def main():
                 content = f.read().strip()
                 if content.startswith("["):
                     import json
+
                     schedule = json.loads(content)
                 else:
                     current_tick = 50

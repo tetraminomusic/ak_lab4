@@ -1,14 +1,16 @@
-
 # Одна физическая строка в кеш памяти
 # При реализации кеша буду использовать Direct-Mapped кеш, мол, прямое отображение и тд. Реализуем через остаток от деления на 8
 
+
 class CacheLine:
     def __init__(self):
-        self.valid = False                                      # Флаг - есть ли в строке реальные и актуальные данные
-        self.tag = None                                         # Адрес ячейки в оперативной памяти
-        self.data = 0                                           # 32-битное значение из этой ячейки
+        self.valid = False  # Флаг - есть ли в строке реальные и актуальные данные
+        self.tag = None  # Адрес ячейки в оперативной памяти
+        self.data = 0  # 32-битное значение из этой ячейки
+
 
 # Сам великий и неповторимый кеш
+
 
 class Cache:
     def __init__(self, memory: list, num_lines: int = 8):
@@ -20,13 +22,13 @@ class Cache:
 
         self.lines = [CacheLine() for _ in range(num_lines)]
 
-        #стата для логирования
+        # стата для логирования
 
         self.hits = 0
         self.misses = 0
         self.last_status = "NONE"
 
-    # Функция чтения, возвращает [прочитанное значение, затраченные такты] 
+    # Функция чтения, возвращает [прочитанное значение, затраченные такты]
 
     def read(self, addr: int) -> tuple[int, int]:
         line_idx = addr % self.num_lines
