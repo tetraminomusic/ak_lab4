@@ -1,6 +1,7 @@
 # tests/test_golden.py
-import sys
 import os
+import sys
+
 import pytest
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
@@ -12,9 +13,9 @@ from machine import run_simulation
 @pytest.mark.golden_test("golden/*.yml")
 def test_golden(golden, tmp_path):
 
-    #Интеграционный Golden-тест с автообновлением эталонов.
+    # Интеграционный Golden-тест с автообновлением эталонов.
     lisp_code = golden["in_source"]
-    input_text = golden.get("in_stdin", "")
+    _ = golden.get("in_stdin", "")
 
     source_file = tmp_path / "program.lisp"
     bin_file = tmp_path / "program.bin"
@@ -26,8 +27,7 @@ def test_golden(golden, tmp_path):
     listing_content = listing_file.read_text(encoding="utf-8").strip()
 
     # Симуляция
-    input_tokens = [ord(c) for c in input_text] if input_text else []
-    output, ticks = run_simulation(str(bin_file), schedule=[], max_ticks=5000)
+    output, _ = run_simulation(str(bin_file), schedule=[], max_ticks=5000)
 
     # Передаем реальные результаты в pytest-golden
     golden.out["out_code_hex"] = listing_content

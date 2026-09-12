@@ -1,19 +1,19 @@
-from isa import Opcode, Instruction
-from datapath import DataPath
-from cache import Cache
 import logging
 
+from cache import Cache
+from datapath import DataPath
+from isa import Instruction, Opcode
 
 # Устройство управления типа Hardwired
 
-class ControlUnit:
 
+class ControlUnit:
     def __init__(self, data_path: DataPath, schedule: list = None):
         self.dp = data_path
         self.cache = Cache(self.dp.memory)
-        self.current_tick = 0                                   # Счётчик прошедших тактов
-        self.instruction_counter = 0                            # Сколько инструкций выполнили
-        self.is_halted = False                                  # Флаг остановки для команды HLT
+        self.current_tick = 0  # Счётчик прошедших тактов
+        self.instruction_counter = 0  # Сколько инструкций выполнили
+        self.is_halted = False  # Флаг остановки для команды HLT
 
         # Расписание прерываний
 
@@ -23,17 +23,22 @@ class ControlUnit:
 
     def check_interrupt_schedule(self):
         while self.schedule and self.current_tick >= self.schedule[0][0]:
-            event_tick, char = self.schedule.pop(0)
+            _, char = self.schedule.pop(0)
             ascii_code = ord(char) if isinstance(char, str) else int(char)
 
             self.dp.port_0_in.append(ascii_code)
-            
 
-            char_repr = chr(ascii_code) if 32 <= ascii_code <= 126 else f"\\x{ascii_code:02x}"
-            logging.info("[ТАКТ %d] ВУ прислало символ '%s' (ASCII %d), провод IntRq = 1!", 
-                         self.current_tick, char_repr, ascii_code)
+            char_repr = (
+                chr(ascii_code) if 32 <= ascii_code <= 126 else f"\\x{ascii_code:02x}"
+            )
+            logging.info(
+                "[ТАКТ %d] ВУ прислало символ '%s' (ASCII %d), провод IntRq = 1!",
+                self.current_tick,
+                char_repr,
+                ascii_code,
+            )
 
-    def tick(self):                                             # Один такт тактового генератора
+    def tick(self):  # Один такт тактового генератора
         self.current_tick += 1
 
     def __repr__(self):
@@ -71,7 +76,7 @@ class ControlUnit:
             f"| {self.cache.last_status:^9} |"
         )
 
-    def step(self):                                             # Выполнение одной инструкции от корки до корки
+    def step(self):  # Выполнение одной инструкции от корки до корки
         if self.is_halted or not self.dp.flag_p:
             return
 
@@ -82,7 +87,7 @@ class ControlUnit:
         # Interruption Fetch (проверка прерывания через схему И: IntRq & EI)
 
         if self.dp.irq:
-            self.handle_interrupt()         
+            self.handle_interrupt()
 
         # Instruction Fetch (Выборка команды через КЭШ в регистр cr)
 
@@ -153,9 +158,19 @@ class ControlUnit:
 
         # Арифметика бинарная
 
-        elif op in (Opcode.ADD, Opcode.SUB, Opcode.MUL, Opcode.DIV, Opcode.MOD,
-                    Opcode.AND, Opcode.OR, Opcode.XOR, Opcode.LSL, Opcode.LSR, Opcode.CMP):
-
+        elif op in (
+            Opcode.ADD,
+            Opcode.SUB,
+            Opcode.MUL,
+            Opcode.DIV,
+            Opcode.MOD,
+            Opcode.AND,
+            Opcode.OR,
+            Opcode.XOR,
+            Opcode.LSL,
+            Opcode.LSR,
+            Opcode.CMP,
+        ):
             if isinstance(self.dp.cr, Instruction):
                 r_dest = args[0]
                 if op == Opcode.CMP:
@@ -197,23 +212,17 @@ class ControlUnit:
 
         # Ветвления (Каноничный набор)
 
-        elif op == Opcode.JMP:
-            next_pc = imm if not isinstance(self.dp.cr, Instruction) else args[0]
-            self.tick()
-
-        elif op == Opcode.JZ and self.dp.flag_z == 1:
-            next_pc = imm if not isinstance(self.dp.cr, Instruction) else args[0]
-            self.tick()
-
-        elif op == Opcode.JNZ and self.dp.flag_z == 0:
-            next_pc = imm if not isinstance(self.dp.cr, Instruction) else args[0]
-            self.tick()
-
-        elif op == Opcode.JL and (self.dp.flag_n != self.dp.flag_v):
-            next_pc = imm if not isinstance(self.dp.cr, Instruction) else args[0]
-            self.tick()
-
-        elif op == Opcode.JGE and (self.dp.flag_n == self.dp.flag_v):
+        elif (
+            op == Opcode.JMP
+            or op == Opcode.JZ
+            and self.dp.flag_z == 1
+            or op == Opcode.JNZ
+            and self.dp.flag_z == 0
+            or op == Opcode.JL
+            and (self.dp.flag_n != self.dp.flag_v)
+            or op == Opcode.JGE
+            and (self.dp.flag_n == self.dp.flag_v)
+        ):
             next_pc = imm if not isinstance(self.dp.cr, Instruction) else args[0]
             self.tick()
 
@@ -264,7 +273,7 @@ class ControlUnit:
                 target_reg = f"R{rd_idx}"
 
             val = self.dp.port_0_in.pop(0) if self.dp.port_0_in else 0
-            
+
             self.dp.write_reg(target_reg, val)
             self.tick()
 
@@ -306,5 +315,3 @@ class ControlUnit:
 
         self.dp.pc = vector_address
         self.tick()
-
-

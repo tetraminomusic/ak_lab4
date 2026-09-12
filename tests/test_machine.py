@@ -1,17 +1,14 @@
 # tests/test_machine.py
-import sys
 import os
-import pytest
+import sys
 
 # Добавляем путь к папке src
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
-from isa import Opcode, Instruction
 import translator
-from machine import DataPath, ControlUnit, run_simulation
 from cache import Cache
-
-
+from isa import Opcode
+from machine import ControlUnit, DataPath, run_simulation
 
 
 def test_cache_hit_and_miss_latencies():
@@ -56,10 +53,10 @@ def test_cache_eviction():
     # Заполняем все 8 строк кэша (адреса 0..7)
     for i in range(8):
         cache.read(i)
-    
+
     # Читаем адрес 8 (8 % 8 = 0). Он вытесняет строку 0!
     cache.read(8)
-    
+
     # Снова читаем адрес 0 — должен быть промах (10 тактов), так как строка была вытеснена!
     _, ticks = cache.read(0)
     assert ticks == 10
@@ -108,12 +105,15 @@ def test_arithmetic_execution(tmp_path):
     bin_file = tmp_path / "math.bin"
 
     # 65 + 5 - 4 = 66 (буква 'B')
-    source_file.write_text("""
+    source_file.write_text(
+        """
     (progn
         (setq res (- (+ 65 5) 4))
         (out 1 res)
     )
-    """, encoding="utf-8")
+    """,
+        encoding="utf-8",
+    )
 
     translator.compile_file(str(source_file), str(bin_file))
     output, _ = run_simulation(str(bin_file), schedule=[], max_ticks=300)
@@ -126,7 +126,8 @@ def test_functions_and_recursion_execution(tmp_path):
     bin_file = tmp_path / "fact.bin"
 
     # Считаем сумму чисел 3 + 2 + 1 = 6. Начинаем с 60: итог 66 ('B')
-    source_file.write_text("""
+    source_file.write_text(
+        """
     (progn
         (defun sum (n acc)
             (if (<= n 0)
@@ -136,7 +137,9 @@ def test_functions_and_recursion_execution(tmp_path):
         (setq ans (sum 3 60))
         (out 1 ans)
     )
-    """, encoding="utf-8")
+    """,
+        encoding="utf-8",
+    )
 
     translator.compile_file(str(source_file), str(bin_file))
     output, _ = run_simulation(str(bin_file), schedule=[], max_ticks=1000)
@@ -148,13 +151,16 @@ def test_pascal_string_traversal_with_aref(tmp_path):
     source_file = tmp_path / "str.lisp"
     bin_file = tmp_path / "str.bin"
 
-    source_file.write_text("""
+    source_file.write_text(
+        """
     (progn
         (setq s "OK")
         (out 1 (aref s 1))
         (out 1 (aref s 2))
     )
-    """, encoding="utf-8")
+    """,
+        encoding="utf-8",
+    )
 
     translator.compile_file(str(source_file), str(bin_file))
     output, _ = run_simulation(str(bin_file), schedule=[], max_ticks=300)
@@ -166,7 +172,8 @@ def test_deep_recursion_stack_growth(tmp_path):
     source_file = tmp_path / "deep.lisp"
     bin_file = tmp_path / "deep.bin"
 
-    source_file.write_text("""
+    source_file.write_text(
+        """
     (progn
         (defun deep (n val)
             (if (<= n 0)
@@ -174,17 +181,20 @@ def test_deep_recursion_stack_growth(tmp_path):
                 (deep (- n 1) val)))
         (out 1 (deep 15 65))
     )
-    """, encoding="utf-8")
+    """,
+        encoding="utf-8",
+    )
 
     translator.compile_file(str(source_file), str(bin_file))
     output, _ = run_simulation(str(bin_file), schedule=[], max_ticks=8000)
     assert output == "A"
 
+
 def test_input_buffer_empty():
     """Если буфер порта 0 пуст, чтение возвращает 0."""
     dp = DataPath()
     cu = ControlUnit(dp)
-    
+
     # 0x1B100000 = IN R1, 0
     dp.memory[0] = 0x1B100000
     cu.step()
@@ -196,12 +206,15 @@ def test_timeout_execution(tmp_path):
     source_file = tmp_path / "inf.lisp"
     bin_file = tmp_path / "inf.bin"
 
-    source_file.write_text("""
+    source_file.write_text(
+        """
     (progn
         (defun inf () (inf))
         (inf)
     )
-    """, encoding="utf-8")
+    """,
+        encoding="utf-8",
+    )
 
     translator.compile_file(str(source_file), str(bin_file))
     _, ticks = run_simulation(str(bin_file), schedule=[], max_ticks=150)
