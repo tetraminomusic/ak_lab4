@@ -8,7 +8,7 @@ from isa import Instruction, Opcode
 
 
 class ControlUnit:
-    def __init__(self, data_path: DataPath, schedule: list = None):
+    def __init__(self, data_path: DataPath, schedule: list | None = None):
         self.dp = data_path
         self.cache = Cache(self.dp.memory)
         self.current_tick = 0  # Счётчик прошедших тактов
