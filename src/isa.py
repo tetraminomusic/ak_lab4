@@ -60,7 +60,7 @@ class Opcode(IntEnum):
 
 
 class Instruction:
-    def __init__(self, opcode: Opcode, args: list = None):
+    def __init__(self, opcode: Opcode, args: list | None = None):
         self.opcode = opcode
         self.args = args if args is not None else []
 

@@ -13,12 +13,12 @@ available_ports = [0, 1]
 
 interrupt_handler = None
 
-symbol_table = {}
-data_memory = {}
-functions = {}  # {"add_two", "Collatz"} - таблица зарегистрированных функций
-local_vars = {}  # {"x": "R1", "y": "R2"...} - текущие локальные переменные
+symbol_table: dict[str, int] = {}
+data_memory: dict[int, int] = {}
+functions: dict[str, int] = {}  # {"add_two", "Collatz"} - таблица зарегистрированных функций
+local_vars: dict[str, str] = {}  # {"x": "R1", "y": "R2"...} - текущие локальные переменные
 
-program = []
+program: list[Instruction | str] = []
 
 INVERSE_JUMPS = {
     "=": Opcode.JNZ,
@@ -250,7 +250,7 @@ def compile_condition(condition_node: list) -> Opcode:
     return Opcode.JZ
 
 
-def compile_expr(node) -> str:
+def compile_expr(node) -> str | None:
     global local_vars, current_reg, interrupt_handler
 
     # Проверяем, может это простое число
@@ -665,6 +665,7 @@ def compile_expr(node) -> str:
             return left_reg
 
         raise SyntaxError(f"Неизвестная операция или необъявленная функция: '{op}'")
+    return None
 
 
 def generate_listing(instructions: list) -> str:
@@ -679,7 +680,7 @@ def generate_listing(instructions: list) -> str:
     return "\n".join(lines)
 
 
-def compile_file(source_file: str, target_file: str, listing_file: str = None):
+def compile_file(source_file: str, target_file: str, listing_file: str | None = None):
     global program, symbol_table, data_memory, functions, local_vars
     global current_reg, label_counter, data_address_counter, interrupt_handler
 
