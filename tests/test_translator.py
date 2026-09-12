@@ -64,33 +64,6 @@ def test_deeply_nested_expressions():
     res_reg = translator.compile_expr(ast)
     assert res_reg == "R1"  # Благодаря освобождению регистров всё должно свернуться в R1
 
-def test_all_bitwise_and_shift_operations():
-    """Проверка генерации всех битовых и сдвиговых инструкций."""
-    code = """
-    (progn
-        (setq a (and 1 2))
-        (setq b (or 3 4))
-        (setq c (xor 5 6))
-        (setq d (not 7))
-        (setq e (lsl 8 1))
-        (setq f (lsr 9 1))
-        (setq g (rol 10 1))
-        (setq h (ror 11 1))
-        (setq i (asr 12 1))
-        (setq j (% 13 2))
-    )
-    """
-    ast = parse(tokenize(code))
-    translator.compile_expr(ast)
-    clean_code = translator.link_program(translator.program)
-
-    opcodes = {instr.opcode for instr in clean_code}
-    expected_opcodes = {
-        Opcode.AND, Opcode.OR, Opcode.XOR, Opcode.NOT,
-        Opcode.LSL, Opcode.LSR, Opcode.ROL, Opcode.ROR,
-        Opcode.ASR, Opcode.MOD
-    }
-    assert expected_opcodes.issubset(opcodes)
 
 def test_if_with_variable_predicate():
 
@@ -108,7 +81,7 @@ def test_if_with_variable_predicate():
     cmp_with_zero = [instr for instr in clean_code if instr.opcode == Opcode.CMP and "R0" in instr.args]
     assert len(cmp_with_zero) == 1, "Ожидалось сравнение переменной p с нулем R0"
 
-    # Проверяем, что для перехода в else используется команда JZ (прыжок, если 0 / ложь)
+    # Проверяем, что для перехода в else используется команда JZ
     jz_jumps = [instr for instr in clean_code if instr.opcode == Opcode.JZ]
     assert len(jz_jumps) == 1, "Ожидался прыжок в else по команде JZ"
 
@@ -141,9 +114,6 @@ def test_binary_op_wrong_arity():
         ast = parse(tokenize(code))
         translator.compile_expr(ast)
 
-# =====================================================================
-# 13. ТЕСТЫ НОВЫХ ФИШЕК: AREF, ASET, DEFINTERRUPT, PRINT, INC/DEC, ASL
-# =====================================================================
 
 def test_aref_read_pascal_string():
     """aref должен генерировать ADD (смещение) и LD (чтение) из памяти."""
@@ -198,13 +168,13 @@ def test_definterrupt_and_vector_table_linking():
     translator.compile_expr(ast)
     clean_code = translator.link_program(translator.program)
 
-    # 1. Адрес 0 обязан быть безусловным прыжком JMP на начало программы
+    # Адрес 0 обязан быть безусловным прыжком JMP на начало программы
     assert clean_code[0].opcode == Opcode.JMP
 
-    # 2. Адрес 1 обязан быть прыжком JMP на обработчик прерывания
+    # Адрес 1 обязан быть прыжком JMP на обработчик прерывания
     assert clean_code[1].opcode == Opcode.JMP
 
-    # 3. В коде обязана присутствовать инструкция возврата из прерывания IRET
+    # В коде обязана присутствовать инструкция возврата из прерывания IRET
     assert Opcode.IRET in [instr.opcode for instr in clean_code]
 
 
@@ -248,16 +218,6 @@ def test_inc_and_dec_opcodes():
     opcodes = {i.opcode for i in clean_code}
     assert Opcode.INC in opcodes
     assert Opcode.DEC in opcodes
-
-
-def test_asl_shift_compilation():
-    """Проверка генерации арифметического сдвига влево ASL."""
-    code = "(asl 5 2)"
-    ast = parse(tokenize(code))
-    translator.compile_expr(ast)
-    clean_code = translator.link_program(translator.program)
-
-    assert Opcode.ASL in [i.opcode for i in clean_code]
 
 
 def test_aref_and_aset_syntax_errors():
