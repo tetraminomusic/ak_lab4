@@ -2,7 +2,7 @@ from enum import IntEnum
 
 class Opcode(IntEnum):
 
-    # Работа с памаятью + регистры
+    # Работа с памятью + регистры
 
     LDI = 0x01              # 0000 0001 - Load Immediate: LDI R1, 10 (10 -> R1)
     LD  = 0x02              # 0000 0010 - Load: LD R1, R2, offset (R1 -> Mem[R2+offset])
@@ -31,102 +31,74 @@ class Opcode(IntEnum):
     LSL = 0x10              # 0001 0000 - Logical Shift Left (R2 << R3 -> R1)
     LSR = 0x11              # 0001 0001 - Logical Shift Right (R2 >> R3 -> R1, с нулями)
 
-    # Арифметические сдвиги
+    # Ветвления (Минимальный каноничный набор RISC)
 
-    ASL = 0x12              # 0001 0010 - Arithmetic Shift Left (R2 << R3 -> R1, с проверкой V)
-    ASR = 0x13              # 0001 0011 - Arithmetic Shift Right (с сохранением знака)
-
-    # Циклические сдвиги (Rotations)
-    
-    ROL = 0x14              # 0001 0100 - Rotate Left  
-    ROR = 0x15              # 0001 0101 - Rotate Right
-
-    # Ветвления
-
-    JMP = 0x16              # 0001 0110 - Безусловный переход
-    JZ  = 0x17              # 0001 0111 - Переход, если Z == 1 (Equal)
-    JNZ = 0x18              # 0001 1000 - Переход, если Z == 0 (Not Equal)
-    JN  = 0x19              # 0001 1001 - Переход, если N == 1 (Negative)
-    JNN = 0x1A              # 0001 1010 - Переход, если N == 0 (Not Negative)
-    JL  = 0x1B              # 0001 1011 - Переход, если Меньше (N != V)
-    JGE = 0x1C              # 0001 1100 - Переход, если Больше или Равно (N == V)
-    JC  = 0x1D              # 0001 1101 - Переход, если C == 1
-    JNC = 0x1E              # 0001 1110 - Переход, если C == 0
-    JV  = 0x1F              # 0001 1111 - Переход, если V == 1
-    JNV = 0x20              # 0010 0000 - Переход, если V == 0
+    JMP = 0x12              # 0001 0010 - Безусловный переход
+    JZ  = 0x13              # 0001 0011 - Переход, если Z == 1 (Equal)
+    JNZ = 0x14              # 0001 0100 - Переход, если Z == 0 (Not Equal)
+    JL  = 0x15              # 0001 0101 - Переход, если Меньше (N != V)
+    JGE = 0x16              # 0001 0110 - Переход, если Больше или Равно (N == V)
 
     # Функция + Стек
 
-    CALL = 0x21             # 0010 0001 - CALL ADDR: вызов функции: next_pc -> LR; ADDR -> PC
-    RET  = 0x22             # 0010 0010 - Возврат из функции: LR -> PC
-    PUSH = 0x23             # 0010 0011 - PUSH R1: R1 -> Mem[SP], SP - 1 -> SP
-    POP  = 0x24             # 0010 0100 - POP R1: SP + 1 -> SP, MEM[SP] -> R1
+    CALL = 0x17             # 0001 0111 - CALL ADDR: вызов функции: next_pc -> Stack; ADDR -> PC
+    RET  = 0x18             # 0001 1000 - Возврат из функции: Stack -> PC
+    PUSH = 0x19             # 0001 1001 - PUSH R1: R1 -> Mem[SP], SP - 1 -> SP
+    POP  = 0x1A             # 0001 1010 - POP R1: SP + 1 -> SP, MEM[SP] -> R1
 
     # Порты + прерывания
 
-    IN   = 0x25             # 0010 0101 - IN R1, port_num
-    OUT  = 0x26             # 0010 0110 - OUT port_num, R1
-    EI   = 0x27             # 0010 0111 - Enable Interrupts (разрешить прерывания: IE = 1)
-    DI   = 0x28             # 0010 1000 - Disable Interrupts (запретить прерывания: IE = 0)
-    IRET = 0x29             # 0010 1001 - Возврат из прерывания + восстановление флагов: IRA -> PC
+    IN   = 0x1B             # 0001 1011 - IN R1, port_num
+    OUT  = 0x1C             # 0001 1100 - OUT port_num, R1
+    EI   = 0x1D             # 0001 1101 - Enable Interrupts (разрешить прерывания: IE = 1)
+    DI   = 0x1E             # 0001 1110 - Disable Interrupts (запретить прерывания: IE = 0)
+    IRET = 0x1F             # 0001 1111 - Возврат из прерывания: Stack -> PC, Stack -> PS
 
     # Прочее
 
-    HLT  = 0x2A             # 0010 1010 - Остановка процессора
+    HLT  = 0x20             # 0010 0000 - Остановка процессора
 
-# Машинная инструкция процессора
 
 class Instruction:
 
-    # Будет запускаться каждый раз, когда будет создаваться объект класса Instruction
-    
     def __init__(self, opcode: Opcode, args: list = None):
         self.opcode = opcode
-
-        # Если аргументов нет, то делаем просто пустой список
         self.args = args if args is not None else []
 
-    # Форматируем так, чтобы красиво отображалось
-    
     def __repr__(self):
         args_str = ", ".join(map(str, self.args))
         return f"{self.opcode.name} {args_str}".strip()
-
-    # Упаковывает команду в 32-битное машинное слово:
 
     def encode(self) -> int:
         op_code_num = int(self.opcode) & 0xFF
 
         rd = 0
         rs1 = 0
+        rs2 = 0
         imm = 0
 
-        # Парсим аргументы
-
+        reg_args = []
         for arg in self.args:
             if isinstance(arg, str) and arg.startswith("R"):
-                reg_num = int(arg.replace("R", ""))
-                if rd == 0:
-                    rd = reg_num
-                else:
-                    rs1 = reg_num
-
-            # Если это стек
-            
-            elif arg == "LR":
-                if rd == 0: rd = 13
-                else: rs1 = 13
-            elif arg == "SP":
-                if rd == 0: rd = 12
-                else: rs1 = 12
-
-            # Если аргумент это просто число
-            
+                reg_args.append(int(arg.replace("R", "")))
             elif isinstance(arg, int):
                 imm = arg & 0xFFFF
 
-        # Склеиваем в 32 битное слово
+        if len(reg_args) == 1:
+            rd = reg_args[0]
+        elif len(reg_args) == 2:
+            rd = reg_args[0]
+            rs1 = reg_args[1]
+        elif len(reg_args) >= 3:
+            rd = reg_args[0]
+            rs1 = reg_args[1]
+            rs2 = reg_args[2]
 
-        word = (op_code_num << 24) | (rd << 20) | (rs1 << 16) | imm
+        # Для 3-регистровых инструкций (ADD R1, R2, R0) сохраняем rs2 в биты [15:12]
+
+        if len(reg_args) >= 3:
+            word = (op_code_num << 24) | (rd << 20) | (rs1 << 16) | (rs2 << 12)
+        else:
+            word = (op_code_num << 24) | (rd << 20) | (rs1 << 16) | imm
 
         return word
