@@ -28,6 +28,7 @@ def run_simulation(binary_file: str, schedule: list, max_ticks: int = 2000):
 
     header = (
         f"| {'TICK':^6} "
+        f"| {'STEP':<9} "
         f"| {'PC':^4} "
         f"| {'HEX CODE':^8} "
         f"| {'INSTRUCTION':<22} "
@@ -35,7 +36,8 @@ def run_simulation(binary_file: str, schedule: list, max_ticks: int = 2000):
         f"| {'R2':^6} "
         f"| {'SP':^6} "
         f"| {'NZVC':^6} "
-        f"| {'CACHE':^9} |"
+        f"| {'CACHE':^9} "
+        f"| {'INT':^4} |"
     )
 
     separator = "-" * len(header)
@@ -47,8 +49,8 @@ def run_simulation(binary_file: str, schedule: list, max_ticks: int = 2000):
     # Главный цикл симуляции
     try:
         while not cu.is_halted and cu.current_tick <= max_ticks:
+            cu.tick()
             logging.debug("%s", cu)
-            cu.step()
     except EOFError:
         logging.warning("Ошибка: буфер ввода пуст, но программа запрашивает IN")
 

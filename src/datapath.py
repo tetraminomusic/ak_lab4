@@ -1,5 +1,33 @@
 from isa import Opcode
 
+STACK_LIMIT = 3100
+
+
+def to_signed(value: int) -> int:
+    value &= 0xFFFF_FFFF
+    return value - (1 << 32) if value & (1 << 31) else value
+
+
+
+def signed_div(src1: int, src2: int) -> int:
+    if to_signed(src2) == 0:
+        return 0
+
+    left = to_signed(src1)
+    right = to_signed(src2)
+
+    quotient = abs(left) // abs(right)
+    return -quotient if (left < 0) != (right < 0) else quotient
+
+
+
+def signed_mod(src1: int, src2: int) -> int:
+    if to_signed(src2) == 0:
+        return 0
+
+    return to_signed(src1) - to_signed(src2) * signed_div(src1, src2)
+
+
 # Класс, отвечающий за физические компоненты процессора - память, регистровый файл, АЛУ, Флаги и Порты ввода-вывода
 
 
@@ -21,9 +49,12 @@ class DataPath:
         self.cr = 0  # Регистр команд (CR / IR)
         self.status_register = 0  # Регистр состояния процессора (PS)
 
-        self.port_0_in: list[int] = []  # Буфер входных символов
+        self.in_reg = 0
+        self.out_reg = 0
         self.port_1_out: list[int] = []  # Буфер вывода на экран
+
         # Сигнал о запросе прерывания от ВУ
+        self.dev_signal = 0
 
         self.flag_w = 1  # Процессор находится в непрерывном режиме
         self.flag_p = 1  # Процессор работает
@@ -92,10 +123,6 @@ class DataPath:
     def irq(self) -> int:
         return 1 if (self.dev_signal and self.flag_ie) else 0
 
-    @property
-    def dev_signal(self) -> int:
-        return 1 if len(self.port_0_in) > 0 else 0
-
     @property  # W (1 - непрерывный режим, 0 - потактовый режим)
     def flag_w(self) -> int:
         return (self.status_register >> 7) & 1
@@ -157,9 +184,9 @@ class DataPath:
         elif op == Opcode.MUL:
             res = src1 * src2
         elif op == Opcode.DIV:
-            res = src1 // src2 if src2 != 0 else 0
+            res = signed_div(src1, src2)
         elif op == Opcode.MOD:
-            res = src1 % src2 if src2 != 0 else 0
+            res = signed_mod(src1, src2)
         elif op == Opcode.INC:
             res = src1 + 1
         elif op == Opcode.DEC:

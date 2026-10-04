@@ -142,7 +142,7 @@ def test_functions_and_recursion_execution(tmp_path):
     )
 
     translator.compile_file(str(source_file), str(bin_file))
-    output, _ = run_simulation(str(bin_file), schedule=[], max_ticks=1000)
+    output, _ = run_simulation(str(bin_file), schedule=[], max_ticks=2000)
     assert output == "B"
 
 
@@ -197,7 +197,10 @@ def test_input_buffer_empty():
 
     # 0x1B100000 = IN R1, 0
     dp.memory[0] = 0x1B100000
-    cu.step()
+
+    while cu.instruction_counter == 0 and not cu.is_halted:
+        cu.tick()
+
     assert dp.read_reg("R1") == 0
 
 
