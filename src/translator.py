@@ -7,7 +7,11 @@ from parser import StringLiteral, parse, tokenize
 
 current_reg = 1
 label_counter = 0
-data_address_counter = 1000
+
+DATA_SEGMENT_START = 1000
+STACK_LIMIT = 3100
+
+data_address_counter = DATA_SEGMENT_START
 
 available_ports = [0, 1]
 
@@ -40,10 +44,6 @@ BINARY_OPS = {
     "lsr",
     "<<",
     ">>",
-    "asl",
-    "asr",
-    "rol",
-    "ror",
 }
 
 RESERVED_KEYWORDS = {
@@ -155,6 +155,52 @@ def free_reg():
     current_reg -= 1
 
 
+
+def load_constant(reg: str, value: int):
+    value &= 0xFFFF_FFFF
+
+    if value <= 0xFFFF:
+        program.append(Instruction(Opcode.LDI, [reg, value]))
+        return
+
+    tmp_reg = allocate_reg()
+
+    program.append(Instruction(Opcode.LDI, [reg, (value >> 16) & 0xFFFF]))
+    program.append(Instruction(Opcode.LDI, [tmp_reg, 16]))
+    program.append(Instruction(Opcode.LSL, [reg, reg, tmp_reg]))
+    program.append(Instruction(Opcode.LDI, [tmp_reg, value & 0xFFFF]))
+    program.append(Instruction(Opcode.OR, [reg, reg, tmp_reg]))
+
+    free_reg()
+
+
+
+def compile_value(node) -> str:
+    reg = compile_expr(node)
+
+    if reg is None:
+        raise SyntaxError(f"Выражение не возвращает значения: {node}")
+
+    return reg
+
+
+
+def collect_used_regs(instructions: list) -> list[int]:
+    used = set()
+
+    for item in instructions:
+        if not isinstance(item, Instruction):
+            continue
+
+        for arg in item.args:
+            if isinstance(arg, str) and arg.startswith("R") and arg[1:].isdigit():
+                idx = int(arg[1:])
+                if idx != 0:
+                    used.add(idx)
+
+    return sorted(used)
+
+
 # Компоновщик, нужный для замены символических меток на числовые адреса памяти
 
 
@@ -222,42 +268,42 @@ def compile_condition(condition_node: list) -> Opcode:
         right = condition_node[2]
 
         if op == ">":
-            reg_right = compile_expr(right)
-            reg_left = compile_expr(left)
+            reg_right = compile_value(right)
+            reg_left = compile_value(left)
             program.append(Instruction(Opcode.CMP, [reg_right, reg_left]))
             free_reg()
             free_reg()
             return Opcode.JGE
 
         elif op == "<=":
-            reg_right = compile_expr(right)
-            reg_left = compile_expr(left)
+            reg_right = compile_value(right)
+            reg_left = compile_value(left)
             program.append(Instruction(Opcode.CMP, [reg_right, reg_left]))
             free_reg()
             free_reg()
             return Opcode.JL
 
-        reg_left = compile_expr(left)
-        reg_right = compile_expr(right)
+        reg_left = compile_value(left)
+        reg_right = compile_value(right)
         program.append(Instruction(Opcode.CMP, [reg_left, reg_right]))
         free_reg()
         free_reg()
         return INVERSE_JUMPS[op]
 
-    cond_reg = compile_expr(condition_node)
+    cond_reg = compile_value(condition_node)
     program.append(Instruction(Opcode.CMP, [cond_reg, "R0"]))
     free_reg()
     return Opcode.JZ
 
 
 def compile_expr(node) -> str | None:
-    global local_vars, current_reg, interrupt_handler
+    global local_vars, current_reg, interrupt_handler, program
 
     # Проверяем, может это простое число
 
     if isinstance(node, int):
         reg = allocate_reg()
-        program.append(Instruction(Opcode.LDI, [reg, node]))
+        load_constant(reg, node)
         return reg
 
     # Проверяем строковую переменную
@@ -316,8 +362,8 @@ def compile_expr(node) -> str | None:
             base_expr = node[1]
             idx_expr = node[2]
 
-            base_reg = compile_expr(base_expr)
-            idx_reg = compile_expr(idx_expr)
+            base_reg = compile_value(base_expr)
+            idx_reg = compile_value(idx_expr)
 
             program.append(Instruction(Opcode.ADD, [base_reg, base_reg, idx_reg]))
             free_reg()
@@ -337,9 +383,9 @@ def compile_expr(node) -> str | None:
             idx_expr = node[2]
             val_expr = node[3]
 
-            base_reg = compile_expr(base_expr)
-            idx_reg = compile_expr(idx_expr)
-            val_reg = compile_expr(val_expr)
+            base_reg = compile_value(base_expr)
+            idx_reg = compile_value(idx_expr)
+            val_reg = compile_value(val_expr)
 
             program.append(Instruction(Opcode.ADD, [base_reg, base_reg, idx_reg]))
             program.append(Instruction(Opcode.ST, [val_reg, base_reg, 0]))
@@ -377,8 +423,8 @@ def compile_expr(node) -> str | None:
             program.append(Instruction(Opcode.JMP, [label_skip]))
             program.append(f"{handler_name}:")
 
-            for i in range(1, 11):
-                program.append(Instruction(Opcode.PUSH, [f"R{i}"]))
+            outer_program = program
+            program = []
 
             old_reg = current_reg
             current_reg = 1
@@ -387,7 +433,17 @@ def compile_expr(node) -> str | None:
                 free_reg()
             current_reg = old_reg
 
-            for i in range(10, 0, -1):
+            body = program
+            program = outer_program
+
+            used_regs = collect_used_regs(body)
+
+            for i in used_regs:
+                program.append(Instruction(Opcode.PUSH, [f"R{i}"]))
+
+            program.extend(body)
+
+            for i in reversed(used_regs):
                 program.append(Instruction(Opcode.POP, [f"R{i}"]))
 
             program.append(Instruction(Opcode.IRET))
@@ -448,7 +504,7 @@ def compile_expr(node) -> str | None:
                 raise SyntaxError(
                     "Команда 'print' требует 1 аргумент: (print значение)"
                 )
-            val_reg = compile_expr(node[1])
+            val_reg = compile_value(node[1])
             program.append(Instruction(Opcode.OUT, [1, val_reg]))
             return val_reg
 
@@ -474,7 +530,7 @@ def compile_expr(node) -> str | None:
                 )
 
             addr = get_or_allocate_var(var_name)
-            val_reg = compile_expr(value_expr)
+            val_reg = compile_value(value_expr)
 
             addr_reg = allocate_reg()
             program.append(Instruction(Opcode.LDI, [addr_reg, addr]))
@@ -539,7 +595,7 @@ def compile_expr(node) -> str | None:
 
             arg_temp_regs = []
             for arg_expr in passed_args:
-                arg_temp_regs.append(compile_expr(arg_expr))
+                arg_temp_regs.append(compile_value(arg_expr))
 
             for i, temp_r in enumerate(arg_temp_regs):
                 target_r = f"R{i + 1}"
@@ -573,10 +629,9 @@ def compile_expr(node) -> str | None:
             if not isinstance(port_num, int) or port_num not in available_ports:
                 raise ValueError(f"Некорректный номер порта: {port_num}")
 
-            val_reg = compile_expr(val_expr)
+            val_reg = compile_value(val_expr)
             program.append(Instruction(Opcode.OUT, [port_num, val_reg]))
-            free_reg()
-            return None
+            return val_reg
 
         # Ввод из порта
 
@@ -595,17 +650,17 @@ def compile_expr(node) -> str | None:
         # Унарные операции
 
         if op == "not":
-            arg_reg = compile_expr(node[1])
+            arg_reg = compile_value(node[1])
             program.append(Instruction(Opcode.NOT, [arg_reg, arg_reg]))
             return arg_reg
 
         if op == "inc":
-            arg_reg = compile_expr(node[1])
+            arg_reg = compile_value(node[1])
             program.append(Instruction(Opcode.INC, [arg_reg]))
             return arg_reg
 
         if op == "dec":
-            arg_reg = compile_expr(node[1])
+            arg_reg = compile_value(node[1])
             program.append(Instruction(Opcode.DEC, [arg_reg]))
             return arg_reg
 
@@ -615,9 +670,9 @@ def compile_expr(node) -> str | None:
             if len(node) < 3:
                 raise SyntaxError(f"Операция '{op}' требует как минимум 2 операнда")
 
-            accum_reg = compile_expr(node[1])
+            accum_reg = compile_value(node[1])
             for next_expr in node[2:]:
-                next_reg = compile_expr(next_expr)
+                next_reg = compile_value(next_expr)
                 if op == "+":
                     program.append(
                         Instruction(Opcode.ADD, [accum_reg, accum_reg, next_reg])
@@ -641,8 +696,8 @@ def compile_expr(node) -> str | None:
             left = node[1]
             right = node[2]
 
-            left_reg = compile_expr(left)
-            right_reg = compile_expr(right)
+            left_reg = compile_value(left)
+            right_reg = compile_value(right)
 
             if op == "-":
                 program.append(Instruction(Opcode.SUB, [left_reg, left_reg, right_reg]))
@@ -656,9 +711,9 @@ def compile_expr(node) -> str | None:
                 program.append(Instruction(Opcode.OR, [left_reg, left_reg, right_reg]))
             elif op == "xor":
                 program.append(Instruction(Opcode.XOR, [left_reg, left_reg, right_reg]))
-            elif op in ("lsl", "<<", "asr", "rol"):
+            elif op in ("lsl", "<<"):
                 program.append(Instruction(Opcode.LSL, [left_reg, left_reg, right_reg]))
-            elif op in ("lsr", ">>", "asr", "ror"):
+            elif op in ("lsr", ">>"):
                 program.append(Instruction(Opcode.LSR, [left_reg, left_reg, right_reg]))
 
             free_reg()
@@ -691,7 +746,7 @@ def compile_file(source_file: str, target_file: str, listing_file: str | None = 
     local_vars = {}
     current_reg = 1
     label_counter = 0
-    data_address_counter = 1000
+    data_address_counter = DATA_SEGMENT_START
     interrupt_handler = None
 
     with open(source_file, "r", encoding="utf-8") as f:
@@ -705,6 +760,18 @@ def compile_file(source_file: str, target_file: str, listing_file: str | None = 
     compile_expr(ast)
 
     machine_code = link_program(program)
+
+    if len(machine_code) > DATA_SEGMENT_START:
+        raise RuntimeError(
+            f"Код занял {len(machine_code)} слов и залезает в сегмент данных "
+            f"(адрес {DATA_SEGMENT_START})"
+        )
+
+    if data_address_counter > STACK_LIMIT:
+        raise RuntimeError(
+            f"Данные заняли память до адреса {data_address_counter} "
+            f"и залезают в область стека (адрес {STACK_LIMIT})"
+        )
 
     memory_dump = [0] * 4096
 

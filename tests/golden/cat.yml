@@ -4,6 +4,8 @@ in_source: |-
       (definterrupt isr ()
           (out 1 (in 0)))
 
+      (ei)
+
       ; Фоновый цикл ожидания
       (defun wait (n)
           (if (> n 0)

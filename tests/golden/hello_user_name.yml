@@ -36,6 +36,8 @@ in_source: |-
               (out 1 33)  ; !
           ))
 
+      (ei)
+
       (defun wait (n)
           (if (> n 0)
               (wait (- n 1))
