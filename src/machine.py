@@ -50,7 +50,7 @@ def run_simulation(binary_file: str, schedule: list, max_ticks: int = 2000):
     try:
         while not cu.is_halted and cu.current_tick <= max_ticks:
             cu.tick()
-            logging.debug("%s", cu)
+            logging.debug("%s", str(cu))
     except EOFError:
         logging.warning("Ошибка: буфер ввода пуст, но программа запрашивает IN")
 
