@@ -1,0 +1,16 @@
+# Служебные файлы macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Кеши инструментов
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Результаты сборки транслятора
+*.bin
+*.lst
