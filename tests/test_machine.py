@@ -245,3 +245,19 @@ def test_tail_recursion_does_not_grow_stack(tmp_path):
     translator.compile_file(str(source_file), str(bin_file))
     output, _ = run_simulation(str(bin_file), schedule=[], max_ticks=500000)
     assert output == "A"
+
+
+def test_cache_can_be_disabled():
+    """С выключенным кешем любое обращение в память стоит 10 тактов."""
+    memory = [0] * 4096
+    memory[100] = 42
+    cache = Cache(memory, num_lines=8, enabled=False)
+
+    val1, ticks1 = cache.read(100)
+    assert val1 == 42
+    assert ticks1 == 10
+
+    val2, ticks2 = cache.read(100)
+    assert val2 == 42
+    assert ticks2 == 10
+    assert cache.hits == 0

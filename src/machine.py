@@ -9,7 +9,12 @@ from datapath import DataPath
 # Загружает бинарник с диска и запускает процессор
 
 
-def run_simulation(binary_file: str, schedule: list, max_ticks: int = 2000):
+def run_simulation(
+    binary_file: str,
+    schedule: list,
+    max_ticks: int = 2000,
+    cache_enabled: bool = True,
+):
     dp = DataPath(4096)
 
     # Читаем 32-битные слова из файла обратно в память
@@ -22,7 +27,7 @@ def run_simulation(binary_file: str, schedule: list, max_ticks: int = 2000):
             word = struct.unpack(">I", chunk)[0]
             dp.memory[i] = word
 
-    cu = ControlUnit(dp, schedule=schedule)
+    cu = ControlUnit(dp, schedule=schedule, cache_enabled=cache_enabled)
 
     logging.info("\nЗапуск процесса by tetramino")
 
@@ -118,6 +123,12 @@ def main():
         help="Лимит тактов симуляции (по умолчанию 5000)",
     )
 
+    parser.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Отключить кеш: каждое обращение в память стоит 10 тактов",
+    )
+
     args = parser.parse_args()
 
     # Оставляем чистый формат логов
@@ -146,7 +157,12 @@ def main():
     # Запуск симуляции
 
     try:
-        run_simulation(args.code, schedule, max_ticks=args.ticks)
+        run_simulation(
+            args.code,
+            schedule,
+            max_ticks=args.ticks,
+            cache_enabled=not args.no_cache,
+        )
     except Exception as e:
         print(f"Произошла ошибка во время симуляции: {e}", file=sys.stderr)
         sys.exit(1)

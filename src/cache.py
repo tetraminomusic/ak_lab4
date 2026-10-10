@@ -13,12 +13,13 @@ class CacheLine:
 
 
 class Cache:
-    def __init__(self, memory: list, num_lines: int = 8):
+    def __init__(self, memory: list, num_lines: int = 8, enabled: bool = True):
 
         # Ссылаемся на ОЗУ
 
         self.memory = memory
         self.num_lines = num_lines
+        self.enabled = enabled
 
         self.lines = [CacheLine() for _ in range(num_lines)]
 
@@ -31,6 +32,11 @@ class Cache:
     # Функция чтения, возвращает [прочитанное значение, затраченные такты]
 
     def read(self, addr: int) -> tuple[int, int]:
+        if not self.enabled:
+            self.misses += 1
+            self.last_status = "OFF (10) "
+            return self.memory[addr], 10
+
         line_idx = addr % self.num_lines
         line = self.lines[line_idx]
 
@@ -57,6 +63,11 @@ class Cache:
     # сквозная запись. Возвращает затраченное время на запись
 
     def write(self, addr: int, val: int) -> int:
+        if not self.enabled:
+            self.memory[addr] = val
+            self.last_status = "OFF (10) "
+            return 10
+
         line_idx = addr % self.num_lines
         line = self.lines[line_idx]
 

@@ -37,9 +37,14 @@ BRANCH_OPS = (Opcode.JMP, Opcode.JZ, Opcode.JNZ, Opcode.JL, Opcode.JGE)
 
 
 class ControlUnit:
-    def __init__(self, data_path: DataPath, schedule: list | None = None):
+    def __init__(
+        self,
+        data_path: DataPath,
+        schedule: list | None = None,
+        cache_enabled: bool = True,
+    ):
         self.dp = data_path
-        self.cache = Cache(self.dp.memory)
+        self.cache = Cache(self.dp.memory, enabled=cache_enabled)
         self.current_tick = 0  # Счётчик прошедших тактов
         self.instruction_counter = 0  # Сколько инструкций выполнили
         self.is_halted = False  # Флаг остановки для команды HLT
