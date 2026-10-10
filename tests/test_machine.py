@@ -222,3 +222,26 @@ def test_timeout_execution(tmp_path):
     translator.compile_file(str(source_file), str(bin_file))
     _, ticks = run_simulation(str(bin_file), schedule=[], max_ticks=150)
     assert ticks >= 150
+
+
+def test_tail_recursion_does_not_grow_stack(tmp_path):
+    """Хвостовая рекурсия на 2000 витков не должна переполнять стек."""
+    source_file = tmp_path / "tail.lisp"
+    bin_file = tmp_path / "tail.bin"
+
+    source_file.write_text(
+        """
+    (progn
+        (defun deep (n val)
+            (if (<= n 0)
+                val
+                (deep (- n 1) val)))
+        (out 1 (deep 2000 65))
+    )
+    """,
+        encoding="utf-8",
+    )
+
+    translator.compile_file(str(source_file), str(bin_file))
+    output, _ = run_simulation(str(bin_file), schedule=[], max_ticks=500000)
+    assert output == "A"

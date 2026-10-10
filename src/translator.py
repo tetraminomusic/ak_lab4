@@ -296,6 +296,50 @@ def compile_condition(condition_node: list) -> Opcode:
     return Opcode.JZ
 
 
+def compile_tail_body(node, func_name: str, epilogue_label: str, result_reg: str):
+    if isinstance(node, list) and len(node) > 0:
+
+        if node[0] == "progn" and len(node) > 1:
+            for expr in node[1:-1]:
+                if compile_expr(expr) is not None:
+                    free_reg()
+            compile_tail_body(node[-1], func_name, epilogue_label, result_reg)
+            return
+
+        if node[0] == "if" and len(node) == 4:
+            label_else = make_label("else")
+            jump_to_else_op = compile_condition(node[1])
+            program.append(Instruction(jump_to_else_op, [label_else]))
+
+            compile_tail_body(node[2], func_name, epilogue_label, result_reg)
+
+            program.append(f"{label_else}:")
+            compile_tail_body(node[3], func_name, epilogue_label, result_reg)
+            return
+
+        if node[0] == func_name and len(node) - 1 == functions.get(func_name, -1):
+            temp_regs = [compile_value(arg) for arg in node[1:]]
+
+            for i, temp_reg in enumerate(temp_regs):
+                target_reg = f"R{i + 1}"
+                if temp_reg != target_reg:
+                    program.append(Instruction(Opcode.ADD, [target_reg, temp_reg, "R0"]))
+
+            for _ in temp_regs:
+                free_reg()
+
+            program.append(Instruction(Opcode.JMP, [func_name]))
+            return
+
+    value_reg = compile_expr(node)
+
+    if value_reg is not None:
+        program.append(Instruction(Opcode.ADD, [result_reg, value_reg, "R0"]))
+        free_reg()
+
+    program.append(Instruction(Opcode.JMP, [epilogue_label]))
+
+
 def compile_expr(node) -> str | None:
     global local_vars, current_reg, interrupt_handler, program
 
@@ -473,6 +517,7 @@ def compile_expr(node) -> str | None:
                 )
 
             label_after_func = make_label(f"skip_{func_name}")
+            label_epilogue = make_label(f"ret_{func_name}")
             program.append(Instruction(Opcode.JMP, [label_after_func]))
             program.append(f"{func_name}:")
 
@@ -482,15 +527,15 @@ def compile_expr(node) -> str | None:
             local_vars = {arg_name: f"R{i + 1}" for i, arg_name in enumerate(arg_list)}
             current_reg = len(arg_list) + 1
 
-            result_reg = compile_expr(body_expr)
+            result_reg = allocate_reg()
+            compile_tail_body(body_expr, func_name, label_epilogue, result_reg)
 
-            if result_reg != "R1" and result_reg is not None:
+            program.append(f"{label_epilogue}:")
+
+            if result_reg != "R1":
                 program.append(Instruction(Opcode.ADD, ["R1", result_reg, "R0"]))
 
             program.append(Instruction(Opcode.RET))
-
-            if result_reg is not None:
-                free_reg()
 
             local_vars = old_locals
             current_reg = old_reg

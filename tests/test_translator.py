@@ -239,3 +239,43 @@ def test_aref_and_aset_syntax_errors():
     with pytest.raises(SyntaxError, match="Команда 'aset' требует 3 аргумента"):
         parse_tree = parse(tokenize("(aset s 1)"))
         translator.compile_expr(parse_tree)
+
+
+def test_tail_recursion_compiles_to_jump():
+    """Хвостовой самовызов должен превратиться в JMP, а не в CALL."""
+    code = """
+    (progn
+        (defun count (n)
+            (if (= n 0)
+                0
+                (count (- n 1))))
+        (count 5)
+    )
+    """
+    ast = parse(tokenize(code))
+    translator.collect_function_signatures(ast)
+    translator.compile_expr(ast)
+    clean_code = translator.link_program(translator.program)
+
+    calls = [instr for instr in clean_code if instr.opcode == Opcode.CALL]
+    assert len(calls) == 1, "Остаться должен только вызов из основной программы"
+
+
+def test_non_tail_recursion_keeps_call():
+    """Вызов не в хвостовой позиции оптимизировать нельзя, он остаётся CALL."""
+    code = """
+    (progn
+        (defun fact (n)
+            (if (<= n 1)
+                1
+                (* n (fact (- n 1)))))
+        (fact 3)
+    )
+    """
+    ast = parse(tokenize(code))
+    translator.collect_function_signatures(ast)
+    translator.compile_expr(ast)
+    clean_code = translator.link_program(translator.program)
+
+    calls = [instr for instr in clean_code if instr.opcode == Opcode.CALL]
+    assert len(calls) == 2, "Рекурсивный вызов внутри (* n ...) должен остаться вызовом"
