@@ -3,31 +3,44 @@
 
 
 class CacheLine:
-    def __init__(self):
+    def __init__(self, block_size: int = 4):
         self.valid = False  # Флаг - есть ли в строке реальные и актуальные данные
-        self.tag = None  # Адрес ячейки в оперативной памяти
-        self.data = 0  # 32-битное значение из этой ячейки
+        self.tag: int | None = None  # Номер блока в оперативной памяти
+        self.data = [0] * block_size  # Блок 32-битных значений из этого блока
 
 
 # Сам великий и неповторимый кеш
 
 
 class Cache:
-    def __init__(self, memory: list, num_lines: int = 8, enabled: bool = True):
+    def __init__(
+        self,
+        memory: list,
+        num_lines: int = 8,
+        enabled: bool = True,
+        block_size: int = 4,
+    ):
 
         # Ссылаемся на ОЗУ
 
         self.memory = memory
         self.num_lines = num_lines
         self.enabled = enabled
+        self.block_size = block_size
 
-        self.lines = [CacheLine() for _ in range(num_lines)]
+        self.lines = [CacheLine(block_size) for _ in range(num_lines)]
 
         # стата для логирования
 
         self.hits = 0
         self.misses = 0
         self.last_status = "NONE"
+
+    # Блок тянется из памяти одной пачкой: первое слово стоит полную
+    # задержку в 10 тактов, остальные слова блока приходят следом по такту
+
+    def fill_cost(self) -> int:
+        return 10 + self.block_size - 1
 
     # Функция чтения, возвращает [прочитанное значение, затраченные такты]
 
@@ -37,28 +50,29 @@ class Cache:
             self.last_status = "OFF (10) "
             return self.memory[addr], 10
 
-        line_idx = addr % self.num_lines
-        line = self.lines[line_idx]
+        block, offset = divmod(addr, self.block_size)
+        line = self.lines[block % self.num_lines]
 
         # Попадание
 
-        if line.valid and line.tag == addr:
+        if line.valid and line.tag == block:
             self.hits += 1
             self.last_status = "HIT (1)"
-            return line.data, 1
+            return line.data[offset], 1
 
         # Промах
 
         self.misses += 1
-        self.last_status = "MISS(10)"
+        wait_ticks = self.fill_cost()
+        self.last_status = f"MISS({wait_ticks})"
 
-        data_from_ram = self.memory[addr]
+        base_addr = block * self.block_size
 
         line.valid = True
-        line.tag = addr
-        line.data = data_from_ram
+        line.tag = block
+        line.data = self.memory[base_addr : base_addr + self.block_size]
 
-        return data_from_ram, 10
+        return line.data[offset], wait_ticks
 
     # сквозная запись. Возвращает затраченное время на запись
 
@@ -68,8 +82,8 @@ class Cache:
             self.last_status = "OFF (10) "
             return 10
 
-        line_idx = addr % self.num_lines
-        line = self.lines[line_idx]
+        block, offset = divmod(addr, self.block_size)
+        line = self.lines[block % self.num_lines]
 
         # Пишем в ОЗУ
 
@@ -77,8 +91,8 @@ class Cache:
 
         # Если в кеше лежал адрес, который мы хотели записать
 
-        if line.valid and line.tag == addr:
-            line.data = val
+        if line.valid and line.tag == block:
+            line.data[offset] = val
 
         self.last_status = "WRITE(10)"
         return 10

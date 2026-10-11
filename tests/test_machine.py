@@ -12,14 +12,14 @@ from machine import ControlUnit, DataPath, run_simulation
 
 
 def test_cache_hit_and_miss_latencies():
-    """Задержки: промах = 10 тактов, попадание = 1 такт."""
+    """Задержки: промах = 13 тактов на блок из 4 слов, попадание = 1 такт."""
     memory = [0] * 4096
     memory[100] = 42
-    cache = Cache(memory, num_lines=8)
+    cache = Cache(memory, num_lines=8, block_size=4)
 
     val1, ticks1 = cache.read(100)
     assert val1 == 42
-    assert ticks1 == 10
+    assert ticks1 == 13
     assert cache.misses == 1
     assert cache.hits == 0
 
@@ -30,10 +30,35 @@ def test_cache_hit_and_miss_latencies():
     assert cache.hits == 1
 
 
+def test_cache_block_gives_spatial_locality():
+    """Промах тянет весь блок, поэтому соседние адреса читаются уже из кеша."""
+    memory = [0] * 4096
+    for addr in range(100, 104):
+        memory[addr] = addr
+
+    cache = Cache(memory, num_lines=8, block_size=4)
+
+    # Адреса 100..103 лежат в одном блоке: платим только за первое обращение
+    _, ticks = cache.read(100)
+    assert ticks == 13
+
+    for addr in (101, 102, 103):
+        val, ticks = cache.read(addr)
+        assert val == addr
+        assert ticks == 1
+
+    assert cache.misses == 1
+    assert cache.hits == 3
+
+    # Адрес 104 уже в следующем блоке, за него платим снова
+    _, ticks = cache.read(104)
+    assert ticks == 13
+
+
 def test_cache_write_through():
     """Сквозная запись: пишет и в память, и обновляет строку кэша."""
     memory = [0] * 4096
-    cache = Cache(memory, num_lines=8)
+    cache = Cache(memory, num_lines=8, block_size=4)
 
     cache.read(50)
     ticks = cache.write(50, 999)
@@ -46,20 +71,20 @@ def test_cache_write_through():
 
 
 def test_cache_eviction():
-    """Вытеснение кэша (Eviction): 8 строк, 9-я должна перезаписать 1-ю."""
+    """Вытеснение кэша (Eviction): 8 строк, 9-й блок должен перезаписать 1-й."""
     memory = [0] * 4096
-    cache = Cache(memory, num_lines=8)
+    cache = Cache(memory, num_lines=8, block_size=4)
 
-    # Заполняем все 8 строк кэша (адреса 0..7)
-    for i in range(8):
-        cache.read(i)
+    # Заполняем все 8 строк кэша блоками 0..7 (адреса 0, 4, 8, ... 28)
+    for block in range(8):
+        cache.read(block * 4)
 
-    # Читаем адрес 8 (8 % 8 = 0). Он вытесняет строку 0!
-    cache.read(8)
+    # Блок 8 ложится в строку 8 % 8 = 0 и вытесняет блок 0
+    cache.read(32)
 
-    # Снова читаем адрес 0 — должен быть промах (10 тактов), так как строка была вытеснена!
+    # Снова читаем адрес 0 — должен быть промах, строка была вытеснена
     _, ticks = cache.read(0)
-    assert ticks == 10
+    assert ticks == 13
 
 
 def test_alu_flags_nzcv():
