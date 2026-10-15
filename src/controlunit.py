@@ -101,6 +101,7 @@ class ControlUnit:
 
     def tick(self) -> None:  # Один такт тактового генератора
         if self.is_halted or not self.dp.flag_p:
+            self.is_halted = True
             return
 
         self.current_tick += 1
@@ -251,6 +252,8 @@ class ControlUnit:
             self.step = T3_MEMORY
 
         elif op == Opcode.RET:
+            if not self.check_stack_bottom():
+                return
             self.dp.sp += 1
             self.mem_addr = self.dp.sp
             self.mem_op = "read"
@@ -265,6 +268,8 @@ class ControlUnit:
             self.step = T3_MEMORY
 
         elif op == Opcode.POP:
+            if not self.check_stack_bottom():
+                return
             self.dp.sp += 1
             self.mem_addr = self.dp.sp
             self.mem_op = "read"
@@ -310,6 +315,18 @@ class ControlUnit:
         self.is_halted = True
         self.dp.flag_p = 0
 
+    def check_stack_bottom(self) -> bool:
+        if self.dp.sp < len(self.dp.memory) - 1:
+            return True
+
+        logging.error(
+            "[ТАКТ %d] Стек пуст, снимать с него нечего",
+            self.current_tick,
+        )
+        self.is_halted = True
+        self.dp.flag_p = 0
+        return False
+
     def branch_taken(self, op: Opcode) -> bool:
         if op == Opcode.JMP:
             return True
@@ -328,6 +345,8 @@ class ControlUnit:
         rd = f"R{self.rd_idx}"
 
         if op == Opcode.IRET:
+            if not self.check_stack_bottom():
+                return
             self.dp.sp += 1
             ps_value, wait_ps = self.cache.read(self.dp.sp)
             self.dp.sp += 1
