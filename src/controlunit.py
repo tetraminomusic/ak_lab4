@@ -40,9 +40,10 @@ class ControlUnit:
     def __init__(
         self,
         data_path: DataPath,
-        schedule: list | None = None,
+        schedule: list[tuple[int, str | int]] | None = None,
+        *,
         cache_enabled: bool = True,
-    ):
+    ) -> None:
         self.dp = data_path
         self.cache = Cache(self.dp.memory, enabled=cache_enabled)
         self.current_tick = 0  # Счётчик прошедших тактов
@@ -74,7 +75,7 @@ class ControlUnit:
 
         self.check_interrupt_schedule()
 
-    def check_interrupt_schedule(self):
+    def check_interrupt_schedule(self) -> None:
         while self.schedule and self.current_tick >= self.schedule[0][0]:
             _, char = self.schedule.pop(0)
             ascii_code = ord(char) if isinstance(char, str) else int(char)
@@ -98,7 +99,7 @@ class ControlUnit:
                 ascii_code,
             )
 
-    def tick(self):  # Один такт тактового генератора
+    def tick(self) -> None:  # Один такт тактового генератора
         if self.is_halted or not self.dp.flag_p:
             return
 
@@ -124,7 +125,7 @@ class ControlUnit:
         elif self.step == T4_INTERRUPT:
             self.interrupt_fetch()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Возвращает строку с текущими значениями для табличного вывода."""
         nzcv = f"{self.dp.status_register & 0xF:04b}"
 
@@ -154,7 +155,7 @@ class ControlUnit:
             f"| {'INT' if self.int_active else '-':^4} |"
         )
 
-    def instruction_fetch(self):
+    def instruction_fetch(self) -> None:
         raw_word, wait_ticks = self.cache.read(self.dp.pc)
 
         self.stall_ticks = wait_ticks - 1
@@ -162,11 +163,11 @@ class ControlUnit:
         self.next_pc = self.dp.pc + 1
         self.step = T1_DECODE
 
-    def instruction_decode(self):
+    def instruction_decode(self) -> None:
         word = self.dp.cr
         op_val = (word >> 24) & 0xFF
 
-        if op_val == 0 or op_val == Opcode.HLT:
+        if op_val in (0, Opcode.HLT):
             self.is_halted = True
             self.dp.flag_p = 0
             return
@@ -191,7 +192,7 @@ class ControlUnit:
         self.mem_op = ""
         self.step = T2_EXECUTE
 
-    def execute(self):
+    def execute(self) -> None:
         op = self.op
         rd = f"R{self.rd_idx}"
         rs1 = f"R{self.rs1_idx}"
@@ -214,7 +215,9 @@ class ControlUnit:
 
         elif op in ALU_BINARY_OPS:
             result = self.dp.execute_alu(
-                op, self.dp.read_reg(rs1), self.dp.read_reg(rs2)
+                op,
+                self.dp.read_reg(rs1),
+                self.dp.read_reg(rs2),
             )
             self.dp.write_reg(rd, result)
             self.finish_instruction()
@@ -295,7 +298,7 @@ class ControlUnit:
         else:
             self.finish_instruction()
 
-    def check_stack(self):
+    def check_stack(self) -> None:
         if self.dp.sp >= STACK_LIMIT:
             return
 
@@ -320,7 +323,7 @@ class ControlUnit:
             return self.dp.flag_n == self.dp.flag_v
         return False
 
-    def memory_access(self):
+    def memory_access(self) -> None:
         op = self.op
         rd = f"R{self.rd_idx}"
 
@@ -355,13 +358,13 @@ class ControlUnit:
 
         self.finish_instruction()
 
-    def finish_instruction(self):
+    def finish_instruction(self) -> None:
         self.instruction_counter += 1
         self.dp.pc = self.next_pc
 
         self.step = T4_INTERRUPT if self.dp.irq else T0_FETCH
 
-    def interrupt_fetch(self, vector_address: int = 1):
+    def interrupt_fetch(self, vector_address: int = 1) -> None:
         wait_pc = self.cache.write(self.dp.sp, self.dp.pc)
         self.dp.sp -= 1
         wait_ps = self.cache.write(self.dp.sp, self.dp.status_register)

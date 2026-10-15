@@ -4,17 +4,20 @@ import re
 
 
 class StringLiteral:
-    def __init__(self, text: str):
+    def __init__(self, text: str) -> None:
         self.text = text
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'StringLiteral("{self.text}")'
+
+
+Node = int | str | StringLiteral | list["Node"]
 
 
 # Функция, нужная для дробления списка на атомарные составляющие
 
 
-def tokenize(code: str) -> list:
+def tokenize(code: str) -> list[str]:
 
     # "[^"]*" - текст в кавычках
     # \( - левая скобка
@@ -31,7 +34,7 @@ def tokenize(code: str) -> list:
 # Функция, которая отвечает за приведение к нужным типам данных у атомов списка lisp
 
 
-def parse_atom(token: str):
+def parse_atom(token: str) -> Node:
 
     # String
     if token.startswith('"') and token.endswith('"'):
@@ -49,7 +52,7 @@ def parse_atom(token: str):
     return token
 
 
-def parse(tokens: list):
+def parse(tokens: list[str]) -> Node:
     if len(tokens) == 0:
         raise SyntaxError("Код оборвался раньше вреемни")
 
@@ -66,8 +69,7 @@ def parse(tokens: list):
         tokens.pop(0)
         return sub_tree
 
-    elif token == ")":
+    if token == ")":
         raise SyntaxError("Неожиданная закрывающая скобка ')'")
 
-    else:
-        return parse_atom(token)
+    return parse_atom(token)

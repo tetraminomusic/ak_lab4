@@ -8,7 +8,6 @@ def to_signed(value: int) -> int:
     return value - (1 << 32) if value & (1 << 31) else value
 
 
-
 def signed_div(src1: int, src2: int) -> int:
     if to_signed(src2) == 0:
         return 0
@@ -18,7 +17,6 @@ def signed_div(src1: int, src2: int) -> int:
 
     quotient = abs(left) // abs(right)
     return -quotient if (left < 0) != (right < 0) else quotient
-
 
 
 def signed_mod(src1: int, src2: int) -> int:
@@ -34,7 +32,7 @@ def signed_mod(src1: int, src2: int) -> int:
 class DataPath:
     # Что у нас будет инициализировать в общем-то
 
-    def __init__(self, memory_size: int = 4096):
+    def __init__(self, memory_size: int = 4096) -> None:
 
         # В начале расположим инструкции, опосля строки и переменные и с конца будет расти у нас великий и ужасный стек
 
@@ -67,7 +65,7 @@ class DataPath:
         return (self.status_register >> 0) & 1
 
     @flag_c.setter
-    def flag_c(self, val: int):
+    def flag_c(self, val: int) -> None:
         if val:
             self.status_register |= 1 << 0
         else:
@@ -78,7 +76,7 @@ class DataPath:
         return (self.status_register >> 1) & 1
 
     @flag_v.setter
-    def flag_v(self, val: int):
+    def flag_v(self, val: int) -> None:
         if val:
             self.status_register |= 1 << 1
         else:
@@ -89,7 +87,7 @@ class DataPath:
         return (self.status_register >> 2) & 1
 
     @flag_z.setter
-    def flag_z(self, val: int):
+    def flag_z(self, val: int) -> None:
         if val:
             self.status_register |= 1 << 2
         else:
@@ -100,7 +98,7 @@ class DataPath:
         return (self.status_register >> 3) & 1
 
     @flag_n.setter
-    def flag_n(self, val: int):
+    def flag_n(self, val: int) -> None:
         if val:
             self.status_register |= 1 << 3
         else:
@@ -113,7 +111,7 @@ class DataPath:
         return (self.status_register >> 5) & 1
 
     @flag_ie.setter
-    def flag_ie(self, val: int):
+    def flag_ie(self, val: int) -> None:
         if val:
             self.status_register |= 1 << 5
         else:
@@ -128,7 +126,7 @@ class DataPath:
         return (self.status_register >> 7) & 1
 
     @flag_w.setter
-    def flag_w(self, val: int):
+    def flag_w(self, val: int) -> None:
         if val:
             self.status_register |= 1 << 7
         else:
@@ -139,7 +137,7 @@ class DataPath:
         return (self.status_register >> 8) & 1
 
     @flag_p.setter
-    def flag_p(self, val: int):
+    def flag_p(self, val: int) -> None:
         if val:
             self.status_register |= 1 << 8
         else:
@@ -148,19 +146,23 @@ class DataPath:
     # Регистровые файлы (строго R0..R15)
 
     def get_reg_idx(
-        self, reg_name: str
+        self,
+        reg_name: str,
     ) -> int:  # Превращает имя регистра в индекс 0..15
         return int(reg_name.replace("R", ""))
 
     def read_reg(
-        self, reg_name: str
+        self,
+        reg_name: str,
     ) -> int:  # Возвращает 32-битное значение из регистра
         idx = self.get_reg_idx(reg_name)
         return self.registers[idx]
 
     def write_reg(
-        self, reg_name: str, value: int
-    ):  # Записывает 32-битное значение в регистр
+        self,
+        reg_name: str,
+        value: int,
+    ) -> None:  # Записывает 32-битное значение в регистр
         idx = self.get_reg_idx(reg_name)
 
         # В R0 нельзя ничего записать

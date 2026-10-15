@@ -3,7 +3,7 @@
 
 
 class CacheLine:
-    def __init__(self, block_size: int = 4):
+    def __init__(self, block_size: int = 4) -> None:
         self.valid = False  # Флаг - есть ли в строке реальные и актуальные данные
         self.tag: int | None = None  # Номер блока в оперативной памяти
         self.data = [0] * block_size  # Блок 32-битных значений из этого блока
@@ -15,11 +15,12 @@ class CacheLine:
 class Cache:
     def __init__(
         self,
-        memory: list,
+        memory: list[int],
         num_lines: int = 8,
-        enabled: bool = True,
         block_size: int = 4,
-    ):
+        *,
+        enabled: bool = True,
+    ) -> None:
 
         # Ссылаемся на ОЗУ
 

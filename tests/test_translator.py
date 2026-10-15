@@ -120,13 +120,13 @@ def test_variadic_addition():
 
 def test_binary_op_wrong_arity():
     code = "(- 1 2 3)"  # Заменили '+' на '-'
+    ast = parse(tokenize(code))
     with pytest.raises(SyntaxError, match="требует ровно 2 операнда"):
-        ast = parse(tokenize(code))
         translator.compile_expr(ast)
 
 
 def test_aref_read_pascal_string():
-    """aref должен генерировать ADD (смещение) и LD (чтение) из памяти."""
+    """Aref должен генерировать ADD (смещение) и LD (чтение) из памяти."""
     code = """
     (progn
         (setq s "ITMO")
@@ -144,7 +144,7 @@ def test_aref_read_pascal_string():
 
 
 def test_aset_modify_memory():
-    """aset должен вычислять адрес через ADD и записывать значение через ST."""
+    """Aset должен вычислять адрес через ADD и записывать значение через ST."""
     code = """
     (progn
         (setq s "ABC")
@@ -160,8 +160,8 @@ def test_aset_modify_memory():
 
 
 def test_definterrupt_and_vector_table_linking():
-    """
-    Проверка адресной карты векторов:
+    """Проверка адресной карты векторов.
+
     Адрес 0000 -> JMP _start
     Адрес 0001 -> JMP на обработчик прерывания
     Тело обработчика завершается командой IRET.
@@ -232,12 +232,12 @@ def test_inc_and_dec_opcodes():
 
 def test_aref_and_aset_syntax_errors():
     """Валидация количества аргументов у aref и aset."""
+    parse_tree = parse(tokenize("(aref s)"))
     with pytest.raises(SyntaxError, match="Команда 'aref' требует 2 аргумента"):
-        parse_tree = parse(tokenize("(aref s)"))
         translator.compile_expr(parse_tree)
 
+    parse_tree = parse(tokenize("(aset s 1)"))
     with pytest.raises(SyntaxError, match="Команда 'aset' требует 3 аргумента"):
-        parse_tree = parse(tokenize("(aset s 1)"))
         translator.compile_expr(parse_tree)
 
 

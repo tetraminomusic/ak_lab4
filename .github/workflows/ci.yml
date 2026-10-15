@@ -20,7 +20,10 @@ jobs:
           
       - name: Run linter (Ruff)
         run: ruff check src/ tests/
-        
+
+      - name: Check formatting (Ruff)
+        run: ruff format --check src/ tests/
+
       - name: Run type checker (Mypy)
         run: mypy src/
         

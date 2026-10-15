@@ -60,11 +60,11 @@ class Opcode(IntEnum):
 
 
 class Instruction:
-    def __init__(self, opcode: Opcode, args: list | None = None):
+    def __init__(self, opcode: Opcode, args: list[str | int] | None = None) -> None:
         self.opcode = opcode
         self.args = args if args is not None else []
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         args_str = ", ".join(map(str, self.args))
         return f"{self.opcode.name} {args_str}".strip()
 

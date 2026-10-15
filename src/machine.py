@@ -1,7 +1,9 @@
 import argparse
+import json
 import logging
 import struct
 import sys
+from pathlib import Path
 
 from controlunit import ControlUnit
 from datapath import DataPath
@@ -11,15 +13,16 @@ from datapath import DataPath
 
 def run_simulation(
     binary_file: str,
-    schedule: list,
+    schedule: list[tuple[int, str | int]],
     max_ticks: int = 2000,
+    *,
     cache_enabled: bool = True,
-):
+) -> tuple[str, int]:
     dp = DataPath(4096)
 
     # Читаем 32-битные слова из файла обратно в память
 
-    with open(binary_file, "rb") as f:
+    with Path(binary_file).open("rb") as f:
         for i in range(4096):
             chunk = f.read(4)
             if not chunk:
@@ -96,9 +99,9 @@ def run_simulation(
 # Точка входа в программу
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Симулятор RISC-процессора by tetramino"
+        description="Симулятор RISC-процессора by tetramino",
     )
 
     parser.add_argument(
@@ -139,17 +142,14 @@ def main():
     schedule = []
     if args.input:
         try:
-            with open(args.input, "r", encoding="utf-8") as f:
-                content = f.read().strip()
-                if content.startswith("["):
-                    import json
-
-                    schedule = json.loads(content)
-                else:
-                    current_tick = 50
-                    for char in content:
-                        schedule.append((current_tick, char))
-                        current_tick += 100
+            content = Path(args.input).read_text(encoding="utf-8").strip()
+            if content.startswith("["):
+                schedule = json.loads(content)
+            else:
+                current_tick = 50
+                for char in content:
+                    schedule.append((current_tick, char))
+                    current_tick += 100
         except FileNotFoundError:
             print(f"Ошибка: файл ввода '{args.input}' не найден", file=sys.stderr)
             sys.exit(1)
