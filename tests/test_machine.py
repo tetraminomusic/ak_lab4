@@ -12,14 +12,14 @@ from machine import ControlUnit, DataPath, run_simulation
 
 
 def test_cache_hit_and_miss_latencies():
-    """Задержки: промах = 13 тактов на блок из 4 слов, попадание = 1 такт."""
+    """Задержки: промах = 10 тактов на блок из 4 слов, попадание = 1 такт."""
     memory = [0] * 4096
     memory[25] = 42  # слово по байтовому адресу 100
     cache = Cache(memory, num_lines=8, block_size=4)
 
     val1, ticks1 = cache.read(100)
     assert val1 == 42
-    assert ticks1 == 13
+    assert ticks1 == 10
     assert cache.misses == 1
     assert cache.hits == 0
 
@@ -41,7 +41,7 @@ def test_cache_block_gives_spatial_locality():
     # Байтовые адреса 96..111 лежат в одном блоке из 16 байт:
     # платим только за первое обращение
     _, ticks = cache.read(96)
-    assert ticks == 13
+    assert ticks == 10
 
     for addr in (100, 104, 108):
         val, ticks = cache.read(addr)
@@ -53,7 +53,7 @@ def test_cache_block_gives_spatial_locality():
 
     # Адрес 112 уже в следующем блоке, за него платим снова
     _, ticks = cache.read(112)
-    assert ticks == 13
+    assert ticks == 10
 
 
 def test_cache_write_through():
@@ -85,7 +85,7 @@ def test_cache_eviction():
 
     # Снова читаем адрес 0 — должен быть промах, строка была вытеснена
     _, ticks = cache.read(0)
-    assert ticks == 13
+    assert ticks == 10
 
 
 def test_alu_flags_nzcv():
