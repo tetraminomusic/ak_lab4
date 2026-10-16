@@ -45,12 +45,12 @@ in_source: |-
   )
 
 in_schedule:
-  - [200, "A"]
-  - [800, "l"]
-  - [1400, "i"]
-  - [2000, "c"]
-  - [2600, "e"]
-  - [3200, "\n"]
+- [200, A]
+- [800, l]
+- [1400, i]
+- [2000, c]
+- [2600, e]
+- [3200, "\n"]
 
 in_ticks: 13000
 
@@ -188,7 +188,10 @@ out_code_hex: |-
   0520 - 0x1C100001 - OUT 1, R1
   0524 - 0x20000000 - HLT
 
-out_stdout: "What is your name?\nHello, Alice!"
+out_stdout: |-
+  What is your name?
+  Hello, Alice!
+
 
 out_log: |-
   Запуск процесса by tetramino

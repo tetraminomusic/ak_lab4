@@ -14,10 +14,10 @@ in_source: |-
   )
 
 in_schedule:
-  - [100, "P"]
-  - [200, "i"]
-  - [300, "n"]
-  - [400, "g"]
+- [100, P]
+- [200, i]
+- [300, n]
+- [400, g]
 
 in_ticks: 800
 
@@ -38,7 +38,7 @@ out_code_hex: |-
   0052 - 0x04110000 - ADD R1, R1, R0
   0056 - 0x20000000 - HLT
 
-out_stdout: "Ping"
+out_stdout: Ping
 
 out_log: |-
   Запуск процесса by tetramino

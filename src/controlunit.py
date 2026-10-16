@@ -157,6 +157,9 @@ class ControlUnit:
         )
 
     def instruction_fetch(self) -> None:
+        if not self.check_address(self.dp.pc):
+            return
+
         raw_word, wait_ticks = self.cache.read(self.dp.pc)
 
         self.stall_ticks = wait_ticks - 1
@@ -315,6 +318,19 @@ class ControlUnit:
         self.is_halted = True
         self.dp.flag_p = 0
 
+    def check_address(self, addr: int) -> bool:
+        if 0 <= addr < len(self.dp.memory) * WORD_SIZE:
+            return True
+
+        logging.error(
+            "[ТАКТ %d] Обращение по адресу %d за пределами памяти",
+            self.current_tick,
+            addr,
+        )
+        self.is_halted = True
+        self.dp.flag_p = 0
+        return False
+
     def check_stack_bottom(self) -> bool:
         if self.dp.sp < (len(self.dp.memory) - 1) * WORD_SIZE:
             return True
@@ -360,6 +376,9 @@ class ControlUnit:
 
             logging.info("[ТАКТ %d] Выход из прерывания (IRET)", self.current_tick)
             self.finish_instruction()
+            return
+
+        if not self.check_address(self.mem_addr):
             return
 
         if self.mem_op == "write":

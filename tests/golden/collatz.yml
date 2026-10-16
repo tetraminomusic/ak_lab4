@@ -40,9 +40,9 @@ in_source: |-
   )
 
 in_schedule:
-  - [200, "2"]
-  - [900, "7"]
-  - [1600, "\n"]
+- [200, '2']
+- [900, '7']
+- [1600, "\n"]
 
 in_ticks: 31000
 
@@ -181,7 +181,7 @@ out_code_hex: |-
   0524 - 0x04110000 - ADD R1, R1, R0
   0528 - 0x20000000 - HLT
 
-out_stdout: "111"
+out_stdout: '111'
 
 out_log: |-
   Запуск процесса by tetramino

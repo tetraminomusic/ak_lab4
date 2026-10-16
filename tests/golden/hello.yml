@@ -58,7 +58,7 @@ out_code_hex: |-
   0152 - 0x04110000 - ADD R1, R1, R0
   0156 - 0x20000000 - HLT
 
-out_stdout: "Hello, World!"
+out_stdout: Hello, World!
 
 out_log: |-
   Запуск процесса by tetramino

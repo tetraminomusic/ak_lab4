@@ -311,7 +311,7 @@ out_code_hex: |-
   0992 - 0x04110000 - ADD R1, R1, R0
   0996 - 0x20000000 - HLT
 
-out_stdout: "0000FFFFFFFFFFFF + 0000000000000001 = 0001000000000000"
+out_stdout: 0000FFFFFFFFFFFF + 0000000000000001 = 0001000000000000
 
 out_log: |-
   Запуск процесса by tetramino

@@ -15,11 +15,11 @@ in_source: |-
   )
 
 in_schedule:
-  - [100, "A"]
-  - [200, "B"]
-  - [500, "C"]
-  - [540, "D"]
-  - [900, "E"]
+- [100, A]
+- [200, B]
+- [500, C]
+- [540, D]
+- [900, E]
 
 in_ticks: 1100
 
@@ -40,7 +40,7 @@ out_code_hex: |-
   0052 - 0x04110000 - ADD R1, R1, R0
   0056 - 0x20000000 - HLT
 
-out_stdout: "ABDE"
+out_stdout: ABDE
 
 out_log: |-
   Запуск процесса by tetramino
