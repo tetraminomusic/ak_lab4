@@ -16,7 +16,7 @@ data_address_counter = DATA_SEGMENT_START
 
 available_ports = [0, 1]
 
-interrupt_handler = None
+interrupt_handler: str | None = None
 
 symbol_table: dict[str, int] = {}
 data_memory: dict[int, int] = {}
@@ -225,12 +225,12 @@ def link_program(raw_program: list[Instruction | str]) -> list[Instruction]:
 
     # Сначала разбираемся с таблицей векторов прерывания
 
-    vector_table = [
-        Instruction(Opcode.JMP, ["_start"]),
-        Instruction(Opcode.JMP, [interrupt_handler])
-        if interrupt_handler
-        else Instruction(Opcode.IRET),
-    ]
+    if interrupt_handler is None:
+        interrupt_vector = Instruction(Opcode.IRET)
+    else:
+        interrupt_vector = Instruction(Opcode.JMP, [interrupt_handler])
+
+    vector_table = [Instruction(Opcode.JMP, ["_start"]), interrupt_vector]
 
     full_program = [*vector_table, "_start:", *raw_program]
 
@@ -512,6 +512,11 @@ def compile_node(node: Node) -> str | None:
 
             handler_name = node[1]
             body_expr = node[3]
+
+            if not isinstance(handler_name, str):
+                raise TypeError(
+                    f"Имя обработчика должно быть строкой, получено: {handler_name}",
+                )
 
             interrupt_handler = handler_name
 
