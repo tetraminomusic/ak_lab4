@@ -54,11 +54,10 @@ class DataPath:
         # Сигнал о запросе прерывания от ВУ
         self.dev_signal = 0
 
-        self.flag_w = 1  # Процессор находится в непрерывном режиме
         self.flag_p = 1  # Процессор работает
         self.flag_ie = 0  # Прерывания по дефолту разрешены
 
-    # Регистр состояния со слайда лекции (NZCV, EI, W, P)
+    # Регистр состояния со слайда лекции (NZCV, EI, P)
 
     @property  # C
     def flag_c(self) -> int:
@@ -120,17 +119,6 @@ class DataPath:
     @property  # IRQ
     def irq(self) -> int:
         return 1 if (self.dev_signal and self.flag_ie) else 0
-
-    @property  # W (1 - непрерывный режим, 0 - потактовый режим)
-    def flag_w(self) -> int:
-        return (self.status_register >> 7) & 1
-
-    @flag_w.setter
-    def flag_w(self, val: int) -> None:
-        if val:
-            self.status_register |= 1 << 7
-        else:
-            self.status_register &= ~(1 << 7)
 
     @property  # P (Работа/Останов)
     def flag_p(self) -> int:
