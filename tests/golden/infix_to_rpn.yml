@@ -112,449 +112,449 @@ in_ticks: 18000
 out_code_hex: |-
   0000 - 0x12000008 - JMP 8
   0004 - 0x12000048 - JMP 72
-  0008 - 0x01100FA4 - LDI R1, 4004
-  0012 - 0x01200FA0 - LDI R2, 4000
-  0016 - 0x03120000 - ST R1, R2, 0
-  0020 - 0x01100FFC - LDI R1, 4092
-  0024 - 0x01200FF8 - LDI R2, 4088
-  0028 - 0x03120000 - ST R1, R2, 0
-  0032 - 0x01100000 - LDI R1, 0
-  0036 - 0x01201050 - LDI R2, 4176
-  0040 - 0x03120000 - ST R1, R2, 0
-  0044 - 0x01100000 - LDI R1, 0
-  0048 - 0x01201054 - LDI R2, 4180
-  0052 - 0x03120000 - ST R1, R2, 0
-  0056 - 0x01100000 - LDI R1, 0
-  0060 - 0x01201058 - LDI R2, 4184
-  0064 - 0x03120000 - ST R1, R2, 0
-  0068 - 0x12000110 - JMP 272
-  0072 - 0x19100000 - PUSH R1
-  0076 - 0x19200000 - PUSH R2
-  0080 - 0x19300000 - PUSH R3
-  0084 - 0x19400000 - PUSH R4
-  0088 - 0x1B100000 - IN R1, 0
-  0092 - 0x0120105C - LDI R2, 4188
-  0096 - 0x03120000 - ST R1, R2, 0
-  0100 - 0x0110105C - LDI R1, 4188
-  0104 - 0x02110000 - LD R1, R1, 0
-  0108 - 0x0120000A - LDI R2, 10
-  0112 - 0x0B120000 - CMP R1, R2
-  0116 - 0x140000B4 - JNZ 180
-  0120 - 0x01200FA0 - LDI R2, 4000
-  0124 - 0x02220000 - LD R2, R2, 0
-  0128 - 0x01300000 - LDI R3, 0
-  0132 - 0x01400002 - LDI R4, 2
-  0136 - 0x10334000 - LSL R3, R3, R4
-  0140 - 0x01401050 - LDI R4, 4176
-  0144 - 0x02440000 - LD R4, R4, 0
-  0148 - 0x04223000 - ADD R2, R2, R3
-  0152 - 0x03420000 - ST R4, R2, 0
-  0156 - 0x04240000 - ADD R2, R4, R0
-  0160 - 0x01200001 - LDI R2, 1
-  0164 - 0x01301058 - LDI R3, 4184
-  0168 - 0x03230000 - ST R2, R3, 0
-  0172 - 0x04120000 - ADD R1, R2, R0
-  0176 - 0x120000FC - JMP 252
-  0180 - 0x01201050 - LDI R2, 4176
-  0184 - 0x02220000 - LD R2, R2, 0
-  0188 - 0x01300001 - LDI R3, 1
-  0192 - 0x04223000 - ADD R2, R2, R3
-  0196 - 0x01301050 - LDI R3, 4176
-  0200 - 0x03230000 - ST R2, R3, 0
-  0204 - 0x01200FA0 - LDI R2, 4000
-  0208 - 0x02220000 - LD R2, R2, 0
-  0212 - 0x01301050 - LDI R3, 4176
-  0216 - 0x02330000 - LD R3, R3, 0
-  0220 - 0x01400002 - LDI R4, 2
-  0224 - 0x10334000 - LSL R3, R3, R4
-  0228 - 0x0140105C - LDI R4, 4188
-  0232 - 0x02440000 - LD R4, R4, 0
-  0236 - 0x04223000 - ADD R2, R2, R3
-  0240 - 0x03420000 - ST R4, R2, 0
-  0244 - 0x04240000 - ADD R2, R4, R0
-  0248 - 0x04120000 - ADD R1, R2, R0
-  0252 - 0x1A400000 - POP R4
-  0256 - 0x1A300000 - POP R3
-  0260 - 0x1A200000 - POP R2
-  0264 - 0x1A100000 - POP R1
-  0268 - 0x1F000000 - IRET
-  0272 - 0x1D000000 - EI
-  0276 - 0x12000140 - JMP 320
-  0280 - 0x01201058 - LDI R2, 4184
-  0284 - 0x02220000 - LD R2, R2, 0
-  0288 - 0x01300001 - LDI R3, 1
-  0292 - 0x0B230000 - CMP R2, R3
-  0296 - 0x14000138 - JNZ 312
-  0300 - 0x01200000 - LDI R2, 0
-  0304 - 0x04120000 - ADD R1, R2, R0
-  0308 - 0x1200013C - JMP 316
-  0312 - 0x12000118 - JMP 280
-  0316 - 0x18000000 - RET
-  0320 - 0x17000118 - CALL 280
-  0324 - 0x04110000 - ADD R1, R1, R0
-  0328 - 0x1E000000 - DI
-  0332 - 0x120001D4 - JMP 468
-  0336 - 0x04310000 - ADD R3, R1, R0
-  0340 - 0x0140002A - LDI R4, 42
-  0344 - 0x0B340000 - CMP R3, R4
-  0348 - 0x1400016C - JNZ 364
-  0352 - 0x01300002 - LDI R3, 2
-  0356 - 0x04230000 - ADD R2, R3, R0
-  0360 - 0x120001CC - JMP 460
-  0364 - 0x04310000 - ADD R3, R1, R0
-  0368 - 0x0140002F - LDI R4, 47
-  0372 - 0x0B340000 - CMP R3, R4
-  0376 - 0x14000188 - JNZ 392
-  0380 - 0x01300002 - LDI R3, 2
-  0384 - 0x04230000 - ADD R2, R3, R0
-  0388 - 0x120001CC - JMP 460
-  0392 - 0x04310000 - ADD R3, R1, R0
-  0396 - 0x0140002B - LDI R4, 43
-  0400 - 0x0B340000 - CMP R3, R4
-  0404 - 0x140001A4 - JNZ 420
-  0408 - 0x01300001 - LDI R3, 1
-  0412 - 0x04230000 - ADD R2, R3, R0
-  0416 - 0x120001CC - JMP 460
-  0420 - 0x04310000 - ADD R3, R1, R0
-  0424 - 0x0140002D - LDI R4, 45
-  0428 - 0x0B340000 - CMP R3, R4
-  0432 - 0x140001C0 - JNZ 448
-  0436 - 0x01300001 - LDI R3, 1
-  0440 - 0x04230000 - ADD R2, R3, R0
-  0444 - 0x120001CC - JMP 460
-  0448 - 0x01300000 - LDI R3, 0
-  0452 - 0x04230000 - ADD R2, R3, R0
-  0456 - 0x120001CC - JMP 460
-  0460 - 0x04120000 - ADD R1, R2, R0
-  0464 - 0x18000000 - RET
-  0468 - 0x12000228 - JMP 552
-  0472 - 0x01301054 - LDI R3, 4180
-  0476 - 0x02330000 - LD R3, R3, 0
-  0480 - 0x01400001 - LDI R4, 1
-  0484 - 0x04334000 - ADD R3, R3, R4
-  0488 - 0x01401054 - LDI R4, 4180
-  0492 - 0x03340000 - ST R3, R4, 0
-  0496 - 0x01300FF8 - LDI R3, 4088
-  0500 - 0x02330000 - LD R3, R3, 0
-  0504 - 0x01401054 - LDI R4, 4180
-  0508 - 0x02440000 - LD R4, R4, 0
-  0512 - 0x01500002 - LDI R5, 2
-  0516 - 0x10445000 - LSL R4, R4, R5
-  0520 - 0x04510000 - ADD R5, R1, R0
-  0524 - 0x04334000 - ADD R3, R3, R4
-  0528 - 0x03530000 - ST R5, R3, 0
-  0532 - 0x04350000 - ADD R3, R5, R0
-  0536 - 0x04230000 - ADD R2, R3, R0
-  0540 - 0x12000220 - JMP 544
-  0544 - 0x04120000 - ADD R1, R2, R0
-  0548 - 0x18000000 - RET
-  0552 - 0x12000328 - JMP 808
-  0556 - 0x01300000 - LDI R3, 0
-  0560 - 0x01401054 - LDI R4, 4180
-  0564 - 0x02440000 - LD R4, R4, 0
-  0568 - 0x0B340000 - CMP R3, R4
-  0572 - 0x1500024C - JL 588
-  0576 - 0x01300000 - LDI R3, 0
-  0580 - 0x04230000 - ADD R2, R3, R0
-  0584 - 0x12000320 - JMP 800
-  0588 - 0x01300FF8 - LDI R3, 4088
-  0592 - 0x02330000 - LD R3, R3, 0
-  0596 - 0x01401054 - LDI R4, 4180
-  0600 - 0x02440000 - LD R4, R4, 0
-  0604 - 0x01500002 - LDI R5, 2
-  0608 - 0x10445000 - LSL R4, R4, R5
-  0612 - 0x04334000 - ADD R3, R3, R4
-  0616 - 0x02330000 - LD R3, R3, 0
-  0620 - 0x01400028 - LDI R4, 40
-  0624 - 0x0B340000 - CMP R3, R4
-  0628 - 0x14000284 - JNZ 644
-  0632 - 0x01300000 - LDI R3, 0
-  0636 - 0x04230000 - ADD R2, R3, R0
-  0640 - 0x12000320 - JMP 800
-  0644 - 0x19100000 - PUSH R1
-  0648 - 0x19200000 - PUSH R2
-  0652 - 0x01300FF8 - LDI R3, 4088
-  0656 - 0x02330000 - LD R3, R3, 0
-  0660 - 0x01401054 - LDI R4, 4180
-  0664 - 0x02440000 - LD R4, R4, 0
-  0668 - 0x01500002 - LDI R5, 2
-  0672 - 0x10445000 - LSL R4, R4, R5
-  0676 - 0x04334000 - ADD R3, R3, R4
-  0680 - 0x02330000 - LD R3, R3, 0
-  0684 - 0x04130000 - ADD R1, R3, R0
-  0688 - 0x17000150 - CALL 336
-  0692 - 0x04310000 - ADD R3, R1, R0
-  0696 - 0x1A200000 - POP R2
-  0700 - 0x1A100000 - POP R1
-  0704 - 0x04410000 - ADD R4, R1, R0
-  0708 - 0x0B340000 - CMP R3, R4
-  0712 - 0x160002D8 - JGE 728
-  0716 - 0x01300000 - LDI R3, 0
-  0720 - 0x04230000 - ADD R2, R3, R0
-  0724 - 0x12000320 - JMP 800
-  0728 - 0x01300FF8 - LDI R3, 4088
-  0732 - 0x02330000 - LD R3, R3, 0
-  0736 - 0x01401054 - LDI R4, 4180
-  0740 - 0x02440000 - LD R4, R4, 0
-  0744 - 0x01500002 - LDI R5, 2
-  0748 - 0x10445000 - LSL R4, R4, R5
-  0752 - 0x04334000 - ADD R3, R3, R4
-  0756 - 0x02330000 - LD R3, R3, 0
-  0760 - 0x1C300001 - OUT 1, R3
-  0764 - 0x01301054 - LDI R3, 4180
-  0768 - 0x02330000 - LD R3, R3, 0
-  0772 - 0x01400001 - LDI R4, 1
-  0776 - 0x05334000 - SUB R3, R3, R4
-  0780 - 0x01401054 - LDI R4, 4180
-  0784 - 0x03340000 - ST R3, R4, 0
-  0788 - 0x04310000 - ADD R3, R1, R0
-  0792 - 0x04130000 - ADD R1, R3, R0
-  0796 - 0x1200022C - JMP 556
-  0800 - 0x04120000 - ADD R1, R2, R0
-  0804 - 0x18000000 - RET
-  0808 - 0x120003DC - JMP 988
-  0812 - 0x01200000 - LDI R2, 0
-  0816 - 0x01301054 - LDI R3, 4180
-  0820 - 0x02330000 - LD R3, R3, 0
-  0824 - 0x0B230000 - CMP R2, R3
-  0828 - 0x1500034C - JL 844
-  0832 - 0x01200000 - LDI R2, 0
-  0836 - 0x04120000 - ADD R1, R2, R0
-  0840 - 0x120003D8 - JMP 984
-  0844 - 0x01200FF8 - LDI R2, 4088
-  0848 - 0x02220000 - LD R2, R2, 0
-  0852 - 0x01301054 - LDI R3, 4180
-  0856 - 0x02330000 - LD R3, R3, 0
-  0860 - 0x01400002 - LDI R4, 2
-  0864 - 0x10334000 - LSL R3, R3, R4
-  0868 - 0x04223000 - ADD R2, R2, R3
-  0872 - 0x02220000 - LD R2, R2, 0
-  0876 - 0x01300028 - LDI R3, 40
-  0880 - 0x0B230000 - CMP R2, R3
-  0884 - 0x14000398 - JNZ 920
-  0888 - 0x01201054 - LDI R2, 4180
-  0892 - 0x02220000 - LD R2, R2, 0
-  0896 - 0x01300001 - LDI R3, 1
-  0900 - 0x05223000 - SUB R2, R2, R3
-  0904 - 0x01301054 - LDI R3, 4180
-  0908 - 0x03230000 - ST R2, R3, 0
-  0912 - 0x04120000 - ADD R1, R2, R0
-  0916 - 0x120003D8 - JMP 984
-  0920 - 0x01200FF8 - LDI R2, 4088
-  0924 - 0x02220000 - LD R2, R2, 0
-  0928 - 0x01301054 - LDI R3, 4180
-  0932 - 0x02330000 - LD R3, R3, 0
-  0936 - 0x01400002 - LDI R4, 2
-  0940 - 0x10334000 - LSL R3, R3, R4
-  0944 - 0x04223000 - ADD R2, R2, R3
-  0948 - 0x02220000 - LD R2, R2, 0
-  0952 - 0x1C200001 - OUT 1, R2
-  0956 - 0x01201054 - LDI R2, 4180
-  0960 - 0x02220000 - LD R2, R2, 0
-  0964 - 0x01300001 - LDI R3, 1
-  0968 - 0x05223000 - SUB R2, R2, R3
-  0972 - 0x01301054 - LDI R3, 4180
-  0976 - 0x03230000 - ST R2, R3, 0
-  0980 - 0x1200032C - JMP 812
-  0984 - 0x18000000 - RET
-  0988 - 0x12000444 - JMP 1092
-  0992 - 0x01200000 - LDI R2, 0
-  0996 - 0x01301054 - LDI R3, 4180
-  1000 - 0x02330000 - LD R3, R3, 0
-  1004 - 0x0B230000 - CMP R2, R3
-  1008 - 0x15000400 - JL 1024
-  1012 - 0x01200000 - LDI R2, 0
-  1016 - 0x04120000 - ADD R1, R2, R0
-  1020 - 0x12000440 - JMP 1088
-  1024 - 0x01200FF8 - LDI R2, 4088
-  1028 - 0x02220000 - LD R2, R2, 0
-  1032 - 0x01301054 - LDI R3, 4180
-  1036 - 0x02330000 - LD R3, R3, 0
-  1040 - 0x01400002 - LDI R4, 2
-  1044 - 0x10334000 - LSL R3, R3, R4
-  1048 - 0x04223000 - ADD R2, R2, R3
-  1052 - 0x02220000 - LD R2, R2, 0
-  1056 - 0x1C200001 - OUT 1, R2
-  1060 - 0x01201054 - LDI R2, 4180
-  1064 - 0x02220000 - LD R2, R2, 0
-  1068 - 0x01300001 - LDI R3, 1
-  1072 - 0x05223000 - SUB R2, R2, R3
-  1076 - 0x01301054 - LDI R3, 4180
-  1080 - 0x03230000 - ST R2, R3, 0
-  1084 - 0x120003E0 - JMP 992
-  1088 - 0x18000000 - RET
-  1092 - 0x12000654 - JMP 1620
-  1096 - 0x01300FA0 - LDI R3, 4000
-  1100 - 0x02330000 - LD R3, R3, 0
-  1104 - 0x01400000 - LDI R4, 0
-  1108 - 0x01500002 - LDI R5, 2
-  1112 - 0x10445000 - LSL R4, R4, R5
-  1116 - 0x04334000 - ADD R3, R3, R4
-  1120 - 0x02330000 - LD R3, R3, 0
-  1124 - 0x04410000 - ADD R4, R1, R0
-  1128 - 0x0B340000 - CMP R3, R4
-  1132 - 0x1600047C - JGE 1148
-  1136 - 0x01300000 - LDI R3, 0
-  1140 - 0x04230000 - ADD R2, R3, R0
-  1144 - 0x1200064C - JMP 1612
-  1148 - 0x01300FA0 - LDI R3, 4000
-  1152 - 0x02330000 - LD R3, R3, 0
-  1156 - 0x04410000 - ADD R4, R1, R0
-  1160 - 0x01500002 - LDI R5, 2
-  1164 - 0x10445000 - LSL R4, R4, R5
-  1168 - 0x04334000 - ADD R3, R3, R4
-  1172 - 0x02330000 - LD R3, R3, 0
-  1176 - 0x01401060 - LDI R4, 4192
-  1180 - 0x03340000 - ST R3, R4, 0
-  1184 - 0x01301060 - LDI R3, 4192
-  1188 - 0x02330000 - LD R3, R3, 0
-  1192 - 0x01400028 - LDI R4, 40
-  1196 - 0x0B340000 - CMP R3, R4
-  1200 - 0x140004E8 - JNZ 1256
-  1204 - 0x19100000 - PUSH R1
-  1208 - 0x19200000 - PUSH R2
-  1212 - 0x19300000 - PUSH R3
-  1216 - 0x01401060 - LDI R4, 4192
-  1220 - 0x02440000 - LD R4, R4, 0
-  1224 - 0x04140000 - ADD R1, R4, R0
-  1228 - 0x170001D8 - CALL 472
-  1232 - 0x04410000 - ADD R4, R1, R0
-  1236 - 0x1A300000 - POP R3
-  1240 - 0x1A200000 - POP R2
-  1244 - 0x1A100000 - POP R1
-  1248 - 0x04340000 - ADD R3, R4, R0
-  1252 - 0x12000638 - JMP 1592
-  1256 - 0x01401060 - LDI R4, 4192
-  1260 - 0x02440000 - LD R4, R4, 0
-  1264 - 0x01500029 - LDI R5, 41
-  1268 - 0x0B450000 - CMP R4, R5
-  1272 - 0x1400052C - JNZ 1324
-  1276 - 0x19100000 - PUSH R1
-  1280 - 0x19200000 - PUSH R2
-  1284 - 0x19300000 - PUSH R3
-  1288 - 0x19400000 - PUSH R4
-  1292 - 0x1700032C - CALL 812
-  1296 - 0x04510000 - ADD R5, R1, R0
-  1300 - 0x1A400000 - POP R4
-  1304 - 0x1A300000 - POP R3
-  1308 - 0x1A200000 - POP R2
-  1312 - 0x1A100000 - POP R1
-  1316 - 0x04450000 - ADD R4, R5, R0
-  1320 - 0x12000634 - JMP 1588
-  1324 - 0x19100000 - PUSH R1
-  1328 - 0x19200000 - PUSH R2
-  1332 - 0x19300000 - PUSH R3
-  1336 - 0x19400000 - PUSH R4
-  1340 - 0x01501060 - LDI R5, 4192
-  1344 - 0x02550000 - LD R5, R5, 0
-  1348 - 0x04150000 - ADD R1, R5, R0
-  1352 - 0x17000150 - CALL 336
-  1356 - 0x04510000 - ADD R5, R1, R0
-  1360 - 0x1A400000 - POP R4
-  1364 - 0x1A300000 - POP R3
-  1368 - 0x1A200000 - POP R2
-  1372 - 0x1A100000 - POP R1
-  1376 - 0x01600000 - LDI R6, 0
-  1380 - 0x0B560000 - CMP R5, R6
-  1384 - 0x14000580 - JNZ 1408
-  1388 - 0x01601060 - LDI R6, 4192
-  1392 - 0x02660000 - LD R6, R6, 0
-  1396 - 0x1C600001 - OUT 1, R6
-  1400 - 0x04560000 - ADD R5, R6, R0
-  1404 - 0x12000630 - JMP 1584
-  1408 - 0x19100000 - PUSH R1
-  1412 - 0x19200000 - PUSH R2
-  1416 - 0x19300000 - PUSH R3
-  1420 - 0x19400000 - PUSH R4
-  1424 - 0x19500000 - PUSH R5
-  1428 - 0x19100000 - PUSH R1
-  1432 - 0x19200000 - PUSH R2
-  1436 - 0x19300000 - PUSH R3
-  1440 - 0x19400000 - PUSH R4
-  1444 - 0x19500000 - PUSH R5
-  1448 - 0x01601060 - LDI R6, 4192
-  1452 - 0x02660000 - LD R6, R6, 0
-  1456 - 0x04160000 - ADD R1, R6, R0
-  1460 - 0x17000150 - CALL 336
-  1464 - 0x04610000 - ADD R6, R1, R0
-  1468 - 0x1A500000 - POP R5
-  1472 - 0x1A400000 - POP R4
-  1476 - 0x1A300000 - POP R3
-  1480 - 0x1A200000 - POP R2
-  1484 - 0x1A100000 - POP R1
-  1488 - 0x04160000 - ADD R1, R6, R0
-  1492 - 0x1700022C - CALL 556
-  1496 - 0x04610000 - ADD R6, R1, R0
-  1500 - 0x1A500000 - POP R5
-  1504 - 0x1A400000 - POP R4
-  1508 - 0x1A300000 - POP R3
-  1512 - 0x1A200000 - POP R2
-  1516 - 0x1A100000 - POP R1
-  1520 - 0x19100000 - PUSH R1
-  1524 - 0x19200000 - PUSH R2
-  1528 - 0x19300000 - PUSH R3
-  1532 - 0x19400000 - PUSH R4
-  1536 - 0x19500000 - PUSH R5
-  1540 - 0x01601060 - LDI R6, 4192
-  1544 - 0x02660000 - LD R6, R6, 0
-  1548 - 0x04160000 - ADD R1, R6, R0
-  1552 - 0x170001D8 - CALL 472
-  1556 - 0x04610000 - ADD R6, R1, R0
-  1560 - 0x1A500000 - POP R5
-  1564 - 0x1A400000 - POP R4
-  1568 - 0x1A300000 - POP R3
-  1572 - 0x1A200000 - POP R2
-  1576 - 0x1A100000 - POP R1
-  1580 - 0x04560000 - ADD R5, R6, R0
-  1584 - 0x04450000 - ADD R4, R5, R0
-  1588 - 0x04340000 - ADD R3, R4, R0
-  1592 - 0x04310000 - ADD R3, R1, R0
-  1596 - 0x01400001 - LDI R4, 1
-  1600 - 0x04334000 - ADD R3, R3, R4
-  1604 - 0x04130000 - ADD R1, R3, R0
-  1608 - 0x12000448 - JMP 1096
-  1612 - 0x04120000 - ADD R1, R2, R0
-  1616 - 0x18000000 - RET
-  1620 - 0x01100001 - LDI R1, 1
-  1624 - 0x17000448 - CALL 1096
-  1628 - 0x04110000 - ADD R1, R1, R0
-  1632 - 0x170003E0 - CALL 992
-  1636 - 0x04110000 - ADD R1, R1, R0
+  0008 - 0x01100FA4 - LDI R1, 4004  ; "                    "
+  0012 - 0x01200FA0 - LDI R2, 4000  ; (setq expr "                    ")
+  0016 - 0x03120000 - ST R1, R2, 0  ; (setq expr "                    ")
+  0020 - 0x01100FFC - LDI R1, 4092  ; "                    "
+  0024 - 0x01200FF8 - LDI R2, 4088  ; (setq ops "                    ")
+  0028 - 0x03120000 - ST R1, R2, 0  ; (setq ops "                    ")
+  0032 - 0x01100000 - LDI R1, 0  ; 0
+  0036 - 0x01201050 - LDI R2, 4176  ; (setq idx 0)
+  0040 - 0x03120000 - ST R1, R2, 0  ; (setq idx 0)
+  0044 - 0x01100000 - LDI R1, 0  ; 0
+  0048 - 0x01201054 - LDI R2, 4180  ; (setq top 0)
+  0052 - 0x03120000 - ST R1, R2, 0  ; (setq top 0)
+  0056 - 0x01100000 - LDI R1, 0  ; 0
+  0060 - 0x01201058 - LDI R2, 4184  ; (setq ready 0)
+  0064 - 0x03120000 - ST R1, R2, 0  ; (setq ready 0)
+  0068 - 0x12000110 - JMP 272  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset expr 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset expr idx ch)))))
+  0072 - 0x19100000 - PUSH R1  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset expr 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset expr idx ch)))))
+  0076 - 0x19200000 - PUSH R2  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset expr 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset expr idx ch)))))
+  0080 - 0x19300000 - PUSH R3  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset expr 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset expr idx ch)))))
+  0084 - 0x19400000 - PUSH R4  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset expr 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset expr idx ch)))))
+  0088 - 0x1B100000 - IN R1, 0  ; (in 0)
+  0092 - 0x0120105C - LDI R2, 4188  ; (setq ch (in 0))
+  0096 - 0x03120000 - ST R1, R2, 0  ; (setq ch (in 0))
+  0100 - 0x0110105C - LDI R1, 4188  ; ch
+  0104 - 0x02110000 - LD R1, R1, 0  ; ch
+  0108 - 0x0120000A - LDI R2, 10  ; 10
+  0112 - 0x0B120000 - CMP R1, R2  ; (if (= ch 10) (progn (aset expr 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset expr idx ch)))
+  0116 - 0x140000B4 - JNZ 180  ; (if (= ch 10) (progn (aset expr 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset expr idx ch)))
+  0120 - 0x01200FA0 - LDI R2, 4000  ; expr
+  0124 - 0x02220000 - LD R2, R2, 0  ; expr
+  0128 - 0x01300000 - LDI R3, 0  ; 0
+  0132 - 0x01400002 - LDI R4, 2  ; (aset expr 0 idx)
+  0136 - 0x10334000 - LSL R3, R3, R4  ; (aset expr 0 idx)
+  0140 - 0x01401050 - LDI R4, 4176  ; idx
+  0144 - 0x02440000 - LD R4, R4, 0  ; idx
+  0148 - 0x04223000 - ADD R2, R2, R3  ; (aset expr 0 idx)
+  0152 - 0x03420000 - ST R4, R2, 0  ; (aset expr 0 idx)
+  0156 - 0x04240000 - ADD R2, R4, R0  ; (aset expr 0 idx)
+  0160 - 0x01200001 - LDI R2, 1  ; 1
+  0164 - 0x01301058 - LDI R3, 4184  ; (setq ready 1)
+  0168 - 0x03230000 - ST R2, R3, 0  ; (setq ready 1)
+  0172 - 0x04120000 - ADD R1, R2, R0  ; (if (= ch 10) (progn (aset expr 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset expr idx ch)))
+  0176 - 0x120000FC - JMP 252  ; (if (= ch 10) (progn (aset expr 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset expr idx ch)))
+  0180 - 0x01201050 - LDI R2, 4176  ; idx
+  0184 - 0x02220000 - LD R2, R2, 0  ; idx
+  0188 - 0x01300001 - LDI R3, 1  ; 1
+  0192 - 0x04223000 - ADD R2, R2, R3  ; (+ idx 1)
+  0196 - 0x01301050 - LDI R3, 4176  ; (setq idx (+ idx 1))
+  0200 - 0x03230000 - ST R2, R3, 0  ; (setq idx (+ idx 1))
+  0204 - 0x01200FA0 - LDI R2, 4000  ; expr
+  0208 - 0x02220000 - LD R2, R2, 0  ; expr
+  0212 - 0x01301050 - LDI R3, 4176  ; idx
+  0216 - 0x02330000 - LD R3, R3, 0  ; idx
+  0220 - 0x01400002 - LDI R4, 2  ; (aset expr idx ch)
+  0224 - 0x10334000 - LSL R3, R3, R4  ; (aset expr idx ch)
+  0228 - 0x0140105C - LDI R4, 4188  ; ch
+  0232 - 0x02440000 - LD R4, R4, 0  ; ch
+  0236 - 0x04223000 - ADD R2, R2, R3  ; (aset expr idx ch)
+  0240 - 0x03420000 - ST R4, R2, 0  ; (aset expr idx ch)
+  0244 - 0x04240000 - ADD R2, R4, R0  ; (aset expr idx ch)
+  0248 - 0x04120000 - ADD R1, R2, R0  ; (if (= ch 10) (progn (aset expr 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset expr idx ch)))
+  0252 - 0x1A400000 - POP R4  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset expr 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset expr idx ch)))))
+  0256 - 0x1A300000 - POP R3  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset expr 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset expr idx ch)))))
+  0260 - 0x1A200000 - POP R2  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset expr 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset expr idx ch)))))
+  0264 - 0x1A100000 - POP R1  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset expr 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset expr idx ch)))))
+  0268 - 0x1F000000 - IRET  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset expr 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset expr idx ch)))))
+  0272 - 0x1D000000 - EI  ; (ei)
+  0276 - 0x12000140 - JMP 320  ; (defun wait () (if (= ready 1) 0 (wait)))
+  0280 - 0x01201058 - LDI R2, 4184  ; ready
+  0284 - 0x02220000 - LD R2, R2, 0  ; ready
+  0288 - 0x01300001 - LDI R3, 1  ; 1
+  0292 - 0x0B230000 - CMP R2, R3  ; (defun wait () (if (= ready 1) 0 (wait)))
+  0296 - 0x14000138 - JNZ 312  ; (defun wait () (if (= ready 1) 0 (wait)))
+  0300 - 0x01200000 - LDI R2, 0  ; 0
+  0304 - 0x04120000 - ADD R1, R2, R0  ; (defun wait () (if (= ready 1) 0 (wait)))
+  0308 - 0x1200013C - JMP 316  ; (defun wait () (if (= ready 1) 0 (wait)))
+  0312 - 0x12000118 - JMP 280  ; (defun wait () (if (= ready 1) 0 (wait)))
+  0316 - 0x18000000 - RET  ; (defun wait () (if (= ready 1) 0 (wait)))
+  0320 - 0x17000118 - CALL 280  ; (wait)
+  0324 - 0x04110000 - ADD R1, R1, R0  ; (wait)
+  0328 - 0x1E000000 - DI  ; (di)
+  0332 - 0x120001D4 - JMP 468  ; (defun prec (c) (if (= c 42) 2 (if (= c 47) 2 (if (= c 43) 1 (if (= c 45) 1 0)))))
+  0336 - 0x04310000 - ADD R3, R1, R0  ; c
+  0340 - 0x0140002A - LDI R4, 42  ; 42
+  0344 - 0x0B340000 - CMP R3, R4  ; (defun prec (c) (if (= c 42) 2 (if (= c 47) 2 (if (= c 43) 1 (if (= c 45) 1 0)))))
+  0348 - 0x1400016C - JNZ 364  ; (defun prec (c) (if (= c 42) 2 (if (= c 47) 2 (if (= c 43) 1 (if (= c 45) 1 0)))))
+  0352 - 0x01300002 - LDI R3, 2  ; 2
+  0356 - 0x04230000 - ADD R2, R3, R0  ; (defun prec (c) (if (= c 42) 2 (if (= c 47) 2 (if (= c 43) 1 (if (= c 45) 1 0)))))
+  0360 - 0x120001CC - JMP 460  ; (defun prec (c) (if (= c 42) 2 (if (= c 47) 2 (if (= c 43) 1 (if (= c 45) 1 0)))))
+  0364 - 0x04310000 - ADD R3, R1, R0  ; c
+  0368 - 0x0140002F - LDI R4, 47  ; 47
+  0372 - 0x0B340000 - CMP R3, R4  ; (defun prec (c) (if (= c 42) 2 (if (= c 47) 2 (if (= c 43) 1 (if (= c 45) 1 0)))))
+  0376 - 0x14000188 - JNZ 392  ; (defun prec (c) (if (= c 42) 2 (if (= c 47) 2 (if (= c 43) 1 (if (= c 45) 1 0)))))
+  0380 - 0x01300002 - LDI R3, 2  ; 2
+  0384 - 0x04230000 - ADD R2, R3, R0  ; (defun prec (c) (if (= c 42) 2 (if (= c 47) 2 (if (= c 43) 1 (if (= c 45) 1 0)))))
+  0388 - 0x120001CC - JMP 460  ; (defun prec (c) (if (= c 42) 2 (if (= c 47) 2 (if (= c 43) 1 (if (= c 45) 1 0)))))
+  0392 - 0x04310000 - ADD R3, R1, R0  ; c
+  0396 - 0x0140002B - LDI R4, 43  ; 43
+  0400 - 0x0B340000 - CMP R3, R4  ; (defun prec (c) (if (= c 42) 2 (if (= c 47) 2 (if (= c 43) 1 (if (= c 45) 1 0)))))
+  0404 - 0x140001A4 - JNZ 420  ; (defun prec (c) (if (= c 42) 2 (if (= c 47) 2 (if (= c 43) 1 (if (= c 45) 1 0)))))
+  0408 - 0x01300001 - LDI R3, 1  ; 1
+  0412 - 0x04230000 - ADD R2, R3, R0  ; (defun prec (c) (if (= c 42) 2 (if (= c 47) 2 (if (= c 43) 1 (if (= c 45) 1 0)))))
+  0416 - 0x120001CC - JMP 460  ; (defun prec (c) (if (= c 42) 2 (if (= c 47) 2 (if (= c 43) 1 (if (= c 45) 1 0)))))
+  0420 - 0x04310000 - ADD R3, R1, R0  ; c
+  0424 - 0x0140002D - LDI R4, 45  ; 45
+  0428 - 0x0B340000 - CMP R3, R4  ; (defun prec (c) (if (= c 42) 2 (if (= c 47) 2 (if (= c 43) 1 (if (= c 45) 1 0)))))
+  0432 - 0x140001C0 - JNZ 448  ; (defun prec (c) (if (= c 42) 2 (if (= c 47) 2 (if (= c 43) 1 (if (= c 45) 1 0)))))
+  0436 - 0x01300001 - LDI R3, 1  ; 1
+  0440 - 0x04230000 - ADD R2, R3, R0  ; (defun prec (c) (if (= c 42) 2 (if (= c 47) 2 (if (= c 43) 1 (if (= c 45) 1 0)))))
+  0444 - 0x120001CC - JMP 460  ; (defun prec (c) (if (= c 42) 2 (if (= c 47) 2 (if (= c 43) 1 (if (= c 45) 1 0)))))
+  0448 - 0x01300000 - LDI R3, 0  ; 0
+  0452 - 0x04230000 - ADD R2, R3, R0  ; (defun prec (c) (if (= c 42) 2 (if (= c 47) 2 (if (= c 43) 1 (if (= c 45) 1 0)))))
+  0456 - 0x120001CC - JMP 460  ; (defun prec (c) (if (= c 42) 2 (if (= c 47) 2 (if (= c 43) 1 (if (= c 45) 1 0)))))
+  0460 - 0x04120000 - ADD R1, R2, R0  ; (defun prec (c) (if (= c 42) 2 (if (= c 47) 2 (if (= c 43) 1 (if (= c 45) 1 0)))))
+  0464 - 0x18000000 - RET  ; (defun prec (c) (if (= c 42) 2 (if (= c 47) 2 (if (= c 43) 1 (if (= c 45) 1 0)))))
+  0468 - 0x12000228 - JMP 552  ; (defun push_op (c) (progn (setq top (+ top 1)) (aset ops top c)))
+  0472 - 0x01301054 - LDI R3, 4180  ; top
+  0476 - 0x02330000 - LD R3, R3, 0  ; top
+  0480 - 0x01400001 - LDI R4, 1  ; 1
+  0484 - 0x04334000 - ADD R3, R3, R4  ; (+ top 1)
+  0488 - 0x01401054 - LDI R4, 4180  ; (setq top (+ top 1))
+  0492 - 0x03340000 - ST R3, R4, 0  ; (setq top (+ top 1))
+  0496 - 0x01300FF8 - LDI R3, 4088  ; ops
+  0500 - 0x02330000 - LD R3, R3, 0  ; ops
+  0504 - 0x01401054 - LDI R4, 4180  ; top
+  0508 - 0x02440000 - LD R4, R4, 0  ; top
+  0512 - 0x01500002 - LDI R5, 2  ; (aset ops top c)
+  0516 - 0x10445000 - LSL R4, R4, R5  ; (aset ops top c)
+  0520 - 0x04510000 - ADD R5, R1, R0  ; c
+  0524 - 0x04334000 - ADD R3, R3, R4  ; (aset ops top c)
+  0528 - 0x03530000 - ST R5, R3, 0  ; (aset ops top c)
+  0532 - 0x04350000 - ADD R3, R5, R0  ; (aset ops top c)
+  0536 - 0x04230000 - ADD R2, R3, R0  ; (defun push_op (c) (progn (setq top (+ top 1)) (aset ops top c)))
+  0540 - 0x12000220 - JMP 544  ; (defun push_op (c) (progn (setq top (+ top 1)) (aset ops top c)))
+  0544 - 0x04120000 - ADD R1, R2, R0  ; (defun push_op (c) (progn (setq top (+ top 1)) (aset ops top c)))
+  0548 - 0x18000000 - RET  ; (defun push_op (c) (progn (setq top (+ top 1)) (aset ops top c)))
+  0552 - 0x12000328 - JMP 808  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_while p))))))
+  0556 - 0x01300000 - LDI R3, 0  ; 0
+  0560 - 0x01401054 - LDI R4, 4180  ; top
+  0564 - 0x02440000 - LD R4, R4, 0  ; top
+  0568 - 0x0B340000 - CMP R3, R4  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_while p))))))
+  0572 - 0x1500024C - JL 588  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_while p))))))
+  0576 - 0x01300000 - LDI R3, 0  ; 0
+  0580 - 0x04230000 - ADD R2, R3, R0  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_while p))))))
+  0584 - 0x12000320 - JMP 800  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_while p))))))
+  0588 - 0x01300FF8 - LDI R3, 4088  ; ops
+  0592 - 0x02330000 - LD R3, R3, 0  ; ops
+  0596 - 0x01401054 - LDI R4, 4180  ; top
+  0600 - 0x02440000 - LD R4, R4, 0  ; top
+  0604 - 0x01500002 - LDI R5, 2  ; (aref ops top)
+  0608 - 0x10445000 - LSL R4, R4, R5  ; (aref ops top)
+  0612 - 0x04334000 - ADD R3, R3, R4  ; (aref ops top)
+  0616 - 0x02330000 - LD R3, R3, 0  ; (aref ops top)
+  0620 - 0x01400028 - LDI R4, 40  ; 40
+  0624 - 0x0B340000 - CMP R3, R4  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_while p))))))
+  0628 - 0x14000284 - JNZ 644  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_while p))))))
+  0632 - 0x01300000 - LDI R3, 0  ; 0
+  0636 - 0x04230000 - ADD R2, R3, R0  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_while p))))))
+  0640 - 0x12000320 - JMP 800  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_while p))))))
+  0644 - 0x19100000 - PUSH R1  ; (prec (aref ops top))
+  0648 - 0x19200000 - PUSH R2  ; (prec (aref ops top))
+  0652 - 0x01300FF8 - LDI R3, 4088  ; ops
+  0656 - 0x02330000 - LD R3, R3, 0  ; ops
+  0660 - 0x01401054 - LDI R4, 4180  ; top
+  0664 - 0x02440000 - LD R4, R4, 0  ; top
+  0668 - 0x01500002 - LDI R5, 2  ; (aref ops top)
+  0672 - 0x10445000 - LSL R4, R4, R5  ; (aref ops top)
+  0676 - 0x04334000 - ADD R3, R3, R4  ; (aref ops top)
+  0680 - 0x02330000 - LD R3, R3, 0  ; (aref ops top)
+  0684 - 0x04130000 - ADD R1, R3, R0  ; (prec (aref ops top))
+  0688 - 0x17000150 - CALL 336  ; (prec (aref ops top))
+  0692 - 0x04310000 - ADD R3, R1, R0  ; (prec (aref ops top))
+  0696 - 0x1A200000 - POP R2  ; (prec (aref ops top))
+  0700 - 0x1A100000 - POP R1  ; (prec (aref ops top))
+  0704 - 0x04410000 - ADD R4, R1, R0  ; p
+  0708 - 0x0B340000 - CMP R3, R4  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_while p))))))
+  0712 - 0x160002D8 - JGE 728  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_while p))))))
+  0716 - 0x01300000 - LDI R3, 0  ; 0
+  0720 - 0x04230000 - ADD R2, R3, R0  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_while p))))))
+  0724 - 0x12000320 - JMP 800  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_while p))))))
+  0728 - 0x01300FF8 - LDI R3, 4088  ; ops
+  0732 - 0x02330000 - LD R3, R3, 0  ; ops
+  0736 - 0x01401054 - LDI R4, 4180  ; top
+  0740 - 0x02440000 - LD R4, R4, 0  ; top
+  0744 - 0x01500002 - LDI R5, 2  ; (aref ops top)
+  0748 - 0x10445000 - LSL R4, R4, R5  ; (aref ops top)
+  0752 - 0x04334000 - ADD R3, R3, R4  ; (aref ops top)
+  0756 - 0x02330000 - LD R3, R3, 0  ; (aref ops top)
+  0760 - 0x1C300001 - OUT 1, R3  ; (out 1 (aref ops top))
+  0764 - 0x01301054 - LDI R3, 4180  ; top
+  0768 - 0x02330000 - LD R3, R3, 0  ; top
+  0772 - 0x01400001 - LDI R4, 1  ; 1
+  0776 - 0x05334000 - SUB R3, R3, R4  ; (- top 1)
+  0780 - 0x01401054 - LDI R4, 4180  ; (setq top (- top 1))
+  0784 - 0x03340000 - ST R3, R4, 0  ; (setq top (- top 1))
+  0788 - 0x04310000 - ADD R3, R1, R0  ; p
+  0792 - 0x04130000 - ADD R1, R3, R0  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_while p))))))
+  0796 - 0x1200022C - JMP 556  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_while p))))))
+  0800 - 0x04120000 - ADD R1, R2, R0  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_while p))))))
+  0804 - 0x18000000 - RET  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_while p))))))
+  0808 - 0x120003DC - JMP 988  ; (defun pop_paren () (if (<= top 0) 0 (if (= (aref ops top) 40) (setq top (- top 1)) (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_paren)))))
+  0812 - 0x01200000 - LDI R2, 0  ; 0
+  0816 - 0x01301054 - LDI R3, 4180  ; top
+  0820 - 0x02330000 - LD R3, R3, 0  ; top
+  0824 - 0x0B230000 - CMP R2, R3  ; (defun pop_paren () (if (<= top 0) 0 (if (= (aref ops top) 40) (setq top (- top 1)) (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_paren)))))
+  0828 - 0x1500034C - JL 844  ; (defun pop_paren () (if (<= top 0) 0 (if (= (aref ops top) 40) (setq top (- top 1)) (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_paren)))))
+  0832 - 0x01200000 - LDI R2, 0  ; 0
+  0836 - 0x04120000 - ADD R1, R2, R0  ; (defun pop_paren () (if (<= top 0) 0 (if (= (aref ops top) 40) (setq top (- top 1)) (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_paren)))))
+  0840 - 0x120003D8 - JMP 984  ; (defun pop_paren () (if (<= top 0) 0 (if (= (aref ops top) 40) (setq top (- top 1)) (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_paren)))))
+  0844 - 0x01200FF8 - LDI R2, 4088  ; ops
+  0848 - 0x02220000 - LD R2, R2, 0  ; ops
+  0852 - 0x01301054 - LDI R3, 4180  ; top
+  0856 - 0x02330000 - LD R3, R3, 0  ; top
+  0860 - 0x01400002 - LDI R4, 2  ; (aref ops top)
+  0864 - 0x10334000 - LSL R3, R3, R4  ; (aref ops top)
+  0868 - 0x04223000 - ADD R2, R2, R3  ; (aref ops top)
+  0872 - 0x02220000 - LD R2, R2, 0  ; (aref ops top)
+  0876 - 0x01300028 - LDI R3, 40  ; 40
+  0880 - 0x0B230000 - CMP R2, R3  ; (defun pop_paren () (if (<= top 0) 0 (if (= (aref ops top) 40) (setq top (- top 1)) (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_paren)))))
+  0884 - 0x14000398 - JNZ 920  ; (defun pop_paren () (if (<= top 0) 0 (if (= (aref ops top) 40) (setq top (- top 1)) (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_paren)))))
+  0888 - 0x01201054 - LDI R2, 4180  ; top
+  0892 - 0x02220000 - LD R2, R2, 0  ; top
+  0896 - 0x01300001 - LDI R3, 1  ; 1
+  0900 - 0x05223000 - SUB R2, R2, R3  ; (- top 1)
+  0904 - 0x01301054 - LDI R3, 4180  ; (setq top (- top 1))
+  0908 - 0x03230000 - ST R2, R3, 0  ; (setq top (- top 1))
+  0912 - 0x04120000 - ADD R1, R2, R0  ; (defun pop_paren () (if (<= top 0) 0 (if (= (aref ops top) 40) (setq top (- top 1)) (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_paren)))))
+  0916 - 0x120003D8 - JMP 984  ; (defun pop_paren () (if (<= top 0) 0 (if (= (aref ops top) 40) (setq top (- top 1)) (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_paren)))))
+  0920 - 0x01200FF8 - LDI R2, 4088  ; ops
+  0924 - 0x02220000 - LD R2, R2, 0  ; ops
+  0928 - 0x01301054 - LDI R3, 4180  ; top
+  0932 - 0x02330000 - LD R3, R3, 0  ; top
+  0936 - 0x01400002 - LDI R4, 2  ; (aref ops top)
+  0940 - 0x10334000 - LSL R3, R3, R4  ; (aref ops top)
+  0944 - 0x04223000 - ADD R2, R2, R3  ; (aref ops top)
+  0948 - 0x02220000 - LD R2, R2, 0  ; (aref ops top)
+  0952 - 0x1C200001 - OUT 1, R2  ; (out 1 (aref ops top))
+  0956 - 0x01201054 - LDI R2, 4180  ; top
+  0960 - 0x02220000 - LD R2, R2, 0  ; top
+  0964 - 0x01300001 - LDI R3, 1  ; 1
+  0968 - 0x05223000 - SUB R2, R2, R3  ; (- top 1)
+  0972 - 0x01301054 - LDI R3, 4180  ; (setq top (- top 1))
+  0976 - 0x03230000 - ST R2, R3, 0  ; (setq top (- top 1))
+  0980 - 0x1200032C - JMP 812  ; (defun pop_paren () (if (<= top 0) 0 (if (= (aref ops top) 40) (setq top (- top 1)) (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_paren)))))
+  0984 - 0x18000000 - RET  ; (defun pop_paren () (if (<= top 0) 0 (if (= (aref ops top) 40) (setq top (- top 1)) (progn (out 1 (aref ops top)) (setq top (- top 1)) (pop_paren)))))
+  0988 - 0x12000444 - JMP 1092  ; (defun flush () (if (<= top 0) 0 (progn (out 1 (aref ops top)) (setq top (- top 1)) (flush))))
+  0992 - 0x01200000 - LDI R2, 0  ; 0
+  0996 - 0x01301054 - LDI R3, 4180  ; top
+  1000 - 0x02330000 - LD R3, R3, 0  ; top
+  1004 - 0x0B230000 - CMP R2, R3  ; (defun flush () (if (<= top 0) 0 (progn (out 1 (aref ops top)) (setq top (- top 1)) (flush))))
+  1008 - 0x15000400 - JL 1024  ; (defun flush () (if (<= top 0) 0 (progn (out 1 (aref ops top)) (setq top (- top 1)) (flush))))
+  1012 - 0x01200000 - LDI R2, 0  ; 0
+  1016 - 0x04120000 - ADD R1, R2, R0  ; (defun flush () (if (<= top 0) 0 (progn (out 1 (aref ops top)) (setq top (- top 1)) (flush))))
+  1020 - 0x12000440 - JMP 1088  ; (defun flush () (if (<= top 0) 0 (progn (out 1 (aref ops top)) (setq top (- top 1)) (flush))))
+  1024 - 0x01200FF8 - LDI R2, 4088  ; ops
+  1028 - 0x02220000 - LD R2, R2, 0  ; ops
+  1032 - 0x01301054 - LDI R3, 4180  ; top
+  1036 - 0x02330000 - LD R3, R3, 0  ; top
+  1040 - 0x01400002 - LDI R4, 2  ; (aref ops top)
+  1044 - 0x10334000 - LSL R3, R3, R4  ; (aref ops top)
+  1048 - 0x04223000 - ADD R2, R2, R3  ; (aref ops top)
+  1052 - 0x02220000 - LD R2, R2, 0  ; (aref ops top)
+  1056 - 0x1C200001 - OUT 1, R2  ; (out 1 (aref ops top))
+  1060 - 0x01201054 - LDI R2, 4180  ; top
+  1064 - 0x02220000 - LD R2, R2, 0  ; top
+  1068 - 0x01300001 - LDI R3, 1  ; 1
+  1072 - 0x05223000 - SUB R2, R2, R3  ; (- top 1)
+  1076 - 0x01301054 - LDI R3, 4180  ; (setq top (- top 1))
+  1080 - 0x03230000 - ST R2, R3, 0  ; (setq top (- top 1))
+  1084 - 0x120003E0 - JMP 992  ; (defun flush () (if (<= top 0) 0 (progn (out 1 (aref ops top)) (setq top (- top 1)) (flush))))
+  1088 - 0x18000000 - RET  ; (defun flush () (if (<= top 0) 0 (progn (out 1 (aref ops top)) (setq top (- top 1)) (flush))))
+  1092 - 0x12000654 - JMP 1620  ; (defun scan (i) (if (> i (aref expr 0)) 0 (progn (setq cur (aref expr i)) (if (= cur 40) (push_op cur) (if (= cur 41) (pop_paren) (if (= (prec cur) 0) (out 1 cur) (progn (pop_while (prec cur)) (push_op cur))))) (scan (+ i 1)))))
+  1096 - 0x01300FA0 - LDI R3, 4000  ; expr
+  1100 - 0x02330000 - LD R3, R3, 0  ; expr
+  1104 - 0x01400000 - LDI R4, 0  ; 0
+  1108 - 0x01500002 - LDI R5, 2  ; (aref expr 0)
+  1112 - 0x10445000 - LSL R4, R4, R5  ; (aref expr 0)
+  1116 - 0x04334000 - ADD R3, R3, R4  ; (aref expr 0)
+  1120 - 0x02330000 - LD R3, R3, 0  ; (aref expr 0)
+  1124 - 0x04410000 - ADD R4, R1, R0  ; i
+  1128 - 0x0B340000 - CMP R3, R4  ; (defun scan (i) (if (> i (aref expr 0)) 0 (progn (setq cur (aref expr i)) (if (= cur 40) (push_op cur) (if (= cur 41) (pop_paren) (if (= (prec cur) 0) (out 1 cur) (progn (pop_while (prec cur)) (push_op cur))))) (scan (+ i 1)))))
+  1132 - 0x1600047C - JGE 1148  ; (defun scan (i) (if (> i (aref expr 0)) 0 (progn (setq cur (aref expr i)) (if (= cur 40) (push_op cur) (if (= cur 41) (pop_paren) (if (= (prec cur) 0) (out 1 cur) (progn (pop_while (prec cur)) (push_op cur))))) (scan (+ i 1)))))
+  1136 - 0x01300000 - LDI R3, 0  ; 0
+  1140 - 0x04230000 - ADD R2, R3, R0  ; (defun scan (i) (if (> i (aref expr 0)) 0 (progn (setq cur (aref expr i)) (if (= cur 40) (push_op cur) (if (= cur 41) (pop_paren) (if (= (prec cur) 0) (out 1 cur) (progn (pop_while (prec cur)) (push_op cur))))) (scan (+ i 1)))))
+  1144 - 0x1200064C - JMP 1612  ; (defun scan (i) (if (> i (aref expr 0)) 0 (progn (setq cur (aref expr i)) (if (= cur 40) (push_op cur) (if (= cur 41) (pop_paren) (if (= (prec cur) 0) (out 1 cur) (progn (pop_while (prec cur)) (push_op cur))))) (scan (+ i 1)))))
+  1148 - 0x01300FA0 - LDI R3, 4000  ; expr
+  1152 - 0x02330000 - LD R3, R3, 0  ; expr
+  1156 - 0x04410000 - ADD R4, R1, R0  ; i
+  1160 - 0x01500002 - LDI R5, 2  ; (aref expr i)
+  1164 - 0x10445000 - LSL R4, R4, R5  ; (aref expr i)
+  1168 - 0x04334000 - ADD R3, R3, R4  ; (aref expr i)
+  1172 - 0x02330000 - LD R3, R3, 0  ; (aref expr i)
+  1176 - 0x01401060 - LDI R4, 4192  ; (setq cur (aref expr i))
+  1180 - 0x03340000 - ST R3, R4, 0  ; (setq cur (aref expr i))
+  1184 - 0x01301060 - LDI R3, 4192  ; cur
+  1188 - 0x02330000 - LD R3, R3, 0  ; cur
+  1192 - 0x01400028 - LDI R4, 40  ; 40
+  1196 - 0x0B340000 - CMP R3, R4  ; (if (= cur 40) (push_op cur) (if (= cur 41) (pop_paren) (if (= (prec cur) 0) (out 1 cur) (progn (pop_while (prec cur)) (push_op cur)))))
+  1200 - 0x140004E8 - JNZ 1256  ; (if (= cur 40) (push_op cur) (if (= cur 41) (pop_paren) (if (= (prec cur) 0) (out 1 cur) (progn (pop_while (prec cur)) (push_op cur)))))
+  1204 - 0x19100000 - PUSH R1  ; (push_op cur)
+  1208 - 0x19200000 - PUSH R2  ; (push_op cur)
+  1212 - 0x19300000 - PUSH R3  ; (push_op cur)
+  1216 - 0x01401060 - LDI R4, 4192  ; cur
+  1220 - 0x02440000 - LD R4, R4, 0  ; cur
+  1224 - 0x04140000 - ADD R1, R4, R0  ; (push_op cur)
+  1228 - 0x170001D8 - CALL 472  ; (push_op cur)
+  1232 - 0x04410000 - ADD R4, R1, R0  ; (push_op cur)
+  1236 - 0x1A300000 - POP R3  ; (push_op cur)
+  1240 - 0x1A200000 - POP R2  ; (push_op cur)
+  1244 - 0x1A100000 - POP R1  ; (push_op cur)
+  1248 - 0x04340000 - ADD R3, R4, R0  ; (if (= cur 40) (push_op cur) (if (= cur 41) (pop_paren) (if (= (prec cur) 0) (out 1 cur) (progn (pop_while (prec cur)) (push_op cur)))))
+  1252 - 0x12000638 - JMP 1592  ; (if (= cur 40) (push_op cur) (if (= cur 41) (pop_paren) (if (= (prec cur) 0) (out 1 cur) (progn (pop_while (prec cur)) (push_op cur)))))
+  1256 - 0x01401060 - LDI R4, 4192  ; cur
+  1260 - 0x02440000 - LD R4, R4, 0  ; cur
+  1264 - 0x01500029 - LDI R5, 41  ; 41
+  1268 - 0x0B450000 - CMP R4, R5  ; (if (= cur 41) (pop_paren) (if (= (prec cur) 0) (out 1 cur) (progn (pop_while (prec cur)) (push_op cur))))
+  1272 - 0x1400052C - JNZ 1324  ; (if (= cur 41) (pop_paren) (if (= (prec cur) 0) (out 1 cur) (progn (pop_while (prec cur)) (push_op cur))))
+  1276 - 0x19100000 - PUSH R1  ; (pop_paren)
+  1280 - 0x19200000 - PUSH R2  ; (pop_paren)
+  1284 - 0x19300000 - PUSH R3  ; (pop_paren)
+  1288 - 0x19400000 - PUSH R4  ; (pop_paren)
+  1292 - 0x1700032C - CALL 812  ; (pop_paren)
+  1296 - 0x04510000 - ADD R5, R1, R0  ; (pop_paren)
+  1300 - 0x1A400000 - POP R4  ; (pop_paren)
+  1304 - 0x1A300000 - POP R3  ; (pop_paren)
+  1308 - 0x1A200000 - POP R2  ; (pop_paren)
+  1312 - 0x1A100000 - POP R1  ; (pop_paren)
+  1316 - 0x04450000 - ADD R4, R5, R0  ; (if (= cur 41) (pop_paren) (if (= (prec cur) 0) (out 1 cur) (progn (pop_while (prec cur)) (push_op cur))))
+  1320 - 0x12000634 - JMP 1588  ; (if (= cur 41) (pop_paren) (if (= (prec cur) 0) (out 1 cur) (progn (pop_while (prec cur)) (push_op cur))))
+  1324 - 0x19100000 - PUSH R1  ; (prec cur)
+  1328 - 0x19200000 - PUSH R2  ; (prec cur)
+  1332 - 0x19300000 - PUSH R3  ; (prec cur)
+  1336 - 0x19400000 - PUSH R4  ; (prec cur)
+  1340 - 0x01501060 - LDI R5, 4192  ; cur
+  1344 - 0x02550000 - LD R5, R5, 0  ; cur
+  1348 - 0x04150000 - ADD R1, R5, R0  ; (prec cur)
+  1352 - 0x17000150 - CALL 336  ; (prec cur)
+  1356 - 0x04510000 - ADD R5, R1, R0  ; (prec cur)
+  1360 - 0x1A400000 - POP R4  ; (prec cur)
+  1364 - 0x1A300000 - POP R3  ; (prec cur)
+  1368 - 0x1A200000 - POP R2  ; (prec cur)
+  1372 - 0x1A100000 - POP R1  ; (prec cur)
+  1376 - 0x01600000 - LDI R6, 0  ; 0
+  1380 - 0x0B560000 - CMP R5, R6  ; (if (= (prec cur) 0) (out 1 cur) (progn (pop_while (prec cur)) (push_op cur)))
+  1384 - 0x14000580 - JNZ 1408  ; (if (= (prec cur) 0) (out 1 cur) (progn (pop_while (prec cur)) (push_op cur)))
+  1388 - 0x01601060 - LDI R6, 4192  ; cur
+  1392 - 0x02660000 - LD R6, R6, 0  ; cur
+  1396 - 0x1C600001 - OUT 1, R6  ; (out 1 cur)
+  1400 - 0x04560000 - ADD R5, R6, R0  ; (if (= (prec cur) 0) (out 1 cur) (progn (pop_while (prec cur)) (push_op cur)))
+  1404 - 0x12000630 - JMP 1584  ; (if (= (prec cur) 0) (out 1 cur) (progn (pop_while (prec cur)) (push_op cur)))
+  1408 - 0x19100000 - PUSH R1  ; (pop_while (prec cur))
+  1412 - 0x19200000 - PUSH R2  ; (pop_while (prec cur))
+  1416 - 0x19300000 - PUSH R3  ; (pop_while (prec cur))
+  1420 - 0x19400000 - PUSH R4  ; (pop_while (prec cur))
+  1424 - 0x19500000 - PUSH R5  ; (pop_while (prec cur))
+  1428 - 0x19100000 - PUSH R1  ; (prec cur)
+  1432 - 0x19200000 - PUSH R2  ; (prec cur)
+  1436 - 0x19300000 - PUSH R3  ; (prec cur)
+  1440 - 0x19400000 - PUSH R4  ; (prec cur)
+  1444 - 0x19500000 - PUSH R5  ; (prec cur)
+  1448 - 0x01601060 - LDI R6, 4192  ; cur
+  1452 - 0x02660000 - LD R6, R6, 0  ; cur
+  1456 - 0x04160000 - ADD R1, R6, R0  ; (prec cur)
+  1460 - 0x17000150 - CALL 336  ; (prec cur)
+  1464 - 0x04610000 - ADD R6, R1, R0  ; (prec cur)
+  1468 - 0x1A500000 - POP R5  ; (prec cur)
+  1472 - 0x1A400000 - POP R4  ; (prec cur)
+  1476 - 0x1A300000 - POP R3  ; (prec cur)
+  1480 - 0x1A200000 - POP R2  ; (prec cur)
+  1484 - 0x1A100000 - POP R1  ; (prec cur)
+  1488 - 0x04160000 - ADD R1, R6, R0  ; (pop_while (prec cur))
+  1492 - 0x1700022C - CALL 556  ; (pop_while (prec cur))
+  1496 - 0x04610000 - ADD R6, R1, R0  ; (pop_while (prec cur))
+  1500 - 0x1A500000 - POP R5  ; (pop_while (prec cur))
+  1504 - 0x1A400000 - POP R4  ; (pop_while (prec cur))
+  1508 - 0x1A300000 - POP R3  ; (pop_while (prec cur))
+  1512 - 0x1A200000 - POP R2  ; (pop_while (prec cur))
+  1516 - 0x1A100000 - POP R1  ; (pop_while (prec cur))
+  1520 - 0x19100000 - PUSH R1  ; (push_op cur)
+  1524 - 0x19200000 - PUSH R2  ; (push_op cur)
+  1528 - 0x19300000 - PUSH R3  ; (push_op cur)
+  1532 - 0x19400000 - PUSH R4  ; (push_op cur)
+  1536 - 0x19500000 - PUSH R5  ; (push_op cur)
+  1540 - 0x01601060 - LDI R6, 4192  ; cur
+  1544 - 0x02660000 - LD R6, R6, 0  ; cur
+  1548 - 0x04160000 - ADD R1, R6, R0  ; (push_op cur)
+  1552 - 0x170001D8 - CALL 472  ; (push_op cur)
+  1556 - 0x04610000 - ADD R6, R1, R0  ; (push_op cur)
+  1560 - 0x1A500000 - POP R5  ; (push_op cur)
+  1564 - 0x1A400000 - POP R4  ; (push_op cur)
+  1568 - 0x1A300000 - POP R3  ; (push_op cur)
+  1572 - 0x1A200000 - POP R2  ; (push_op cur)
+  1576 - 0x1A100000 - POP R1  ; (push_op cur)
+  1580 - 0x04560000 - ADD R5, R6, R0  ; (if (= (prec cur) 0) (out 1 cur) (progn (pop_while (prec cur)) (push_op cur)))
+  1584 - 0x04450000 - ADD R4, R5, R0  ; (if (= cur 41) (pop_paren) (if (= (prec cur) 0) (out 1 cur) (progn (pop_while (prec cur)) (push_op cur))))
+  1588 - 0x04340000 - ADD R3, R4, R0  ; (if (= cur 40) (push_op cur) (if (= cur 41) (pop_paren) (if (= (prec cur) 0) (out 1 cur) (progn (pop_while (prec cur)) (push_op cur)))))
+  1592 - 0x04310000 - ADD R3, R1, R0  ; i
+  1596 - 0x01400001 - LDI R4, 1  ; 1
+  1600 - 0x04334000 - ADD R3, R3, R4  ; (+ i 1)
+  1604 - 0x04130000 - ADD R1, R3, R0  ; (defun scan (i) (if (> i (aref expr 0)) 0 (progn (setq cur (aref expr i)) (if (= cur 40) (push_op cur) (if (= cur 41) (pop_paren) (if (= (prec cur) 0) (out 1 cur) (progn (pop_while (prec cur)) (push_op cur))))) (scan (+ i 1)))))
+  1608 - 0x12000448 - JMP 1096  ; (defun scan (i) (if (> i (aref expr 0)) 0 (progn (setq cur (aref expr i)) (if (= cur 40) (push_op cur) (if (= cur 41) (pop_paren) (if (= (prec cur) 0) (out 1 cur) (progn (pop_while (prec cur)) (push_op cur))))) (scan (+ i 1)))))
+  1612 - 0x04120000 - ADD R1, R2, R0  ; (defun scan (i) (if (> i (aref expr 0)) 0 (progn (setq cur (aref expr i)) (if (= cur 40) (push_op cur) (if (= cur 41) (pop_paren) (if (= (prec cur) 0) (out 1 cur) (progn (pop_while (prec cur)) (push_op cur))))) (scan (+ i 1)))))
+  1616 - 0x18000000 - RET  ; (defun scan (i) (if (> i (aref expr 0)) 0 (progn (setq cur (aref expr i)) (if (= cur 40) (push_op cur) (if (= cur 41) (pop_paren) (if (= (prec cur) 0) (out 1 cur) (progn (pop_while (prec cur)) (push_op cur))))) (scan (+ i 1)))))
+  1620 - 0x01100001 - LDI R1, 1  ; 1
+  1624 - 0x17000448 - CALL 1096  ; (scan 1)
+  1628 - 0x04110000 - ADD R1, R1, R0  ; (scan 1)
+  1632 - 0x170003E0 - CALL 992  ; (flush)
+  1636 - 0x04110000 - ADD R1, R1, R0  ; (flush)
   1640 - 0x20000000 - HLT
 
 out_stdout: 12+3*
 
 out_log: |-
   Запуск процесса by tetramino
-  ------------------------------------------------------------------------------------------------------------------------
-  |  TICK  | STEP      |  PC  | HEX CODE | INSTRUCTION            |   R1   |   R2   |   SP   |  NZVC  |   CACHE   | INT  |
-  ------------------------------------------------------------------------------------------------------------------------
-  |   1    | T0 FETCH  |  0   | 12000008 | JMP R0, R0, 8          |   0    |   0    | 16380  |  0000  | MISS(10)  |  -   |
-  |   2    | STALL     |  0   | 12000008 | JMP R0, R0, 8          |   0    |   0    | 16380  |  0000  | MISS(10)  |  -   |
-  |   3    | STALL     |  0   | 12000008 | JMP R0, R0, 8          |   0    |   0    | 16380  |  0000  | MISS(10)  |  -   |
-  |   4    | STALL     |  0   | 12000008 | JMP R0, R0, 8          |   0    |   0    | 16380  |  0000  | MISS(10)  |  -   |
-  |   5    | STALL     |  0   | 12000008 | JMP R0, R0, 8          |   0    |   0    | 16380  |  0000  | MISS(10)  |  -   |
-  |   6    | STALL     |  0   | 12000008 | JMP R0, R0, 8          |   0    |   0    | 16380  |  0000  | MISS(10)  |  -   |
-  |   7    | STALL     |  0   | 12000008 | JMP R0, R0, 8          |   0    |   0    | 16380  |  0000  | MISS(10)  |  -   |
-  |   8    | STALL     |  0   | 12000008 | JMP R0, R0, 8          |   0    |   0    | 16380  |  0000  | MISS(10)  |  -   |
-  |   9    | STALL     |  0   | 12000008 | JMP R0, R0, 8          |   0    |   0    | 16380  |  0000  | MISS(10)  |  -   |
-  |   10   | STALL     |  0   | 12000008 | JMP R0, R0, 8          |   0    |   0    | 16380  |  0000  | MISS(10)  |  -   |
-  |   11   | T1 DECODE |  0   | 12000008 | JMP R0, R0, 8          |   0    |   0    | 16380  |  0000  | MISS(10)  |  -   |
-  |   12   | T2 EXEC   |  8   | 12000008 | JMP R0, R0, 8          |   0    |   0    | 16380  |  0000  | MISS(10)  |  -   |
-  |   13   | T0 FETCH  |  8   | 01100FA4 | LDI R1, R0, 4004       |   0    |   0    | 16380  |  0000  |  HIT (1)  |  -   |
-  |   14   | T1 DECODE |  8   | 01100FA4 | LDI R1, R0, 4004       |   0    |   0    | 16380  |  0000  |  HIT (1)  |  -   |
-  |   15   | T2 EXEC   |  12  | 01100FA4 | LDI R1, R0, 4004       |  4004  |   0    | 16380  |  0000  |  HIT (1)  |  -   |
-  |   16   | T0 FETCH  |  12  | 01200FA0 | LDI R2, R0, 4000       |  4004  |   0    | 16380  |  0000  |  HIT (1)  |  -   |
-  |   17   | T1 DECODE |  12  | 01200FA0 | LDI R2, R0, 4000       |  4004  |   0    | 16380  |  0000  |  HIT (1)  |  -   |
-  |   18   | T2 EXEC   |  16  | 01200FA0 | LDI R2, R0, 4000       |  4004  |  4000  | 16380  |  0000  |  HIT (1)  |  -   |
-  |   19   | T0 FETCH  |  16  | 03120000 | ST R1, R2, 0           |  4004  |  4000  | 16380  |  0000  | MISS(10)  |  -   |
-  |   20   | STALL     |  16  | 03120000 | ST R1, R2, 0           |  4004  |  4000  | 16380  |  0000  | MISS(10)  |  -   |
-  |   21   | STALL     |  16  | 03120000 | ST R1, R2, 0           |  4004  |  4000  | 16380  |  0000  | MISS(10)  |  -   |
-  |   22   | STALL     |  16  | 03120000 | ST R1, R2, 0           |  4004  |  4000  | 16380  |  0000  | MISS(10)  |  -   |
-  |   23   | STALL     |  16  | 03120000 | ST R1, R2, 0           |  4004  |  4000  | 16380  |  0000  | MISS(10)  |  -   |
-  |   24   | STALL     |  16  | 03120000 | ST R1, R2, 0           |  4004  |  4000  | 16380  |  0000  | MISS(10)  |  -   |
-  |   25   | STALL     |  16  | 03120000 | ST R1, R2, 0           |  4004  |  4000  | 16380  |  0000  | MISS(10)  |  -   |
-  |   26   | STALL     |  16  | 03120000 | ST R1, R2, 0           |  4004  |  4000  | 16380  |  0000  | MISS(10)  |  -   |
+  ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  |  TICK  | STEP      |  PC   | HEX CODE | INSTRUCTION            |   SP   |  NZVC  |   CACHE   | INT  |    R0    R1    R2    R3    R4    R5    R6    R7    R8    R9   R10   R11   R12   R13   R14   R15 | SOURCE
+  ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  |   1    | T0 FETCH  |   0   | 12000008 | JMP R0, R0, 8          | 16380  |  0000  | MISS(10)  |  -   |     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0 | 
+  |   2    | STALL     |   0   | 12000008 | JMP R0, R0, 8          | 16380  |  0000  | MISS(10)  |  -   |     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0 | 
+  |   3    | STALL     |   0   | 12000008 | JMP R0, R0, 8          | 16380  |  0000  | MISS(10)  |  -   |     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0 | 
+  |   4    | STALL     |   0   | 12000008 | JMP R0, R0, 8          | 16380  |  0000  | MISS(10)  |  -   |     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0 | 
+  |   5    | STALL     |   0   | 12000008 | JMP R0, R0, 8          | 16380  |  0000  | MISS(10)  |  -   |     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0 | 
+  |   6    | STALL     |   0   | 12000008 | JMP R0, R0, 8          | 16380  |  0000  | MISS(10)  |  -   |     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0 | 
+  |   7    | STALL     |   0   | 12000008 | JMP R0, R0, 8          | 16380  |  0000  | MISS(10)  |  -   |     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0 | 
+  |   8    | STALL     |   0   | 12000008 | JMP R0, R0, 8          | 16380  |  0000  | MISS(10)  |  -   |     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0 | 
+  |   9    | STALL     |   0   | 12000008 | JMP R0, R0, 8          | 16380  |  0000  | MISS(10)  |  -   |     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0 | 
+  |   10   | STALL     |   0   | 12000008 | JMP R0, R0, 8          | 16380  |  0000  | MISS(10)  |  -   |     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0 | 
+  |   11   | T1 DECODE |   0   | 12000008 | JMP R0, R0, 8          | 16380  |  0000  | MISS(10)  |  -   |     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0 | 
+  |   12   | T2 EXEC   |   8   | 12000008 | JMP R0, R0, 8          | 16380  |  0000  | MISS(10)  |  -   |     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0 | 
+  |   13   | T0 FETCH  |   8   | 01100FA4 | LDI R1, R0, 4004       | 16380  |  0000  |  HIT (1)  |  -   |     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0 | "                    "
+  |   14   | T1 DECODE |   8   | 01100FA4 | LDI R1, R0, 4004       | 16380  |  0000  |  HIT (1)  |  -   |     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0     0 | "                    "
+  |   15   | T2 EXEC   |  12   | 01100FA4 | LDI R1, R0, 4004       | 16380  |  0000  |  HIT (1)  |  -   |     0  4004     0     0     0     0     0     0     0     0     0     0     0     0     0     0 | "                    "
+  |   16   | T0 FETCH  |  12   | 01200FA0 | LDI R2, R0, 4000       | 16380  |  0000  |  HIT (1)  |  -   |     0  4004     0     0     0     0     0     0     0     0     0     0     0     0     0     0 | (setq expr "                    ")
+  |   17   | T1 DECODE |  12   | 01200FA0 | LDI R2, R0, 4000       | 16380  |  0000  |  HIT (1)  |  -   |     0  4004     0     0     0     0     0     0     0     0     0     0     0     0     0     0 | (setq expr "                    ")
+  |   18   | T2 EXEC   |  16   | 01200FA0 | LDI R2, R0, 4000       | 16380  |  0000  |  HIT (1)  |  -   |     0  4004  4000     0     0     0     0     0     0     0     0     0     0     0     0     0 | (setq expr "                    ")
+  |   19   | T0 FETCH  |  16   | 03120000 | ST R1, R2, 0           | 16380  |  0000  | MISS(10)  |  -   |     0  4004  4000     0     0     0     0     0     0     0     0     0     0     0     0     0 | (setq expr "                    ")
+  |   20   | STALL     |  16   | 03120000 | ST R1, R2, 0           | 16380  |  0000  | MISS(10)  |  -   |     0  4004  4000     0     0     0     0     0     0     0     0     0     0     0     0     0 | (setq expr "                    ")
+  |   21   | STALL     |  16   | 03120000 | ST R1, R2, 0           | 16380  |  0000  | MISS(10)  |  -   |     0  4004  4000     0     0     0     0     0     0     0     0     0     0     0     0     0 | (setq expr "                    ")
+  |   22   | STALL     |  16   | 03120000 | ST R1, R2, 0           | 16380  |  0000  | MISS(10)  |  -   |     0  4004  4000     0     0     0     0     0     0     0     0     0     0     0     0     0 | (setq expr "                    ")
+  |   23   | STALL     |  16   | 03120000 | ST R1, R2, 0           | 16380  |  0000  | MISS(10)  |  -   |     0  4004  4000     0     0     0     0     0     0     0     0     0     0     0     0     0 | (setq expr "                    ")
+  |   24   | STALL     |  16   | 03120000 | ST R1, R2, 0           | 16380  |  0000  | MISS(10)  |  -   |     0  4004  4000     0     0     0     0     0     0     0     0     0     0     0     0     0 | (setq expr "                    ")
+  |   25   | STALL     |  16   | 03120000 | ST R1, R2, 0           | 16380  |  0000  | MISS(10)  |  -   |     0  4004  4000     0     0     0     0     0     0     0     0     0     0     0     0     0 | (setq expr "                    ")
+  |   26   | STALL     |  16   | 03120000 | ST R1, R2, 0           | 16380  |  0000  | MISS(10)  |  -   |     0  4004  4000     0     0     0     0     0     0     0     0     0     0     0     0     0 | (setq expr "                    ")
   ... пропущено строк: 173 ...
   [ТАКТ 200] ВУ прислало символ '(' (ASCII 40), провод IntRq = 1!
   ... пропущено строк: 12 ...
@@ -603,12 +603,22 @@ out_log: |-
   [ТАКТ 5101] Вход в прерывание: PC и PS сохранены в стек
   ... пропущено строк: 331 ...
   [ТАКТ 5432] Выход из прерывания (IRET)
-  ... пропущено строк: 6656 ...
-  | 12088  | T1 DECODE | 1636 | 04110000 | ADD R1, R1, 0          |   0    |   0    | 16380  |  0100  | MISS(10)  |  -   |
-  | 12089  | T2 EXEC   | 1640 | 04110000 | ADD R1, R1, 0          |   0    |   0    | 16380  |  0100  | MISS(10)  |  -   |
-  | 12090  | T0 FETCH  | 1640 | 20000000 | HLT R0, R0, 0          |   0    |   0    | 16380  |  0100  |  HIT (1)  |  -   |
-  | 12091  | T1 DECODE | 1640 | 20000000 | HLT R0, R0, 0          |   0    |   0    | 16380  |  0100  |  HIT (1)  |  -   |
-  ------------------------------------------------------------------------------------------------------------------------
+  ... пропущено строк: 1222 ...
+  [ТАКТ 6654] Процессор вывел в порт 1 символ '1' (код 49)
+  ... пропущено строк: 2199 ...
+  [ТАКТ 8853] Процессор вывел в порт 1 символ '2' (код 50)
+  ... пропущено строк: 574 ...
+  [ТАКТ 9427] Процессор вывел в порт 1 символ '+' (код 43)
+  ... пропущено строк: 2245 ...
+  [ТАКТ 11672] Процессор вывел в порт 1 символ '3' (код 51)
+  ... пропущено строк: 308 ...
+  [ТАКТ 11980] Процессор вывел в порт 1 символ '*' (код 42)
+  ... пропущено строк: 108 ...
+  | 12088  | T1 DECODE | 1636  | 04110000 | ADD R1, R1, 0          | 16380  |  0100  | MISS(10)  |  -   |     0     0     0     0     2     2    51     0     0     0     0     0     0     0     0     0 | (flush)
+  | 12089  | T2 EXEC   | 1640  | 04110000 | ADD R1, R1, 0          | 16380  |  0100  | MISS(10)  |  -   |     0     0     0     0     2     2    51     0     0     0     0     0     0     0     0     0 | (flush)
+  | 12090  | T0 FETCH  | 1640  | 20000000 | HLT R0, R0, 0          | 16380  |  0100  |  HIT (1)  |  -   |     0     0     0     0     2     2    51     0     0     0     0     0     0     0     0     0 | 
+  | 12091  | T1 DECODE | 1640  | 20000000 | HLT R0, R0, 0          | 16380  |  0100  |  HIT (1)  |  -   |     0     0     0     0     2     2    51     0     0     0     0     0     0     0     0     0 | 
+  ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   Процессор остановлен, выполнено тактов: 12091
   Выполнено инструкций: 1777
   Вывод в порт 1:

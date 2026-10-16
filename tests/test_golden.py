@@ -8,7 +8,7 @@ import pytest
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
 import translator
-from machine import run_simulation
+from machine import load_sources, run_simulation
 
 JOURNAL_HEAD = 30
 JOURNAL_TAIL = 10
@@ -54,10 +54,16 @@ def test_golden(golden, tmp_path, caplog):
     # Компиляция
     translator.compile_file(str(source_file), str(bin_file), str(listing_file))
     listing_content = listing_file.read_text(encoding="utf-8").strip()
+    sources = load_sources(str(listing_file))
 
     # Симуляция
     with caplog.at_level(logging.DEBUG):
-        output, _ = run_simulation(str(bin_file), schedule, max_ticks=max_ticks)
+        output, _ = run_simulation(
+            str(bin_file),
+            schedule,
+            max_ticks=max_ticks,
+            sources=sources,
+        )
 
     # Сверка с эталоном
     assert listing_content == golden.out["out_code_hex"]

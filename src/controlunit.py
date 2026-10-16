@@ -41,6 +41,7 @@ class ControlUnit:
         self,
         data_path: DataPath,
         schedule: list[tuple[int, str | int]] | None = None,
+        sources: dict[int, str] | None = None,
         *,
         cache_enabled: bool = True,
     ) -> None:
@@ -62,6 +63,7 @@ class ControlUnit:
         self.mem_addr = 0
         self.mem_value = 0
         self.next_pc = 0
+        self.current_addr = 0  # Адрес команды, которая сейчас в регистре команд
 
         self.stall_ticks = 0
 
@@ -72,6 +74,7 @@ class ControlUnit:
         # Расписание прерываний
 
         self.schedule = schedule if schedule is not None else []
+        self.sources = sources if sources is not None else {}
 
         self.check_interrupt_schedule()
 
@@ -142,24 +145,31 @@ class ControlUnit:
             instr_str = "DATA"
         hex_str = f"{word:08X}"
 
+        registers = " ".join(f"{value:>5}" for value in self.dp.registers)
+
+        source = self.sources.get(self.current_addr, "")
+        if len(source) > 34:
+            source = source[:33] + "…"
+
         return (
             f"| {self.current_tick:^6} "
             f"| {self.step_label:<9} "
-            f"| {self.dp.pc:^4} "
+            f"| {self.dp.pc:^5} "
             f"| {hex_str:^8} "
             f"| {instr_str:<22} "
-            f"| {self.dp.read_reg('R1'):^6} "
-            f"| {self.dp.read_reg('R2'):^6} "
             f"| {self.dp.sp:^6} "
             f"| {nzcv:^6} "
             f"| {self.cache.last_status:^9} "
-            f"| {'INT' if self.int_active else '-':^4} |"
+            f"| {'INT' if self.int_active else '-':^4} "
+            f"| {registers} "
+            f"| {source}"
         )
 
     def instruction_fetch(self) -> None:
         if not self.check_address(self.dp.pc):
             return
 
+        self.current_addr = self.dp.pc
         raw_word, wait_ticks = self.cache.read(self.dp.pc)
 
         self.stall_ticks = wait_ticks - 1
@@ -287,6 +297,15 @@ class ControlUnit:
             self.dp.out_reg = self.dp.read_reg(rd)
             if port == 1:
                 self.dp.port_1_out.append(self.dp.out_reg)
+
+                value = self.dp.out_reg
+                shown = chr(value) if 32 <= value <= 126 else f"\\x{value:02x}"
+                logging.info(
+                    "[ТАКТ %d] Процессор вывел в порт 1 символ '%s' (код %d)",
+                    self.current_tick,
+                    shown,
+                    value,
+                )
             self.finish_instruction()
 
         elif op == Opcode.IN:

@@ -11,10 +11,22 @@ from datapath import DataPath
 # Загружает бинарник с диска и запускает процессор
 
 
+def load_sources(listing_file: str) -> dict[int, str]:
+    sources = {}
+
+    for line in Path(listing_file).read_text(encoding="utf-8").splitlines():
+        parts = line.split(" - ", 2)
+        if len(parts) == 3 and "  ; " in parts[2]:
+            sources[int(parts[0])] = parts[2].split("  ; ", 1)[1]
+
+    return sources
+
+
 def run_simulation(
     binary_file: str,
     schedule: list[tuple[int, str | int]],
     max_ticks: int = 2000,
+    sources: dict[int, str] | None = None,
     *,
     cache_enabled: bool = True,
 ) -> tuple[str, int]:
@@ -30,22 +42,29 @@ def run_simulation(
             word = struct.unpack(">I", chunk)[0]
             dp.memory[i] = word
 
-    cu = ControlUnit(dp, schedule=schedule, cache_enabled=cache_enabled)
+    cu = ControlUnit(
+        dp,
+        schedule=schedule,
+        sources=sources,
+        cache_enabled=cache_enabled,
+    )
 
     logging.info("\nЗапуск процесса by tetramino")
+
+    register_names = " ".join(f"{f'R{i}':>5}" for i in range(16))
 
     header = (
         f"| {'TICK':^6} "
         f"| {'STEP':<9} "
-        f"| {'PC':^4} "
+        f"| {'PC':^5} "
         f"| {'HEX CODE':^8} "
         f"| {'INSTRUCTION':<22} "
-        f"| {'R1':^6} "
-        f"| {'R2':^6} "
         f"| {'SP':^6} "
         f"| {'NZVC':^6} "
         f"| {'CACHE':^9} "
-        f"| {'INT':^4} |"
+        f"| {'INT':^4} "
+        f"| {register_names} "
+        f"| {'SOURCE'}"
     )
 
     separator = "-" * len(header)
@@ -127,6 +146,13 @@ def main() -> None:
     )
 
     parser.add_argument(
+        "-l",
+        "--listing",
+        default=None,
+        help="Путь к листингу: в журнал попадут соответствующие строки исходника",
+    )
+
+    parser.add_argument(
         "--no-cache",
         action="store_true",
         help="Отключить кеш: каждое обращение в память стоит 10 тактов",
@@ -161,6 +187,7 @@ def main() -> None:
             args.code,
             schedule,
             max_ticks=args.ticks,
+            sources=load_sources(args.listing) if args.listing else None,
             cache_enabled=not args.no_cache,
         )
     except Exception as e:

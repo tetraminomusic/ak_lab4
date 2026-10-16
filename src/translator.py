@@ -363,7 +363,34 @@ def compile_tail_body(
     program.append(Instruction(Opcode.JMP, [epilogue_label]))
 
 
+def node_to_text(node: Node) -> str:
+    if isinstance(node, list):
+        return "(" + " ".join(node_to_text(item) for item in node) + ")"
+
+    if isinstance(node, StringLiteral):
+        return f'"{node.text}"'
+
+    return str(node)
+
+
+# Команды, порождённые выражением, подписываются его текстом.
+# Вложенные выражения отрабатывают раньше, поэтому команда достаётся
+# самому мелкому выражению, которое её породило
+
+
 def compile_expr(node: Node) -> str | None:
+    start = len(program)
+    result_reg = compile_node(node)
+    text = node_to_text(node)
+
+    for item in program[start:]:
+        if isinstance(item, Instruction) and not item.source:
+            item.source = text
+
+    return result_reg
+
+
+def compile_node(node: Node) -> str | None:
     global local_vars, current_reg, interrupt_handler, program
 
     # Проверяем, может это простое число
@@ -823,7 +850,8 @@ def generate_listing(instructions: list[Instruction]) -> str:
         addr = index * WORD_SIZE
         if isinstance(instr, Instruction):
             hex_code = f"0x{instr.encode():08X}"
-            lines.append(f"{addr:04d} - {hex_code} - {instr}")
+            source = f"  ; {instr.source}" if instr.source else ""
+            lines.append(f"{addr:04d} - {hex_code} - {instr}{source}")
         elif isinstance(instr, int):
             hex_code = f"0x{instr:08X}"
             lines.append(f"{addr:04d} - {hex_code} - VECTOR_DATA 0x{instr:04X}")

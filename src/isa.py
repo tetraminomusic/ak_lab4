@@ -65,6 +65,7 @@ class Instruction:
     def __init__(self, opcode: Opcode, args: list[str | int] | None = None) -> None:
         self.opcode = opcode
         self.args = args if args is not None else []
+        self.source = ""  # Выражение исходника, из которого получена команда
 
     def __repr__(self) -> str:
         args_str = ", ".join(map(str, self.args))
