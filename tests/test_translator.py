@@ -279,3 +279,29 @@ def test_non_tail_recursion_keeps_call():
 
     calls = [instr for instr in clean_code if instr.opcode == Opcode.CALL]
     assert len(calls) == 2, "Рекурсивный вызов внутри (* n ...) должен остаться вызовом"
+
+
+def test_comparison_as_value():
+    """Сравнение вне условия должно давать 1 или 0, а не ошибку трансляции."""
+    code = "(setq flag (= 1 1))"
+    ast = parse(tokenize(code))
+    res_reg = translator.compile_expr(ast)
+    clean_code = translator.link_program(translator.program)
+
+    assert res_reg is not None
+
+    # Сравнение разворачивается в CMP, условный переход и две загрузки константы
+    assert Opcode.CMP in [instr.opcode for instr in clean_code]
+    assert Opcode.JNZ in [instr.opcode for instr in clean_code]
+
+
+def test_if_does_not_materialize_condition():
+    """В условии if сравнение остаётся переходом и не превращается в 1/0."""
+    code = "(if (= 1 2) 10 20)"
+    ast = parse(tokenize(code))
+    translator.compile_expr(ast)
+    clean_code = translator.link_program(translator.program)
+
+    # Одно сравнение и один условный переход, лишних загрузок единицы нет
+    assert len([i for i in clean_code if i.opcode == Opcode.CMP]) == 1
+    assert len([i for i in clean_code if i.opcode == Opcode.JNZ]) == 1

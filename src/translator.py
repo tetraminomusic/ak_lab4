@@ -35,6 +35,8 @@ INVERSE_JUMPS = {
     ">=": Opcode.JL,
 }
 
+COMPARE_OPS = {"=", "!=", "<", "<=", ">", ">="}
+
 BINARY_OPS = {
     "+",
     "-",
@@ -727,6 +729,25 @@ def compile_expr(node: Node) -> str | None:
             return arg_reg
 
         # Арифметика вариативная (+ 1 2 3...)
+
+        # Сравнение вне условия: превращаем флаги в число 1 или 0
+
+        if op in COMPARE_OPS:
+            label_false = make_label("cmp_false")
+            label_end = make_label("cmp_end")
+
+            jump_if_false = compile_condition(node)
+            result_reg = allocate_reg()
+
+            program.append(Instruction(jump_if_false, [label_false]))
+            program.append(Instruction(Opcode.LDI, [result_reg, 1]))
+            program.append(Instruction(Opcode.JMP, [label_end]))
+
+            program.append(f"{label_false}:")
+            program.append(Instruction(Opcode.LDI, [result_reg, 0]))
+
+            program.append(f"{label_end}:")
+            return result_reg
 
         if op in ("+", "*"):
             if len(node) < 3:
