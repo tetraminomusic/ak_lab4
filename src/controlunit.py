@@ -2,7 +2,7 @@ import logging
 
 from cache import Cache
 from datapath import STACK_LIMIT, DataPath
-from isa import Opcode
+from isa import WORD_SIZE, Opcode
 
 T0_FETCH = 0
 T1_DECODE = 1
@@ -161,7 +161,7 @@ class ControlUnit:
 
         self.stall_ticks = wait_ticks - 1
         self.dp.cr = raw_word
-        self.next_pc = self.dp.pc + 1
+        self.next_pc = self.dp.pc + WORD_SIZE
         self.step = T1_DECODE
 
     def instruction_decode(self) -> None:
@@ -246,7 +246,7 @@ class ControlUnit:
             self.mem_addr = self.dp.sp
             self.mem_value = self.next_pc
             self.mem_op = "write"
-            self.dp.sp -= 1
+            self.dp.sp -= WORD_SIZE
             self.next_pc = self.imm
             self.check_stack()
             self.step = T3_MEMORY
@@ -254,7 +254,7 @@ class ControlUnit:
         elif op == Opcode.RET:
             if not self.check_stack_bottom():
                 return
-            self.dp.sp += 1
+            self.dp.sp += WORD_SIZE
             self.mem_addr = self.dp.sp
             self.mem_op = "read"
             self.step = T3_MEMORY
@@ -263,14 +263,14 @@ class ControlUnit:
             self.mem_addr = self.dp.sp
             self.mem_value = self.dp.read_reg(rd)
             self.mem_op = "write"
-            self.dp.sp -= 1
+            self.dp.sp -= WORD_SIZE
             self.check_stack()
             self.step = T3_MEMORY
 
         elif op == Opcode.POP:
             if not self.check_stack_bottom():
                 return
-            self.dp.sp += 1
+            self.dp.sp += WORD_SIZE
             self.mem_addr = self.dp.sp
             self.mem_op = "read"
             self.step = T3_MEMORY
@@ -316,7 +316,7 @@ class ControlUnit:
         self.dp.flag_p = 0
 
     def check_stack_bottom(self) -> bool:
-        if self.dp.sp < len(self.dp.memory) - 1:
+        if self.dp.sp < (len(self.dp.memory) - 1) * WORD_SIZE:
             return True
 
         logging.error(
@@ -347,9 +347,9 @@ class ControlUnit:
         if op == Opcode.IRET:
             if not self.check_stack_bottom():
                 return
-            self.dp.sp += 1
+            self.dp.sp += WORD_SIZE
             ps_value, wait_ps = self.cache.read(self.dp.sp)
-            self.dp.sp += 1
+            self.dp.sp += WORD_SIZE
             pc_value, wait_pc = self.cache.read(self.dp.sp)
             self.stall_ticks = wait_ps + wait_pc - 1
 
@@ -383,11 +383,11 @@ class ControlUnit:
 
         self.step = T4_INTERRUPT if self.dp.irq else T0_FETCH
 
-    def interrupt_fetch(self, vector_address: int = 1) -> None:
+    def interrupt_fetch(self, vector_address: int = WORD_SIZE) -> None:
         wait_pc = self.cache.write(self.dp.sp, self.dp.pc)
-        self.dp.sp -= 1
+        self.dp.sp -= WORD_SIZE
         wait_ps = self.cache.write(self.dp.sp, self.dp.status_register)
-        self.dp.sp -= 1
+        self.dp.sp -= WORD_SIZE
         self.stall_ticks = wait_pc + wait_ps - 1
         self.check_stack()
 

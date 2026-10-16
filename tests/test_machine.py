@@ -14,7 +14,7 @@ from machine import ControlUnit, DataPath, run_simulation
 def test_cache_hit_and_miss_latencies():
     """Задержки: промах = 13 тактов на блок из 4 слов, попадание = 1 такт."""
     memory = [0] * 4096
-    memory[100] = 42
+    memory[25] = 42  # слово по байтовому адресу 100
     cache = Cache(memory, num_lines=8, block_size=4)
 
     val1, ticks1 = cache.read(100)
@@ -33,16 +33,17 @@ def test_cache_hit_and_miss_latencies():
 def test_cache_block_gives_spatial_locality():
     """Промах тянет весь блок, поэтому соседние адреса читаются уже из кеша."""
     memory = [0] * 4096
-    for addr in range(100, 104):
-        memory[addr] = addr
+    for addr in (96, 100, 104, 108):
+        memory[addr // 4] = addr
 
     cache = Cache(memory, num_lines=8, block_size=4)
 
-    # Адреса 100..103 лежат в одном блоке: платим только за первое обращение
-    _, ticks = cache.read(100)
+    # Байтовые адреса 96..111 лежат в одном блоке из 16 байт:
+    # платим только за первое обращение
+    _, ticks = cache.read(96)
     assert ticks == 13
 
-    for addr in (101, 102, 103):
+    for addr in (100, 104, 108):
         val, ticks = cache.read(addr)
         assert val == addr
         assert ticks == 1
@@ -50,8 +51,8 @@ def test_cache_block_gives_spatial_locality():
     assert cache.misses == 1
     assert cache.hits == 3
 
-    # Адрес 104 уже в следующем блоке, за него платим снова
-    _, ticks = cache.read(104)
+    # Адрес 112 уже в следующем блоке, за него платим снова
+    _, ticks = cache.read(112)
     assert ticks == 13
 
 
@@ -60,12 +61,12 @@ def test_cache_write_through():
     memory = [0] * 4096
     cache = Cache(memory, num_lines=8, block_size=4)
 
-    cache.read(50)
-    ticks = cache.write(50, 999)
+    cache.read(48)
+    ticks = cache.write(48, 999)
     assert ticks == 10
-    assert memory[50] == 999
+    assert memory[12] == 999  # слово по байтовому адресу 48
 
-    val, read_ticks = cache.read(50)
+    val, read_ticks = cache.read(48)
     assert val == 999
     assert read_ticks == 1
 
@@ -75,12 +76,12 @@ def test_cache_eviction():
     memory = [0] * 4096
     cache = Cache(memory, num_lines=8, block_size=4)
 
-    # Заполняем все 8 строк кэша блоками 0..7 (адреса 0, 4, 8, ... 28)
+    # Заполняем все 8 строк кэша блоками 0..7 (адреса 0, 16, 32, ... 112)
     for block in range(8):
-        cache.read(block * 4)
+        cache.read(block * 16)
 
     # Блок 8 ложится в строку 8 % 8 = 0 и вытесняет блок 0
-    cache.read(32)
+    cache.read(128)
 
     # Снова читаем адрес 0 — должен быть промах, строка была вытеснена
     _, ticks = cache.read(0)
@@ -275,7 +276,7 @@ def test_tail_recursion_does_not_grow_stack(tmp_path):
 def test_cache_can_be_disabled():
     """С выключенным кешем любое обращение в память стоит 10 тактов."""
     memory = [0] * 4096
-    memory[100] = 42
+    memory[25] = 42  # слово по байтовому адресу 100
     cache = Cache(memory, num_lines=8, enabled=False)
 
     val1, ticks1 = cache.read(100)

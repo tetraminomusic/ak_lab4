@@ -55,8 +55,8 @@ def test_empty_string_literal():
     code = '(setq empty "")'
     ast = parse(tokenize(code))
     translator.compile_expr(ast)
-    # По адресу 101 должна лежать длина 0
-    assert translator.data_memory[101] == 0
+    # Переменная заняла адрес 100, строка легла следом: длина 0 по адресу 104
+    assert translator.data_memory[104] == 0
 
 
 def test_deeply_nested_expressions():

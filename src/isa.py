@@ -1,5 +1,7 @@
 from enum import IntEnum
 
+WORD_SIZE = 4  # Размер машинного слова в байтах
+
 
 class Opcode(IntEnum):
     # Работа с памятью + регистры

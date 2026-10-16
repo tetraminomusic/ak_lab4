@@ -1,3 +1,5 @@
+from isa import WORD_SIZE
+
 # Одна физическая строка в кеш памяти
 # При реализации кеша буду использовать Direct-Mapped кеш, мол, прямое отображение и тд. Реализуем через остаток от деления на 8
 
@@ -43,15 +45,21 @@ class Cache:
     def fill_cost(self) -> int:
         return 10 + self.block_size - 1
 
+    # Байтовый адрес раскладывается на номер блока и номер слова внутри блока
+
+    def split_address(self, addr: int) -> tuple[int, int]:
+        block, offset_bytes = divmod(addr, self.block_size * WORD_SIZE)
+        return block, offset_bytes // WORD_SIZE
+
     # Функция чтения, возвращает [прочитанное значение, затраченные такты]
 
     def read(self, addr: int) -> tuple[int, int]:
         if not self.enabled:
             self.misses += 1
             self.last_status = "OFF (10) "
-            return self.memory[addr], 10
+            return self.memory[addr // WORD_SIZE], 10
 
-        block, offset = divmod(addr, self.block_size)
+        block, offset = self.split_address(addr)
         line = self.lines[block % self.num_lines]
 
         # Попадание
@@ -67,11 +75,11 @@ class Cache:
         wait_ticks = self.fill_cost()
         self.last_status = f"MISS({wait_ticks})"
 
-        base_addr = block * self.block_size
+        base_word = block * self.block_size
 
         line.valid = True
         line.tag = block
-        line.data = self.memory[base_addr : base_addr + self.block_size]
+        line.data = self.memory[base_word : base_word + self.block_size]
 
         return line.data[offset], wait_ticks
 
@@ -79,16 +87,16 @@ class Cache:
 
     def write(self, addr: int, val: int) -> int:
         if not self.enabled:
-            self.memory[addr] = val
+            self.memory[addr // WORD_SIZE] = val
             self.last_status = "OFF (10) "
             return 10
 
-        block, offset = divmod(addr, self.block_size)
+        block, offset = self.split_address(addr)
         line = self.lines[block % self.num_lines]
 
         # Пишем в ОЗУ
 
-        self.memory[addr] = val
+        self.memory[addr // WORD_SIZE] = val
 
         # Если в кеше лежал адрес, который мы хотели записать
 

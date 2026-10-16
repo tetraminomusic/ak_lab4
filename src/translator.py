@@ -3,14 +3,14 @@ import struct
 import sys
 from pathlib import Path
 
-from isa import Instruction, Opcode
+from isa import WORD_SIZE, Instruction, Opcode
 from parser import Node, StringLiteral, parse, tokenize
 
 current_reg = 1
 label_counter = 0
 
-DATA_SEGMENT_START = 1000
-STACK_LIMIT = 3100
+DATA_SEGMENT_START = 4000
+STACK_LIMIT = 12400
 
 data_address_counter = DATA_SEGMENT_START
 
@@ -124,11 +124,11 @@ def allocate_pstr(text: str) -> int:
     start_addr = data_address_counter
 
     data_memory[start_addr] = len(text)
-    data_address_counter += 1
+    data_address_counter += WORD_SIZE
 
     for char in text:
         data_memory[data_address_counter] = ord(char)
-        data_address_counter += 1
+        data_address_counter += WORD_SIZE
 
     return start_addr
 
@@ -140,7 +140,7 @@ def get_or_allocate_var(var_name: str) -> int:
     global data_address_counter
     if var_name not in symbol_table:
         symbol_table[var_name] = data_address_counter
-        data_address_counter += 1
+        data_address_counter += WORD_SIZE
     return symbol_table[var_name]
 
 
@@ -180,6 +180,15 @@ def load_constant(reg: str, value: int) -> None:
     program.append(Instruction(Opcode.LSL, [reg, reg, tmp_reg]))
     program.append(Instruction(Opcode.LDI, [tmp_reg, value & 0xFFFF]))
     program.append(Instruction(Opcode.OR, [reg, reg, tmp_reg]))
+
+    free_reg()
+
+
+def scale_index(idx_reg: str) -> None:
+    shift_reg = allocate_reg()
+
+    program.append(Instruction(Opcode.LDI, [shift_reg, WORD_SIZE // 2]))
+    program.append(Instruction(Opcode.LSL, [idx_reg, idx_reg, shift_reg]))
 
     free_reg()
 
@@ -237,7 +246,7 @@ def link_program(raw_program: list[Instruction | str]) -> list[Instruction]:
             labels_map[label_name] = current_address
         else:
             clean_instructions.append(item)
-            current_address += 1
+            current_address += WORD_SIZE
 
     # Второй проход: подставляем числовые адреса вместо текстовых
 
@@ -422,6 +431,7 @@ def compile_expr(node: Node) -> str | None:
 
             base_reg = compile_value(base_expr)
             idx_reg = compile_value(idx_expr)
+            scale_index(idx_reg)
 
             program.append(Instruction(Opcode.ADD, [base_reg, base_reg, idx_reg]))
             free_reg()
@@ -443,6 +453,7 @@ def compile_expr(node: Node) -> str | None:
 
             base_reg = compile_value(base_expr)
             idx_reg = compile_value(idx_expr)
+            scale_index(idx_reg)
             val_reg = compile_value(val_expr)
 
             program.append(Instruction(Opcode.ADD, [base_reg, base_reg, idx_reg]))
@@ -808,7 +819,8 @@ def compile_expr(node: Node) -> str | None:
 
 def generate_listing(instructions: list[Instruction]) -> str:
     lines = []
-    for addr, instr in enumerate(instructions):
+    for index, instr in enumerate(instructions):
+        addr = index * WORD_SIZE
         if isinstance(instr, Instruction):
             hex_code = f"0x{instr.encode():08X}"
             lines.append(f"{addr:04d} - {hex_code} - {instr}")
@@ -847,10 +859,10 @@ def compile_file(
 
     machine_code = link_program(program)
 
-    if len(machine_code) > DATA_SEGMENT_START:
+    if len(machine_code) * WORD_SIZE > DATA_SEGMENT_START:
         raise RuntimeError(
-            f"Код занял {len(machine_code)} слов и залезает в сегмент данных "
-            f"(адрес {DATA_SEGMENT_START})",
+            f"Код занял {len(machine_code) * WORD_SIZE} байт и залезает "
+            f"в сегмент данных (адрес {DATA_SEGMENT_START})",
         )
 
     if data_address_counter > STACK_LIMIT:
@@ -868,7 +880,7 @@ def compile_file(
             memory_dump[addr] = instr
 
     for addr, val in data_memory.items():
-        memory_dump[addr] = val
+        memory_dump[addr // WORD_SIZE] = val
 
     with Path(target_file).open("wb") as f:
         f.writelines(struct.pack(">I", word & 0xFFFF_FFFF) for word in memory_dump)

@@ -1,6 +1,6 @@
-from isa import Opcode
+from isa import WORD_SIZE, Opcode
 
-STACK_LIMIT = 3100
+STACK_LIMIT = 12400
 
 
 def to_signed(value: int) -> int:
@@ -43,7 +43,7 @@ class DataPath:
 
         # Служебные регистры вынесены ОТДЕЛЬНО (как просил лектор!)
         self.pc = 0  # Счётчик команд (PC)
-        self.sp = memory_size - 1  # Указатель на вершину стека (SP, 4095)
+        self.sp = (memory_size - 1) * WORD_SIZE  # Вершина стека (SP, 16380)
         self.cr = 0  # Регистр команд (CR / IR)
         self.status_register = 0  # Регистр состояния процессора (PS)
 
