@@ -9,13 +9,17 @@ T1_DECODE = 1
 T2_EXECUTE = 2
 T3_MEMORY = 3
 T4_INTERRUPT = 4
+T4_SAVE_PS = 5
+T3_RESTORE_PC = 6
 
 STEP_NAMES = {
     T0_FETCH: "T0 FETCH",
     T1_DECODE: "T1 DECODE",
     T2_EXECUTE: "T2 EXEC",
     T3_MEMORY: "T3 MEM/WB",
-    T4_INTERRUPT: "T4 INT",
+    T4_INTERRUPT: "T4 SAVE PC",
+    T4_SAVE_PS: "T4 SAVE PS",
+    T3_RESTORE_PC: "T3 IRET PC",
 }
 
 ALU_BINARY_OPS = (
@@ -68,6 +72,7 @@ class ControlUnit:
         self.stall_ticks = 0
 
         self.int_active = False
+        self.saved_ps = 0
 
         self.step_label = STEP_NAMES[T0_FETCH]
 
@@ -114,8 +119,13 @@ class ControlUnit:
         if self.stall_ticks > 0:
             self.stall_ticks -= 1
             self.step_label = "STALL"
+            if self.stall_ticks == 0:
+                self.step_label = "MEM READY"
+                self.complete_memory_access()
             return
 
+        if self.step == T0_FETCH and self.dp.irq and not self.int_active:
+            self.step = T4_INTERRUPT
         self.step_label = STEP_NAMES[self.step]
 
         if self.step == T0_FETCH:
@@ -128,6 +138,10 @@ class ControlUnit:
             self.memory_access()
         elif self.step == T4_INTERRUPT:
             self.interrupt_fetch()
+        elif self.step == T4_SAVE_PS:
+            self.start_memory_access(self.dp.sp, write=True, value=self.saved_ps)
+        elif self.step == T3_RESTORE_PC:
+            self.start_memory_access(self.dp.sp + 2 * WORD_SIZE)
 
     def __repr__(self) -> str:
         """Возвращает строку с текущими значениями для табличного вывода."""
@@ -166,16 +180,8 @@ class ControlUnit:
         )
 
     def instruction_fetch(self) -> None:
-        if not self.check_address(self.dp.pc):
-            return
-
         self.current_addr = self.dp.pc
-        raw_word, wait_ticks = self.cache.read(self.dp.pc)
-
-        self.stall_ticks = wait_ticks - 1
-        self.dp.cr = raw_word
-        self.next_pc = self.dp.pc + WORD_SIZE
-        self.step = T1_DECODE
+        self.start_memory_access(self.dp.pc)
 
     def instruction_decode(self) -> None:
         word = self.dp.cr
@@ -256,35 +262,33 @@ class ControlUnit:
             self.finish_instruction()
 
         elif op == Opcode.CALL:
+            if not self.check_stack():
+                return
             self.mem_addr = self.dp.sp
             self.mem_value = self.next_pc
             self.mem_op = "write"
-            self.dp.sp -= WORD_SIZE
             self.next_pc = self.imm
-            self.check_stack()
             self.step = T3_MEMORY
 
         elif op == Opcode.RET:
             if not self.check_stack_bottom():
                 return
-            self.dp.sp += WORD_SIZE
-            self.mem_addr = self.dp.sp
+            self.mem_addr = self.dp.sp + WORD_SIZE
             self.mem_op = "read"
             self.step = T3_MEMORY
 
         elif op == Opcode.PUSH:
+            if not self.check_stack():
+                return
             self.mem_addr = self.dp.sp
             self.mem_value = self.dp.read_reg(rd)
             self.mem_op = "write"
-            self.dp.sp -= WORD_SIZE
-            self.check_stack()
             self.step = T3_MEMORY
 
         elif op == Opcode.POP:
             if not self.check_stack_bottom():
                 return
-            self.dp.sp += WORD_SIZE
-            self.mem_addr = self.dp.sp
+            self.mem_addr = self.dp.sp + WORD_SIZE
             self.mem_op = "read"
             self.step = T3_MEMORY
 
@@ -325,9 +329,9 @@ class ControlUnit:
         else:
             self.finish_instruction()
 
-    def check_stack(self) -> None:
-        if self.dp.sp >= STACK_LIMIT:
-            return
+    def check_stack(self, words: int = 1) -> bool:
+        if self.dp.sp - (words - 1) * WORD_SIZE >= STACK_LIMIT:
+            return True
 
         logging.error(
             "[ТАКТ %d] Переполнение стека: SP = %d залез в сегмент данных",
@@ -336,6 +340,7 @@ class ControlUnit:
         )
         self.is_halted = True
         self.dp.flag_p = 0
+        return False
 
     def check_address(self, addr: int) -> bool:
         if 0 <= addr < len(self.dp.memory) * WORD_SIZE:
@@ -350,12 +355,12 @@ class ControlUnit:
         self.dp.flag_p = 0
         return False
 
-    def check_stack_bottom(self) -> bool:
-        if self.dp.sp < (len(self.dp.memory) - 1) * WORD_SIZE:
+    def check_stack_bottom(self, words: int = 1) -> bool:
+        if self.dp.sp + words * WORD_SIZE < len(self.dp.memory) * WORD_SIZE:
             return True
 
         logging.error(
-            "[ТАКТ %d] Стек пуст, снимать с него нечего",
+            "[ТАКТ %d] В стеке недостаточно слов для чтения",
             self.current_tick,
         )
         self.is_halted = True
@@ -376,65 +381,88 @@ class ControlUnit:
         return False
 
     def memory_access(self) -> None:
-        op = self.op
-        rd = f"R{self.rd_idx}"
+        if self.op == Opcode.IRET:
+            if self.check_stack_bottom(2):
+                self.start_memory_access(self.dp.sp + WORD_SIZE)
+            return
+        self.start_memory_access(
+            self.mem_addr, write=self.mem_op == "write", value=self.mem_value
+        )
 
-        if op == Opcode.IRET:
-            if not self.check_stack_bottom():
-                return
-            self.dp.sp += WORD_SIZE
-            ps_value, wait_ps = self.cache.read(self.dp.sp)
-            self.dp.sp += WORD_SIZE
-            pc_value, wait_pc = self.cache.read(self.dp.sp)
-            self.stall_ticks = wait_ps + wait_pc - 1
+    def start_memory_access(
+        self, addr: int, *, write: bool = False, value: int = 0
+    ) -> None:
+        if not self.check_address(addr):
+            return
+        self.mem_addr = addr
+        self.mem_value = value
+        self.mem_op = "write" if write else "read"
+        self.stall_ticks = self.cache.access_latency(addr, write=write) - 1
+        if self.stall_ticks == 0:
+            self.complete_memory_access()
 
-            self.dp.status_register = ps_value
-            self.next_pc = pc_value
-            self.dp.flag_ie = 1
+    def complete_memory_access(self) -> None:
+        if self.mem_op == "write":
+            self.cache.write(self.mem_addr, self.mem_value)
+            if self.step in (T4_INTERRUPT, T4_SAVE_PS) or self.op in (
+                Opcode.PUSH,
+                Opcode.CALL,
+            ):
+                self.dp.sp -= WORD_SIZE
+            if self.step == T4_INTERRUPT:
+                self.step = T4_SAVE_PS
+            elif self.step == T4_SAVE_PS:
+                self.dp.pc = WORD_SIZE
+                self.step = T0_FETCH
+                logging.info(
+                    "[ТАКТ %d] PC и PS сохранены в стек, переход на вектор",
+                    self.current_tick,
+                )
+            else:
+                self.finish_instruction()
+        else:
+            value, _ = self.cache.read(self.mem_addr)
+            self.complete_memory_read(value)
+
+    def complete_memory_read(self, value: int) -> None:
+        if self.step == T0_FETCH:
+            self.dp.cr = value
+            self.next_pc = self.dp.pc + WORD_SIZE
+            self.step = T1_DECODE
+        elif self.step == T3_RESTORE_PC:
+            self.dp.sp += 2 * WORD_SIZE
+            self.dp.status_register = self.saved_ps
+            self.next_pc = value
             self.int_active = False
-
             logging.info("[ТАКТ %d] Выход из прерывания (IRET)", self.current_tick)
             self.finish_instruction()
-            return
-
-        if not self.check_address(self.mem_addr):
-            return
-
-        if self.mem_op == "write":
-            self.stall_ticks = self.cache.write(self.mem_addr, self.mem_value) - 1
+        elif self.op == Opcode.IRET:
+            self.saved_ps = value
+            self.step = T3_RESTORE_PC
+        else:
+            if self.op in (Opcode.POP, Opcode.RET):
+                self.dp.sp += WORD_SIZE
+            if self.op in (Opcode.LD, Opcode.POP):
+                self.dp.write_reg(f"R{self.rd_idx}", value)
+            elif self.op == Opcode.RET:
+                self.next_pc = value
             self.finish_instruction()
-            return
-
-        value, wait_ticks = self.cache.read(self.mem_addr)
-        self.stall_ticks = wait_ticks - 1
-
-        if op in (Opcode.LD, Opcode.POP):
-            self.dp.write_reg(rd, value)
-        elif op == Opcode.RET:
-            self.next_pc = value
-
-        self.finish_instruction()
 
     def finish_instruction(self) -> None:
         self.instruction_counter += 1
         self.dp.pc = self.next_pc
 
-        self.step = T4_INTERRUPT if self.dp.irq else T0_FETCH
+        self.step = T4_INTERRUPT if self.dp.irq and not self.int_active else T0_FETCH
 
-    def interrupt_fetch(self, vector_address: int = WORD_SIZE) -> None:
-        wait_pc = self.cache.write(self.dp.sp, self.dp.pc)
-        self.dp.sp -= WORD_SIZE
-        wait_ps = self.cache.write(self.dp.sp, self.dp.status_register)
-        self.dp.sp -= WORD_SIZE
-        self.stall_ticks = wait_pc + wait_ps - 1
-        self.check_stack()
-
+    def interrupt_fetch(self) -> None:
+        if not self.check_stack(2):
+            return
+        self.saved_ps = self.dp.status_register
         self.dp.flag_ie = 0
         self.int_active = True
-        self.dp.pc = vector_address
-        self.step = T0_FETCH
 
         logging.info(
-            "[ТАКТ %d] Вход в прерывание: PC и PS сохранены в стек",
+            "[ТАКТ %d] Вход в прерывание: начинаем сохранять PC и PS",
             self.current_tick,
         )
+        self.start_memory_access(self.dp.sp, write=True, value=self.dp.pc)

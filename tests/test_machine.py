@@ -8,7 +8,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "s
 
 import translator
 from cache import Cache
-from isa import Opcode
+from isa import Instruction, Opcode
 from machine import ControlUnit, DataPath, run_simulation
 
 
@@ -87,6 +87,73 @@ def test_cache_eviction():
     # Снова читаем адрес 0 — должен быть промах, строка была вытеснена
     _, ticks = cache.read(0)
     assert ticks == 10
+
+
+def test_fetch_and_load_commit_when_memory_is_ready():
+    dp = DataPath()
+    cu = ControlUnit(dp)
+    word = Instruction(Opcode.LD, ["R1", "R0", 128]).encode()
+    dp.memory[0] = word
+    dp.memory[32] = 123
+
+    for _ in range(9):
+        cu.tick()
+    assert dp.cr == 0
+    assert not cu.cache.lines[0].valid
+    cu.tick()
+    assert dp.cr == word
+    assert cu.cache.lines[0].valid
+
+    for _ in range(11):
+        cu.tick()
+    assert dp.read_reg("R1") == 0
+    assert dp.pc == 0
+    cu.tick()
+    assert dp.read_reg("R1") == 123
+    assert dp.pc == 4
+    assert cu.instruction_counter == 1
+
+
+def test_interrupt_during_store_wait_uses_next_instruction_boundary():
+    dp = DataPath()
+    dp.flag_ie = 1
+    dp.write_reg("R1", 65)
+    dp.memory[0] = Instruction(Opcode.ST, ["R1", "R0", 128]).encode()
+    cu = ControlUnit(dp, schedule=[(14, "X")])
+
+    for _ in range(21):
+        cu.tick()
+    assert dp.memory[32] == 0
+    assert dp.pc == 0
+    cu.tick()
+    assert dp.memory[32] == 65
+    assert dp.pc == 4
+
+    cu.tick()
+    assert cu.int_active
+    assert not dp.flag_ie
+    assert dp.memory[-1] == 0
+    for _ in range(9):
+        cu.tick()
+    assert dp.memory[-1] == 4
+    assert dp.memory[-2] == 0
+    for _ in range(10):
+        cu.tick()
+    assert dp.memory[-2] & (1 << 5)
+    assert dp.sp == 16372
+    assert cu.instruction_counter == 1
+
+
+def test_iret_checks_for_both_words_before_popping():
+    dp = DataPath()
+    dp.memory[0] = Instruction(Opcode.IRET).encode()
+    dp.sp -= 4
+    sp_before = dp.sp
+    cu = ControlUnit(dp)
+    for _ in range(20):
+        cu.tick()
+    assert cu.is_halted
+    assert dp.sp == sp_before
 
 
 def test_alu_flags_nzcv():

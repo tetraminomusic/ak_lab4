@@ -51,6 +51,23 @@ class Cache:
         block, offset_bytes = divmod(addr, self.block_size * WORD_SIZE)
         return block, offset_bytes // WORD_SIZE
 
+    def access_latency(self, addr: int, *, write: bool) -> int:
+        """Выставить состояние шины и узнать задержку без чтения или записи."""
+        if not self.enabled:
+            self.last_status = "OFF (10) "
+            return 10
+        if write:
+            self.last_status = "WRITE(10)"
+            return 10
+        block, _ = self.split_address(addr)
+        line = self.lines[block % self.num_lines]
+        if line.valid and line.tag == block:
+            self.last_status = "HIT (1)"
+            return 1
+        ticks = self.fill_cost()
+        self.last_status = f"MISS({ticks})"
+        return ticks
+
     # Функция чтения, возвращает [прочитанное значение, затраченные такты]
 
     def read(self, addr: int) -> tuple[int, int]:
