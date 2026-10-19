@@ -8,6 +8,7 @@ from parser import Node, StringLiteral, parse, tokenize
 
 current_reg = 1
 label_counter = 0
+LAST_COMPILER_REG = 10
 
 DATA_SEGMENT_START = 4000
 STACK_LIMIT = 12400
@@ -150,7 +151,7 @@ def get_or_allocate_var(var_name: str) -> int:
 def allocate_reg() -> str:
     global current_reg
 
-    if current_reg > 10:
+    if current_reg > LAST_COMPILER_REG:
         raise RuntimeError("Ошибка компилятора: закончились свободные регистры")
 
     reg_name = f"R{current_reg}"
@@ -208,6 +209,9 @@ def collect_used_regs(instructions: list[Instruction | str]) -> list[int]:
     for item in instructions:
         if not isinstance(item, Instruction):
             continue
+        if item.opcode == Opcode.CALL:
+            # Вызванная функция может изменить регистры, которых нет в теле ISR.
+            return list(range(1, LAST_COMPILER_REG + 1))
 
         for arg in item.args:
             if isinstance(arg, str) and arg.startswith("R") and arg[1:].isdigit():

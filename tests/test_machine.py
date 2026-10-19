@@ -1,5 +1,6 @@
 # tests/test_machine.py
 import os
+import struct
 import sys
 
 # Добавляем путь к папке src
@@ -228,6 +229,40 @@ def test_input_buffer_empty():
         cu.tick()
 
     assert dp.read_reg("R1") == 0
+
+
+def test_interrupt_preserves_registers_across_function_call(tmp_path):
+    source_file = tmp_path / "isr.lisp"
+    bin_file = tmp_path / "isr.bin"
+    source_file.write_text(
+        """
+        (progn
+            (defun helper () (+ 1 2 3))
+            (definterrupt isr () (progn (in 0) (helper)))
+            (ei)
+            (defun wait () (wait))
+            (wait))
+        """,
+        encoding="utf-8",
+    )
+    translator.compile_file(str(source_file), str(bin_file))
+    dp = DataPath()
+    dp.memory[:] = [word for (word,) in struct.iter_unpack(">I", bin_file.read_bytes())]
+    cu = ControlUnit(dp, schedule=[(220, "X")])
+    for _ in range(219):
+        cu.tick()
+    dp.write_reg("R2", 65)
+    before = dp.registers.copy()
+    entered = False
+    for _ in range(600):
+        cu.tick()
+        if entered and not cu.int_active:
+            break
+        entered |= cu.int_active
+
+    assert entered
+    assert not cu.int_active
+    assert dp.registers == before
 
 
 def test_timeout_execution(tmp_path):
