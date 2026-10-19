@@ -96,3 +96,27 @@ def test_rpn_tokenization_and_validation(tmp_path, expression, expected):
     schedule = [(200 + 700 * i, ch) for i, ch in enumerate(expression + "\n")]
     output, _ = run_simulation(str(binary), schedule, max_ticks=120000)
     assert output == expected
+
+
+@pytest.mark.parametrize(
+    ("number", "expected"),
+    [
+        ("0", "-1"),
+        ("-5", "-1"),
+        ("1", "0"),
+        ("6", "8"),
+        ("2147483648", "-1"),
+        ("2147483647", "450"),
+    ],
+)
+def test_collatz_input_and_wide_intermediates(tmp_path, number, expected):
+    case = Path(__file__).with_name("golden") / "collatz.yml"
+    source = tmp_path / "collatz.lisp"
+    binary = tmp_path / "collatz.bin"
+    source.write_text(
+        yaml.safe_load(case.read_text(encoding="utf-8"))["in_source"], encoding="utf-8"
+    )
+    translator.compile_file(str(source), str(binary))
+    schedule = [(200 + 1500 * i, ch) for i, ch in enumerate(number + "\n")]
+    output, _ = run_simulation(str(binary), schedule, max_ticks=600000)
+    assert output == expected

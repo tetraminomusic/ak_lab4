@@ -2,6 +2,7 @@ in_source: |-
   (progn
       (setq num 0)
       (setq ready 0)
+      (setq bad 0)
 
       ; Число набирается из десятичных цифр до перевода строки
       (definterrupt isr ()
@@ -9,7 +10,14 @@ in_source: |-
               (setq ch (in 0))
               (if (= ch 10)
                   (setq ready 1)
-                  (setq num (+ (* num 10) (- ch 48))))))
+                  (progn
+                      (setq digit (- ch 48))
+                      (if (or bad (or (< digit 0) (> digit 9)))
+                          (setq bad 1)
+                          (if (or (> num 214748364)
+                                  (and (= num 214748364) (> digit 7)))
+                              (setq bad 1)
+                              (setq num (+ (* num 10) digit))))))))
 
       (ei)
 
@@ -28,15 +36,34 @@ in_source: |-
                   0)
               (out 1 (+ 48 (% n 10)))))
 
-      ; Длина последовательности Коллатца для num
-      (defun collatz (n count)
-          (if (= n 1)
+      ; Два 32-битных слова для промежуточного значения. При умножении
+      ; младшее слово разбиваем на половины, чтобы сохранить перенос.
+      (defun collatz (hi lo count)
+          (if (and (= hi 0) (= lo 1))
               count
-              (if (= (% n 2) 0)
-                  (collatz (/ n 2) (+ count 1))
-                  (collatz (+ (* 3 n) 1) (+ count 1)))))
+              (if (= (and lo 1) 0)
+                  (collatz (lsr hi 1)
+                           (or (lsr lo 1) (lsl (and hi 1) 31))
+                           (+ count 1))
+                  (progn
+                      (setq low_half (+ (* 3 (and lo 65535)) 1))
+                      (setq high_half (+ (* 3 (lsr lo 16)) (lsr low_half 16)))
+                      (setq carry (lsr high_half 16))
+                      (if (or (< hi 0)
+                              (or (> hi 1431655765)
+                                  (and (= hi 1431655765) (> carry 0))))
+                          -1
+                          (collatz (+ (* 3 hi) carry)
+                                   (or (lsl high_half 16) (and low_half 65535))
+                                   (+ count 1)))))))
 
-      (print_num (collatz num 0))
+      (if (or bad (= num 0))
+          (progn (out 1 45) (out 1 49))
+          (progn
+              (setq length (collatz 0 num 0))
+              (if (< length 0)
+                  (progn (out 1 45) (out 1 49))
+                  (print_num length))))
   )
 
 in_schedule:
@@ -44,142 +71,380 @@ in_schedule:
 - [900, '7']
 - [1600, "\n"]
 
-in_ticks: 31000
+in_ticks: 120000
 
 out_code_hex: |-
   0000 - 0x12000008 - JMP 8
-  0004 - 0x12000024 - JMP 36
+  0004 - 0x12000030 - JMP 48
   0008 - 0x01100000 - LDI R1, 0  ; 0
   0012 - 0x01200FA0 - LDI R2, 4000  ; (setq num 0)
   0016 - 0x03120000 - ST R1, R2, 0  ; (setq num 0)
   0020 - 0x01100000 - LDI R1, 0  ; 0
   0024 - 0x01200FA4 - LDI R2, 4004  ; (setq ready 0)
   0028 - 0x03120000 - ST R1, R2, 0  ; (setq ready 0)
-  0032 - 0x120000AC - JMP 172  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (setq ready 1) (setq num (+ (* num 10) (- ch 48))))))
-  0036 - 0x19100000 - PUSH R1  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (setq ready 1) (setq num (+ (* num 10) (- ch 48))))))
-  0040 - 0x19200000 - PUSH R2  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (setq ready 1) (setq num (+ (* num 10) (- ch 48))))))
-  0044 - 0x19300000 - PUSH R3  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (setq ready 1) (setq num (+ (* num 10) (- ch 48))))))
-  0048 - 0x19400000 - PUSH R4  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (setq ready 1) (setq num (+ (* num 10) (- ch 48))))))
-  0052 - 0x1B100000 - IN R1, 0  ; (in 0)
-  0056 - 0x01200FA8 - LDI R2, 4008  ; (setq ch (in 0))
-  0060 - 0x03120000 - ST R1, R2, 0  ; (setq ch (in 0))
-  0064 - 0x01100FA8 - LDI R1, 4008  ; ch
-  0068 - 0x02110000 - LD R1, R1, 0  ; ch
-  0072 - 0x0120000A - LDI R2, 10  ; 10
-  0076 - 0x0B120000 - CMP R1, R2  ; (if (= ch 10) (setq ready 1) (setq num (+ (* num 10) (- ch 48))))
-  0080 - 0x14000068 - JNZ 104  ; (if (= ch 10) (setq ready 1) (setq num (+ (* num 10) (- ch 48))))
-  0084 - 0x01200001 - LDI R2, 1  ; 1
-  0088 - 0x01300FA4 - LDI R3, 4004  ; (setq ready 1)
-  0092 - 0x03230000 - ST R2, R3, 0  ; (setq ready 1)
-  0096 - 0x04120000 - ADD R1, R2, R0  ; (if (= ch 10) (setq ready 1) (setq num (+ (* num 10) (- ch 48))))
-  0100 - 0x12000098 - JMP 152  ; (if (= ch 10) (setq ready 1) (setq num (+ (* num 10) (- ch 48))))
-  0104 - 0x01200FA0 - LDI R2, 4000  ; num
-  0108 - 0x02220000 - LD R2, R2, 0  ; num
-  0112 - 0x0130000A - LDI R3, 10  ; 10
-  0116 - 0x06223000 - MUL R2, R2, R3  ; (* num 10)
-  0120 - 0x01300FA8 - LDI R3, 4008  ; ch
-  0124 - 0x02330000 - LD R3, R3, 0  ; ch
-  0128 - 0x01400030 - LDI R4, 48  ; 48
-  0132 - 0x05334000 - SUB R3, R3, R4  ; (- ch 48)
-  0136 - 0x04223000 - ADD R2, R2, R3  ; (+ (* num 10) (- ch 48))
-  0140 - 0x01300FA0 - LDI R3, 4000  ; (setq num (+ (* num 10) (- ch 48)))
-  0144 - 0x03230000 - ST R2, R3, 0  ; (setq num (+ (* num 10) (- ch 48)))
-  0148 - 0x04120000 - ADD R1, R2, R0  ; (if (= ch 10) (setq ready 1) (setq num (+ (* num 10) (- ch 48))))
-  0152 - 0x1A400000 - POP R4  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (setq ready 1) (setq num (+ (* num 10) (- ch 48))))))
-  0156 - 0x1A300000 - POP R3  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (setq ready 1) (setq num (+ (* num 10) (- ch 48))))))
-  0160 - 0x1A200000 - POP R2  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (setq ready 1) (setq num (+ (* num 10) (- ch 48))))))
-  0164 - 0x1A100000 - POP R1  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (setq ready 1) (setq num (+ (* num 10) (- ch 48))))))
-  0168 - 0x1F000000 - IRET  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (setq ready 1) (setq num (+ (* num 10) (- ch 48))))))
-  0172 - 0x1D000000 - EI  ; (ei)
-  0176 - 0x120000DC - JMP 220  ; (defun wait () (if (= ready 1) 0 (wait)))
-  0180 - 0x01200FA4 - LDI R2, 4004  ; ready
-  0184 - 0x02220000 - LD R2, R2, 0  ; ready
-  0188 - 0x01300001 - LDI R3, 1  ; 1
-  0192 - 0x0B230000 - CMP R2, R3  ; (defun wait () (if (= ready 1) 0 (wait)))
-  0196 - 0x140000D4 - JNZ 212  ; (defun wait () (if (= ready 1) 0 (wait)))
-  0200 - 0x01200000 - LDI R2, 0  ; 0
-  0204 - 0x04120000 - ADD R1, R2, R0  ; (defun wait () (if (= ready 1) 0 (wait)))
-  0208 - 0x120000D8 - JMP 216  ; (defun wait () (if (= ready 1) 0 (wait)))
-  0212 - 0x120000B4 - JMP 180  ; (defun wait () (if (= ready 1) 0 (wait)))
-  0216 - 0x18000000 - RET  ; (defun wait () (if (= ready 1) 0 (wait)))
-  0220 - 0x170000B4 - CALL 180  ; (wait)
-  0224 - 0x04110000 - ADD R1, R1, R0  ; (wait)
-  0228 - 0x1E000000 - DI  ; (di)
-  0232 - 0x12000164 - JMP 356  ; (defun print_num (n) (progn (if (> n 9) (print_num (/ n 10)) 0) (out 1 (+ 48 (% n 10)))))
-  0236 - 0x01300009 - LDI R3, 9  ; 9
-  0240 - 0x04410000 - ADD R4, R1, R0  ; n
-  0244 - 0x0B340000 - CMP R3, R4  ; (if (> n 9) (print_num (/ n 10)) 0)
-  0248 - 0x16000134 - JGE 308  ; (if (> n 9) (print_num (/ n 10)) 0)
-  0252 - 0x19100000 - PUSH R1  ; (print_num (/ n 10))
-  0256 - 0x19200000 - PUSH R2  ; (print_num (/ n 10))
-  0260 - 0x19300000 - PUSH R3  ; (print_num (/ n 10))
-  0264 - 0x04410000 - ADD R4, R1, R0  ; n
-  0268 - 0x0150000A - LDI R5, 10  ; 10
-  0272 - 0x07445000 - DIV R4, R4, R5  ; (/ n 10)
-  0276 - 0x04140000 - ADD R1, R4, R0  ; (print_num (/ n 10))
-  0280 - 0x170000EC - CALL 236  ; (print_num (/ n 10))
-  0284 - 0x04410000 - ADD R4, R1, R0  ; (print_num (/ n 10))
-  0288 - 0x1A300000 - POP R3  ; (print_num (/ n 10))
-  0292 - 0x1A200000 - POP R2  ; (print_num (/ n 10))
-  0296 - 0x1A100000 - POP R1  ; (print_num (/ n 10))
-  0300 - 0x04340000 - ADD R3, R4, R0  ; (if (> n 9) (print_num (/ n 10)) 0)
-  0304 - 0x1200013C - JMP 316  ; (if (> n 9) (print_num (/ n 10)) 0)
-  0308 - 0x01400000 - LDI R4, 0  ; 0
-  0312 - 0x04340000 - ADD R3, R4, R0  ; (if (> n 9) (print_num (/ n 10)) 0)
-  0316 - 0x01300030 - LDI R3, 48  ; 48
-  0320 - 0x04410000 - ADD R4, R1, R0  ; n
-  0324 - 0x0150000A - LDI R5, 10  ; 10
-  0328 - 0x08445000 - MOD R4, R4, R5  ; (% n 10)
-  0332 - 0x04334000 - ADD R3, R3, R4  ; (+ 48 (% n 10))
-  0336 - 0x1C300001 - OUT 1, R3  ; (out 1 (+ 48 (% n 10)))
-  0340 - 0x04230000 - ADD R2, R3, R0  ; (defun print_num (n) (progn (if (> n 9) (print_num (/ n 10)) 0) (out 1 (+ 48 (% n 10)))))
-  0344 - 0x1200015C - JMP 348  ; (defun print_num (n) (progn (if (> n 9) (print_num (/ n 10)) 0) (out 1 (+ 48 (% n 10)))))
-  0348 - 0x04120000 - ADD R1, R2, R0  ; (defun print_num (n) (progn (if (> n 9) (print_num (/ n 10)) 0) (out 1 (+ 48 (% n 10)))))
-  0352 - 0x18000000 - RET  ; (defun print_num (n) (progn (if (> n 9) (print_num (/ n 10)) 0) (out 1 (+ 48 (% n 10)))))
-  0356 - 0x120001F4 - JMP 500  ; (defun collatz (n count) (if (= n 1) count (if (= (% n 2) 0) (collatz (/ n 2) (+ count 1)) (collatz (+ (* 3 n) 1) (+ count 1)))))
-  0360 - 0x04410000 - ADD R4, R1, R0  ; n
-  0364 - 0x01500001 - LDI R5, 1  ; 1
-  0368 - 0x0B450000 - CMP R4, R5  ; (defun collatz (n count) (if (= n 1) count (if (= (% n 2) 0) (collatz (/ n 2) (+ count 1)) (collatz (+ (* 3 n) 1) (+ count 1)))))
-  0372 - 0x14000184 - JNZ 388  ; (defun collatz (n count) (if (= n 1) count (if (= (% n 2) 0) (collatz (/ n 2) (+ count 1)) (collatz (+ (* 3 n) 1) (+ count 1)))))
-  0376 - 0x04420000 - ADD R4, R2, R0  ; count
-  0380 - 0x04340000 - ADD R3, R4, R0  ; (defun collatz (n count) (if (= n 1) count (if (= (% n 2) 0) (collatz (/ n 2) (+ count 1)) (collatz (+ (* 3 n) 1) (+ count 1)))))
-  0384 - 0x120001EC - JMP 492  ; (defun collatz (n count) (if (= n 1) count (if (= (% n 2) 0) (collatz (/ n 2) (+ count 1)) (collatz (+ (* 3 n) 1) (+ count 1)))))
-  0388 - 0x04410000 - ADD R4, R1, R0  ; n
-  0392 - 0x01500002 - LDI R5, 2  ; 2
-  0396 - 0x08445000 - MOD R4, R4, R5  ; (% n 2)
-  0400 - 0x01500000 - LDI R5, 0  ; 0
-  0404 - 0x0B450000 - CMP R4, R5  ; (defun collatz (n count) (if (= n 1) count (if (= (% n 2) 0) (collatz (/ n 2) (+ count 1)) (collatz (+ (* 3 n) 1) (+ count 1)))))
-  0408 - 0x140001C0 - JNZ 448  ; (defun collatz (n count) (if (= n 1) count (if (= (% n 2) 0) (collatz (/ n 2) (+ count 1)) (collatz (+ (* 3 n) 1) (+ count 1)))))
-  0412 - 0x04410000 - ADD R4, R1, R0  ; n
-  0416 - 0x01500002 - LDI R5, 2  ; 2
-  0420 - 0x07445000 - DIV R4, R4, R5  ; (/ n 2)
-  0424 - 0x04520000 - ADD R5, R2, R0  ; count
-  0428 - 0x01600001 - LDI R6, 1  ; 1
-  0432 - 0x04556000 - ADD R5, R5, R6  ; (+ count 1)
-  0436 - 0x04140000 - ADD R1, R4, R0  ; (defun collatz (n count) (if (= n 1) count (if (= (% n 2) 0) (collatz (/ n 2) (+ count 1)) (collatz (+ (* 3 n) 1) (+ count 1)))))
-  0440 - 0x04250000 - ADD R2, R5, R0  ; (defun collatz (n count) (if (= n 1) count (if (= (% n 2) 0) (collatz (/ n 2) (+ count 1)) (collatz (+ (* 3 n) 1) (+ count 1)))))
-  0444 - 0x12000168 - JMP 360  ; (defun collatz (n count) (if (= n 1) count (if (= (% n 2) 0) (collatz (/ n 2) (+ count 1)) (collatz (+ (* 3 n) 1) (+ count 1)))))
-  0448 - 0x01400003 - LDI R4, 3  ; 3
-  0452 - 0x04510000 - ADD R5, R1, R0  ; n
-  0456 - 0x06445000 - MUL R4, R4, R5  ; (* 3 n)
-  0460 - 0x01500001 - LDI R5, 1  ; 1
-  0464 - 0x04445000 - ADD R4, R4, R5  ; (+ (* 3 n) 1)
-  0468 - 0x04520000 - ADD R5, R2, R0  ; count
-  0472 - 0x01600001 - LDI R6, 1  ; 1
-  0476 - 0x04556000 - ADD R5, R5, R6  ; (+ count 1)
-  0480 - 0x04140000 - ADD R1, R4, R0  ; (defun collatz (n count) (if (= n 1) count (if (= (% n 2) 0) (collatz (/ n 2) (+ count 1)) (collatz (+ (* 3 n) 1) (+ count 1)))))
-  0484 - 0x04250000 - ADD R2, R5, R0  ; (defun collatz (n count) (if (= n 1) count (if (= (% n 2) 0) (collatz (/ n 2) (+ count 1)) (collatz (+ (* 3 n) 1) (+ count 1)))))
-  0488 - 0x12000168 - JMP 360  ; (defun collatz (n count) (if (= n 1) count (if (= (% n 2) 0) (collatz (/ n 2) (+ count 1)) (collatz (+ (* 3 n) 1) (+ count 1)))))
-  0492 - 0x04130000 - ADD R1, R3, R0  ; (defun collatz (n count) (if (= n 1) count (if (= (% n 2) 0) (collatz (/ n 2) (+ count 1)) (collatz (+ (* 3 n) 1) (+ count 1)))))
-  0496 - 0x18000000 - RET  ; (defun collatz (n count) (if (= n 1) count (if (= (% n 2) 0) (collatz (/ n 2) (+ count 1)) (collatz (+ (* 3 n) 1) (+ count 1)))))
-  0500 - 0x01100FA0 - LDI R1, 4000  ; num
-  0504 - 0x02110000 - LD R1, R1, 0  ; num
-  0508 - 0x01200000 - LDI R2, 0  ; 0
-  0512 - 0x17000168 - CALL 360  ; (collatz num 0)
-  0516 - 0x04110000 - ADD R1, R1, R0  ; (collatz num 0)
-  0520 - 0x170000EC - CALL 236  ; (print_num (collatz num 0))
-  0524 - 0x04110000 - ADD R1, R1, R0  ; (print_num (collatz num 0))
-  0528 - 0x20000000 - HLT
+  0032 - 0x01100000 - LDI R1, 0  ; 0
+  0036 - 0x01200FA8 - LDI R2, 4008  ; (setq bad 0)
+  0040 - 0x03120000 - ST R1, R2, 0  ; (setq bad 0)
+  0044 - 0x120001F0 - JMP 496  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (setq ready 1) (progn (setq digit (- ch 48)) (if (or bad (or (< digit 0) (> digit 9))) (setq bad 1) (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit))))))))
+  0048 - 0x19100000 - PUSH R1  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (setq ready 1) (progn (setq digit (- ch 48)) (if (or bad (or (< digit 0) (> digit 9))) (setq bad 1) (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit))))))))
+  0052 - 0x19200000 - PUSH R2  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (setq ready 1) (progn (setq digit (- ch 48)) (if (or bad (or (< digit 0) (> digit 9))) (setq bad 1) (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit))))))))
+  0056 - 0x19300000 - PUSH R3  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (setq ready 1) (progn (setq digit (- ch 48)) (if (or bad (or (< digit 0) (> digit 9))) (setq bad 1) (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit))))))))
+  0060 - 0x19400000 - PUSH R4  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (setq ready 1) (progn (setq digit (- ch 48)) (if (or bad (or (< digit 0) (> digit 9))) (setq bad 1) (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit))))))))
+  0064 - 0x19500000 - PUSH R5  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (setq ready 1) (progn (setq digit (- ch 48)) (if (or bad (or (< digit 0) (> digit 9))) (setq bad 1) (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit))))))))
+  0068 - 0x19600000 - PUSH R6  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (setq ready 1) (progn (setq digit (- ch 48)) (if (or bad (or (< digit 0) (> digit 9))) (setq bad 1) (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit))))))))
+  0072 - 0x1B100000 - IN R1, 0  ; (in 0)
+  0076 - 0x01200FAC - LDI R2, 4012  ; (setq ch (in 0))
+  0080 - 0x03120000 - ST R1, R2, 0  ; (setq ch (in 0))
+  0084 - 0x01100FAC - LDI R1, 4012  ; ch
+  0088 - 0x02110000 - LD R1, R1, 0  ; ch
+  0092 - 0x0120000A - LDI R2, 10  ; 10
+  0096 - 0x0B120000 - CMP R1, R2  ; (if (= ch 10) (setq ready 1) (progn (setq digit (- ch 48)) (if (or bad (or (< digit 0) (> digit 9))) (setq bad 1) (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit))))))
+  0100 - 0x1400007C - JNZ 124  ; (if (= ch 10) (setq ready 1) (progn (setq digit (- ch 48)) (if (or bad (or (< digit 0) (> digit 9))) (setq bad 1) (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit))))))
+  0104 - 0x01200001 - LDI R2, 1  ; 1
+  0108 - 0x01300FA4 - LDI R3, 4004  ; (setq ready 1)
+  0112 - 0x03230000 - ST R2, R3, 0  ; (setq ready 1)
+  0116 - 0x04120000 - ADD R1, R2, R0  ; (if (= ch 10) (setq ready 1) (progn (setq digit (- ch 48)) (if (or bad (or (< digit 0) (> digit 9))) (setq bad 1) (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit))))))
+  0120 - 0x120001D4 - JMP 468  ; (if (= ch 10) (setq ready 1) (progn (setq digit (- ch 48)) (if (or bad (or (< digit 0) (> digit 9))) (setq bad 1) (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit))))))
+  0124 - 0x01200FAC - LDI R2, 4012  ; ch
+  0128 - 0x02220000 - LD R2, R2, 0  ; ch
+  0132 - 0x01300030 - LDI R3, 48  ; 48
+  0136 - 0x05223000 - SUB R2, R2, R3  ; (- ch 48)
+  0140 - 0x01300FB0 - LDI R3, 4016  ; (setq digit (- ch 48))
+  0144 - 0x03230000 - ST R2, R3, 0  ; (setq digit (- ch 48))
+  0148 - 0x01200FA8 - LDI R2, 4008  ; bad
+  0152 - 0x02220000 - LD R2, R2, 0  ; bad
+  0156 - 0x01300FB0 - LDI R3, 4016  ; digit
+  0160 - 0x02330000 - LD R3, R3, 0  ; digit
+  0164 - 0x01400000 - LDI R4, 0  ; 0
+  0168 - 0x0B340000 - CMP R3, R4  ; (< digit 0)
+  0172 - 0x160000B8 - JGE 184  ; (< digit 0)
+  0176 - 0x01300001 - LDI R3, 1  ; (< digit 0)
+  0180 - 0x120000BC - JMP 188  ; (< digit 0)
+  0184 - 0x01300000 - LDI R3, 0  ; (< digit 0)
+  0188 - 0x01400009 - LDI R4, 9  ; 9
+  0192 - 0x01500FB0 - LDI R5, 4016  ; digit
+  0196 - 0x02550000 - LD R5, R5, 0  ; digit
+  0200 - 0x0B450000 - CMP R4, R5  ; (> digit 9)
+  0204 - 0x160000D8 - JGE 216  ; (> digit 9)
+  0208 - 0x01400001 - LDI R4, 1  ; (> digit 9)
+  0212 - 0x120000DC - JMP 220  ; (> digit 9)
+  0216 - 0x01400000 - LDI R4, 0  ; (> digit 9)
+  0220 - 0x0D334000 - OR R3, R3, R4  ; (or (< digit 0) (> digit 9))
+  0224 - 0x0D223000 - OR R2, R2, R3  ; (or bad (or (< digit 0) (> digit 9)))
+  0228 - 0x0B200000 - CMP R2, R0  ; (if (or bad (or (< digit 0) (> digit 9))) (setq bad 1) (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit))))
+  0232 - 0x13000100 - JZ 256  ; (if (or bad (or (< digit 0) (> digit 9))) (setq bad 1) (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit))))
+  0236 - 0x01300001 - LDI R3, 1  ; 1
+  0240 - 0x01400FA8 - LDI R4, 4008  ; (setq bad 1)
+  0244 - 0x03340000 - ST R3, R4, 0  ; (setq bad 1)
+  0248 - 0x04230000 - ADD R2, R3, R0  ; (if (or bad (or (< digit 0) (> digit 9))) (setq bad 1) (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit))))
+  0252 - 0x120001D0 - JMP 464  ; (if (or bad (or (< digit 0) (> digit 9))) (setq bad 1) (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit))))
+  0256 - 0x01300CCC - LDI R3, 3276  ; 214748364
+  0260 - 0x01400010 - LDI R4, 16  ; 214748364
+  0264 - 0x10334000 - LSL R3, R3, R4  ; 214748364
+  0268 - 0x0140CCCC - LDI R4, 52428  ; 214748364
+  0272 - 0x0D334000 - OR R3, R3, R4  ; 214748364
+  0276 - 0x01400FA0 - LDI R4, 4000  ; num
+  0280 - 0x02440000 - LD R4, R4, 0  ; num
+  0284 - 0x0B340000 - CMP R3, R4  ; (> num 214748364)
+  0288 - 0x1600012C - JGE 300  ; (> num 214748364)
+  0292 - 0x01300001 - LDI R3, 1  ; (> num 214748364)
+  0296 - 0x12000130 - JMP 304  ; (> num 214748364)
+  0300 - 0x01300000 - LDI R3, 0  ; (> num 214748364)
+  0304 - 0x01400FA0 - LDI R4, 4000  ; num
+  0308 - 0x02440000 - LD R4, R4, 0  ; num
+  0312 - 0x01500CCC - LDI R5, 3276  ; 214748364
+  0316 - 0x01600010 - LDI R6, 16  ; 214748364
+  0320 - 0x10556000 - LSL R5, R5, R6  ; 214748364
+  0324 - 0x0160CCCC - LDI R6, 52428  ; 214748364
+  0328 - 0x0D556000 - OR R5, R5, R6  ; 214748364
+  0332 - 0x0B450000 - CMP R4, R5  ; (= num 214748364)
+  0336 - 0x1400015C - JNZ 348  ; (= num 214748364)
+  0340 - 0x01400001 - LDI R4, 1  ; (= num 214748364)
+  0344 - 0x12000160 - JMP 352  ; (= num 214748364)
+  0348 - 0x01400000 - LDI R4, 0  ; (= num 214748364)
+  0352 - 0x01500007 - LDI R5, 7  ; 7
+  0356 - 0x01600FB0 - LDI R6, 4016  ; digit
+  0360 - 0x02660000 - LD R6, R6, 0  ; digit
+  0364 - 0x0B560000 - CMP R5, R6  ; (> digit 7)
+  0368 - 0x1600017C - JGE 380  ; (> digit 7)
+  0372 - 0x01500001 - LDI R5, 1  ; (> digit 7)
+  0376 - 0x12000180 - JMP 384  ; (> digit 7)
+  0380 - 0x01500000 - LDI R5, 0  ; (> digit 7)
+  0384 - 0x0C445000 - AND R4, R4, R5  ; (and (= num 214748364) (> digit 7))
+  0388 - 0x0D334000 - OR R3, R3, R4  ; (or (> num 214748364) (and (= num 214748364) (> digit 7)))
+  0392 - 0x0B300000 - CMP R3, R0  ; (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit)))
+  0396 - 0x130001A4 - JZ 420  ; (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit)))
+  0400 - 0x01400001 - LDI R4, 1  ; 1
+  0404 - 0x01500FA8 - LDI R5, 4008  ; (setq bad 1)
+  0408 - 0x03450000 - ST R4, R5, 0  ; (setq bad 1)
+  0412 - 0x04340000 - ADD R3, R4, R0  ; (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit)))
+  0416 - 0x120001CC - JMP 460  ; (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit)))
+  0420 - 0x01400FA0 - LDI R4, 4000  ; num
+  0424 - 0x02440000 - LD R4, R4, 0  ; num
+  0428 - 0x0150000A - LDI R5, 10  ; 10
+  0432 - 0x06445000 - MUL R4, R4, R5  ; (* num 10)
+  0436 - 0x01500FB0 - LDI R5, 4016  ; digit
+  0440 - 0x02550000 - LD R5, R5, 0  ; digit
+  0444 - 0x04445000 - ADD R4, R4, R5  ; (+ (* num 10) digit)
+  0448 - 0x01500FA0 - LDI R5, 4000  ; (setq num (+ (* num 10) digit))
+  0452 - 0x03450000 - ST R4, R5, 0  ; (setq num (+ (* num 10) digit))
+  0456 - 0x04340000 - ADD R3, R4, R0  ; (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit)))
+  0460 - 0x04230000 - ADD R2, R3, R0  ; (if (or bad (or (< digit 0) (> digit 9))) (setq bad 1) (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit))))
+  0464 - 0x04120000 - ADD R1, R2, R0  ; (if (= ch 10) (setq ready 1) (progn (setq digit (- ch 48)) (if (or bad (or (< digit 0) (> digit 9))) (setq bad 1) (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit))))))
+  0468 - 0x1A600000 - POP R6  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (setq ready 1) (progn (setq digit (- ch 48)) (if (or bad (or (< digit 0) (> digit 9))) (setq bad 1) (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit))))))))
+  0472 - 0x1A500000 - POP R5  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (setq ready 1) (progn (setq digit (- ch 48)) (if (or bad (or (< digit 0) (> digit 9))) (setq bad 1) (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit))))))))
+  0476 - 0x1A400000 - POP R4  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (setq ready 1) (progn (setq digit (- ch 48)) (if (or bad (or (< digit 0) (> digit 9))) (setq bad 1) (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit))))))))
+  0480 - 0x1A300000 - POP R3  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (setq ready 1) (progn (setq digit (- ch 48)) (if (or bad (or (< digit 0) (> digit 9))) (setq bad 1) (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit))))))))
+  0484 - 0x1A200000 - POP R2  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (setq ready 1) (progn (setq digit (- ch 48)) (if (or bad (or (< digit 0) (> digit 9))) (setq bad 1) (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit))))))))
+  0488 - 0x1A100000 - POP R1  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (setq ready 1) (progn (setq digit (- ch 48)) (if (or bad (or (< digit 0) (> digit 9))) (setq bad 1) (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit))))))))
+  0492 - 0x1F000000 - IRET  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (setq ready 1) (progn (setq digit (- ch 48)) (if (or bad (or (< digit 0) (> digit 9))) (setq bad 1) (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit))))))))
+  0496 - 0x1D000000 - EI  ; (ei)
+  0500 - 0x12000220 - JMP 544  ; (defun wait () (if (= ready 1) 0 (wait)))
+  0504 - 0x01200FA4 - LDI R2, 4004  ; ready
+  0508 - 0x02220000 - LD R2, R2, 0  ; ready
+  0512 - 0x01300001 - LDI R3, 1  ; 1
+  0516 - 0x0B230000 - CMP R2, R3  ; (defun wait () (if (= ready 1) 0 (wait)))
+  0520 - 0x14000218 - JNZ 536  ; (defun wait () (if (= ready 1) 0 (wait)))
+  0524 - 0x01200000 - LDI R2, 0  ; 0
+  0528 - 0x04120000 - ADD R1, R2, R0  ; (defun wait () (if (= ready 1) 0 (wait)))
+  0532 - 0x1200021C - JMP 540  ; (defun wait () (if (= ready 1) 0 (wait)))
+  0536 - 0x120001F8 - JMP 504  ; (defun wait () (if (= ready 1) 0 (wait)))
+  0540 - 0x18000000 - RET  ; (defun wait () (if (= ready 1) 0 (wait)))
+  0544 - 0x170001F8 - CALL 504  ; (wait)
+  0548 - 0x04110000 - ADD R1, R1, R0  ; (wait)
+  0552 - 0x1E000000 - DI  ; (di)
+  0556 - 0x120002A8 - JMP 680  ; (defun print_num (n) (progn (if (> n 9) (print_num (/ n 10)) 0) (out 1 (+ 48 (% n 10)))))
+  0560 - 0x01300009 - LDI R3, 9  ; 9
+  0564 - 0x04410000 - ADD R4, R1, R0  ; n
+  0568 - 0x0B340000 - CMP R3, R4  ; (if (> n 9) (print_num (/ n 10)) 0)
+  0572 - 0x16000278 - JGE 632  ; (if (> n 9) (print_num (/ n 10)) 0)
+  0576 - 0x19100000 - PUSH R1  ; (print_num (/ n 10))
+  0580 - 0x19200000 - PUSH R2  ; (print_num (/ n 10))
+  0584 - 0x19300000 - PUSH R3  ; (print_num (/ n 10))
+  0588 - 0x04410000 - ADD R4, R1, R0  ; n
+  0592 - 0x0150000A - LDI R5, 10  ; 10
+  0596 - 0x07445000 - DIV R4, R4, R5  ; (/ n 10)
+  0600 - 0x04140000 - ADD R1, R4, R0  ; (print_num (/ n 10))
+  0604 - 0x17000230 - CALL 560  ; (print_num (/ n 10))
+  0608 - 0x04410000 - ADD R4, R1, R0  ; (print_num (/ n 10))
+  0612 - 0x1A300000 - POP R3  ; (print_num (/ n 10))
+  0616 - 0x1A200000 - POP R2  ; (print_num (/ n 10))
+  0620 - 0x1A100000 - POP R1  ; (print_num (/ n 10))
+  0624 - 0x04340000 - ADD R3, R4, R0  ; (if (> n 9) (print_num (/ n 10)) 0)
+  0628 - 0x12000280 - JMP 640  ; (if (> n 9) (print_num (/ n 10)) 0)
+  0632 - 0x01400000 - LDI R4, 0  ; 0
+  0636 - 0x04340000 - ADD R3, R4, R0  ; (if (> n 9) (print_num (/ n 10)) 0)
+  0640 - 0x01300030 - LDI R3, 48  ; 48
+  0644 - 0x04410000 - ADD R4, R1, R0  ; n
+  0648 - 0x0150000A - LDI R5, 10  ; 10
+  0652 - 0x08445000 - MOD R4, R4, R5  ; (% n 10)
+  0656 - 0x04334000 - ADD R3, R3, R4  ; (+ 48 (% n 10))
+  0660 - 0x1C300001 - OUT 1, R3  ; (out 1 (+ 48 (% n 10)))
+  0664 - 0x04230000 - ADD R2, R3, R0  ; (defun print_num (n) (progn (if (> n 9) (print_num (/ n 10)) 0) (out 1 (+ 48 (% n 10)))))
+  0668 - 0x120002A0 - JMP 672  ; (defun print_num (n) (progn (if (> n 9) (print_num (/ n 10)) 0) (out 1 (+ 48 (% n 10)))))
+  0672 - 0x04120000 - ADD R1, R2, R0  ; (defun print_num (n) (progn (if (> n 9) (print_num (/ n 10)) 0) (out 1 (+ 48 (% n 10)))))
+  0676 - 0x18000000 - RET  ; (defun print_num (n) (progn (if (> n 9) (print_num (/ n 10)) 0) (out 1 (+ 48 (% n 10)))))
+  0680 - 0x120004F0 - JMP 1264  ; (defun collatz (hi lo count) (if (and (= hi 0) (= lo 1)) count (if (= (and lo 1) 0) (collatz (lsr hi 1) (or (lsr lo 1) (lsl (and hi 1) 31)) (+ count 1)) (progn (setq low_half (+ (* 3 (and lo 65535)) 1)) (setq high_half (+ (* 3 (lsr lo 16)) (lsr low_half 16))) (setq carry (lsr high_half 16)) (if (or (< hi 0) (or (> hi 1431655765) (and (= hi 1431655765) (> carry 0)))) -1 (collatz (+ (* 3 hi) carry) (or (lsl high_half 16) (and low_half 65535)) (+ count 1)))))))
+  0684 - 0x04510000 - ADD R5, R1, R0  ; hi
+  0688 - 0x01600000 - LDI R6, 0  ; 0
+  0692 - 0x0B560000 - CMP R5, R6  ; (= hi 0)
+  0696 - 0x140002C4 - JNZ 708  ; (= hi 0)
+  0700 - 0x01500001 - LDI R5, 1  ; (= hi 0)
+  0704 - 0x120002C8 - JMP 712  ; (= hi 0)
+  0708 - 0x01500000 - LDI R5, 0  ; (= hi 0)
+  0712 - 0x04620000 - ADD R6, R2, R0  ; lo
+  0716 - 0x01700001 - LDI R7, 1  ; 1
+  0720 - 0x0B670000 - CMP R6, R7  ; (= lo 1)
+  0724 - 0x140002E0 - JNZ 736  ; (= lo 1)
+  0728 - 0x01600001 - LDI R6, 1  ; (= lo 1)
+  0732 - 0x120002E4 - JMP 740  ; (= lo 1)
+  0736 - 0x01600000 - LDI R6, 0  ; (= lo 1)
+  0740 - 0x0C556000 - AND R5, R5, R6  ; (and (= hi 0) (= lo 1))
+  0744 - 0x0B500000 - CMP R5, R0  ; (defun collatz (hi lo count) (if (and (= hi 0) (= lo 1)) count (if (= (and lo 1) 0) (collatz (lsr hi 1) (or (lsr lo 1) (lsl (and hi 1) 31)) (+ count 1)) (progn (setq low_half (+ (* 3 (and lo 65535)) 1)) (setq high_half (+ (* 3 (lsr lo 16)) (lsr low_half 16))) (setq carry (lsr high_half 16)) (if (or (< hi 0) (or (> hi 1431655765) (and (= hi 1431655765) (> carry 0)))) -1 (collatz (+ (* 3 hi) carry) (or (lsl high_half 16) (and low_half 65535)) (+ count 1)))))))
+  0748 - 0x130002FC - JZ 764  ; (defun collatz (hi lo count) (if (and (= hi 0) (= lo 1)) count (if (= (and lo 1) 0) (collatz (lsr hi 1) (or (lsr lo 1) (lsl (and hi 1) 31)) (+ count 1)) (progn (setq low_half (+ (* 3 (and lo 65535)) 1)) (setq high_half (+ (* 3 (lsr lo 16)) (lsr low_half 16))) (setq carry (lsr high_half 16)) (if (or (< hi 0) (or (> hi 1431655765) (and (= hi 1431655765) (> carry 0)))) -1 (collatz (+ (* 3 hi) carry) (or (lsl high_half 16) (and low_half 65535)) (+ count 1)))))))
+  0752 - 0x04530000 - ADD R5, R3, R0  ; count
+  0756 - 0x04450000 - ADD R4, R5, R0  ; (defun collatz (hi lo count) (if (and (= hi 0) (= lo 1)) count (if (= (and lo 1) 0) (collatz (lsr hi 1) (or (lsr lo 1) (lsl (and hi 1) 31)) (+ count 1)) (progn (setq low_half (+ (* 3 (and lo 65535)) 1)) (setq high_half (+ (* 3 (lsr lo 16)) (lsr low_half 16))) (setq carry (lsr high_half 16)) (if (or (< hi 0) (or (> hi 1431655765) (and (= hi 1431655765) (> carry 0)))) -1 (collatz (+ (* 3 hi) carry) (or (lsl high_half 16) (and low_half 65535)) (+ count 1)))))))
+  0760 - 0x120004E8 - JMP 1256  ; (defun collatz (hi lo count) (if (and (= hi 0) (= lo 1)) count (if (= (and lo 1) 0) (collatz (lsr hi 1) (or (lsr lo 1) (lsl (and hi 1) 31)) (+ count 1)) (progn (setq low_half (+ (* 3 (and lo 65535)) 1)) (setq high_half (+ (* 3 (lsr lo 16)) (lsr low_half 16))) (setq carry (lsr high_half 16)) (if (or (< hi 0) (or (> hi 1431655765) (and (= hi 1431655765) (> carry 0)))) -1 (collatz (+ (* 3 hi) carry) (or (lsl high_half 16) (and low_half 65535)) (+ count 1)))))))
+  0764 - 0x04520000 - ADD R5, R2, R0  ; lo
+  0768 - 0x01600001 - LDI R6, 1  ; 1
+  0772 - 0x0C556000 - AND R5, R5, R6  ; (and lo 1)
+  0776 - 0x01600000 - LDI R6, 0  ; 0
+  0780 - 0x0B560000 - CMP R5, R6  ; (defun collatz (hi lo count) (if (and (= hi 0) (= lo 1)) count (if (= (and lo 1) 0) (collatz (lsr hi 1) (or (lsr lo 1) (lsl (and hi 1) 31)) (+ count 1)) (progn (setq low_half (+ (* 3 (and lo 65535)) 1)) (setq high_half (+ (* 3 (lsr lo 16)) (lsr low_half 16))) (setq carry (lsr high_half 16)) (if (or (< hi 0) (or (> hi 1431655765) (and (= hi 1431655765) (> carry 0)))) -1 (collatz (+ (* 3 hi) carry) (or (lsl high_half 16) (and low_half 65535)) (+ count 1)))))))
+  0784 - 0x14000360 - JNZ 864  ; (defun collatz (hi lo count) (if (and (= hi 0) (= lo 1)) count (if (= (and lo 1) 0) (collatz (lsr hi 1) (or (lsr lo 1) (lsl (and hi 1) 31)) (+ count 1)) (progn (setq low_half (+ (* 3 (and lo 65535)) 1)) (setq high_half (+ (* 3 (lsr lo 16)) (lsr low_half 16))) (setq carry (lsr high_half 16)) (if (or (< hi 0) (or (> hi 1431655765) (and (= hi 1431655765) (> carry 0)))) -1 (collatz (+ (* 3 hi) carry) (or (lsl high_half 16) (and low_half 65535)) (+ count 1)))))))
+  0788 - 0x04510000 - ADD R5, R1, R0  ; hi
+  0792 - 0x01600001 - LDI R6, 1  ; 1
+  0796 - 0x11556000 - LSR R5, R5, R6  ; (lsr hi 1)
+  0800 - 0x04620000 - ADD R6, R2, R0  ; lo
+  0804 - 0x01700001 - LDI R7, 1  ; 1
+  0808 - 0x11667000 - LSR R6, R6, R7  ; (lsr lo 1)
+  0812 - 0x04710000 - ADD R7, R1, R0  ; hi
+  0816 - 0x01800001 - LDI R8, 1  ; 1
+  0820 - 0x0C778000 - AND R7, R7, R8  ; (and hi 1)
+  0824 - 0x0180001F - LDI R8, 31  ; 31
+  0828 - 0x10778000 - LSL R7, R7, R8  ; (lsl (and hi 1) 31)
+  0832 - 0x0D667000 - OR R6, R6, R7  ; (or (lsr lo 1) (lsl (and hi 1) 31))
+  0836 - 0x04730000 - ADD R7, R3, R0  ; count
+  0840 - 0x01800001 - LDI R8, 1  ; 1
+  0844 - 0x04778000 - ADD R7, R7, R8  ; (+ count 1)
+  0848 - 0x04150000 - ADD R1, R5, R0  ; (defun collatz (hi lo count) (if (and (= hi 0) (= lo 1)) count (if (= (and lo 1) 0) (collatz (lsr hi 1) (or (lsr lo 1) (lsl (and hi 1) 31)) (+ count 1)) (progn (setq low_half (+ (* 3 (and lo 65535)) 1)) (setq high_half (+ (* 3 (lsr lo 16)) (lsr low_half 16))) (setq carry (lsr high_half 16)) (if (or (< hi 0) (or (> hi 1431655765) (and (= hi 1431655765) (> carry 0)))) -1 (collatz (+ (* 3 hi) carry) (or (lsl high_half 16) (and low_half 65535)) (+ count 1)))))))
+  0852 - 0x04260000 - ADD R2, R6, R0  ; (defun collatz (hi lo count) (if (and (= hi 0) (= lo 1)) count (if (= (and lo 1) 0) (collatz (lsr hi 1) (or (lsr lo 1) (lsl (and hi 1) 31)) (+ count 1)) (progn (setq low_half (+ (* 3 (and lo 65535)) 1)) (setq high_half (+ (* 3 (lsr lo 16)) (lsr low_half 16))) (setq carry (lsr high_half 16)) (if (or (< hi 0) (or (> hi 1431655765) (and (= hi 1431655765) (> carry 0)))) -1 (collatz (+ (* 3 hi) carry) (or (lsl high_half 16) (and low_half 65535)) (+ count 1)))))))
+  0856 - 0x04370000 - ADD R3, R7, R0  ; (defun collatz (hi lo count) (if (and (= hi 0) (= lo 1)) count (if (= (and lo 1) 0) (collatz (lsr hi 1) (or (lsr lo 1) (lsl (and hi 1) 31)) (+ count 1)) (progn (setq low_half (+ (* 3 (and lo 65535)) 1)) (setq high_half (+ (* 3 (lsr lo 16)) (lsr low_half 16))) (setq carry (lsr high_half 16)) (if (or (< hi 0) (or (> hi 1431655765) (and (= hi 1431655765) (> carry 0)))) -1 (collatz (+ (* 3 hi) carry) (or (lsl high_half 16) (and low_half 65535)) (+ count 1)))))))
+  0860 - 0x120002AC - JMP 684  ; (defun collatz (hi lo count) (if (and (= hi 0) (= lo 1)) count (if (= (and lo 1) 0) (collatz (lsr hi 1) (or (lsr lo 1) (lsl (and hi 1) 31)) (+ count 1)) (progn (setq low_half (+ (* 3 (and lo 65535)) 1)) (setq high_half (+ (* 3 (lsr lo 16)) (lsr low_half 16))) (setq carry (lsr high_half 16)) (if (or (< hi 0) (or (> hi 1431655765) (and (= hi 1431655765) (> carry 0)))) -1 (collatz (+ (* 3 hi) carry) (or (lsl high_half 16) (and low_half 65535)) (+ count 1)))))))
+  0864 - 0x01500003 - LDI R5, 3  ; 3
+  0868 - 0x04620000 - ADD R6, R2, R0  ; lo
+  0872 - 0x0170FFFF - LDI R7, 65535  ; 65535
+  0876 - 0x0C667000 - AND R6, R6, R7  ; (and lo 65535)
+  0880 - 0x06556000 - MUL R5, R5, R6  ; (* 3 (and lo 65535))
+  0884 - 0x01600001 - LDI R6, 1  ; 1
+  0888 - 0x04556000 - ADD R5, R5, R6  ; (+ (* 3 (and lo 65535)) 1)
+  0892 - 0x01600FB4 - LDI R6, 4020  ; (setq low_half (+ (* 3 (and lo 65535)) 1))
+  0896 - 0x03560000 - ST R5, R6, 0  ; (setq low_half (+ (* 3 (and lo 65535)) 1))
+  0900 - 0x01500003 - LDI R5, 3  ; 3
+  0904 - 0x04620000 - ADD R6, R2, R0  ; lo
+  0908 - 0x01700010 - LDI R7, 16  ; 16
+  0912 - 0x11667000 - LSR R6, R6, R7  ; (lsr lo 16)
+  0916 - 0x06556000 - MUL R5, R5, R6  ; (* 3 (lsr lo 16))
+  0920 - 0x01600FB4 - LDI R6, 4020  ; low_half
+  0924 - 0x02660000 - LD R6, R6, 0  ; low_half
+  0928 - 0x01700010 - LDI R7, 16  ; 16
+  0932 - 0x11667000 - LSR R6, R6, R7  ; (lsr low_half 16)
+  0936 - 0x04556000 - ADD R5, R5, R6  ; (+ (* 3 (lsr lo 16)) (lsr low_half 16))
+  0940 - 0x01600FB8 - LDI R6, 4024  ; (setq high_half (+ (* 3 (lsr lo 16)) (lsr low_half 16)))
+  0944 - 0x03560000 - ST R5, R6, 0  ; (setq high_half (+ (* 3 (lsr lo 16)) (lsr low_half 16)))
+  0948 - 0x01500FB8 - LDI R5, 4024  ; high_half
+  0952 - 0x02550000 - LD R5, R5, 0  ; high_half
+  0956 - 0x01600010 - LDI R6, 16  ; 16
+  0960 - 0x11556000 - LSR R5, R5, R6  ; (lsr high_half 16)
+  0964 - 0x01600FBC - LDI R6, 4028  ; (setq carry (lsr high_half 16))
+  0968 - 0x03560000 - ST R5, R6, 0  ; (setq carry (lsr high_half 16))
+  0972 - 0x04510000 - ADD R5, R1, R0  ; hi
+  0976 - 0x01600000 - LDI R6, 0  ; 0
+  0980 - 0x0B560000 - CMP R5, R6  ; (< hi 0)
+  0984 - 0x160003E4 - JGE 996  ; (< hi 0)
+  0988 - 0x01500001 - LDI R5, 1  ; (< hi 0)
+  0992 - 0x120003E8 - JMP 1000  ; (< hi 0)
+  0996 - 0x01500000 - LDI R5, 0  ; (< hi 0)
+  1000 - 0x01605555 - LDI R6, 21845  ; 1431655765
+  1004 - 0x01700010 - LDI R7, 16  ; 1431655765
+  1008 - 0x10667000 - LSL R6, R6, R7  ; 1431655765
+  1012 - 0x01705555 - LDI R7, 21845  ; 1431655765
+  1016 - 0x0D667000 - OR R6, R6, R7  ; 1431655765
+  1020 - 0x04710000 - ADD R7, R1, R0  ; hi
+  1024 - 0x0B670000 - CMP R6, R7  ; (> hi 1431655765)
+  1028 - 0x16000410 - JGE 1040  ; (> hi 1431655765)
+  1032 - 0x01600001 - LDI R6, 1  ; (> hi 1431655765)
+  1036 - 0x12000414 - JMP 1044  ; (> hi 1431655765)
+  1040 - 0x01600000 - LDI R6, 0  ; (> hi 1431655765)
+  1044 - 0x04710000 - ADD R7, R1, R0  ; hi
+  1048 - 0x01805555 - LDI R8, 21845  ; 1431655765
+  1052 - 0x01900010 - LDI R9, 16  ; 1431655765
+  1056 - 0x10889000 - LSL R8, R8, R9  ; 1431655765
+  1060 - 0x01905555 - LDI R9, 21845  ; 1431655765
+  1064 - 0x0D889000 - OR R8, R8, R9  ; 1431655765
+  1068 - 0x0B780000 - CMP R7, R8  ; (= hi 1431655765)
+  1072 - 0x1400043C - JNZ 1084  ; (= hi 1431655765)
+  1076 - 0x01700001 - LDI R7, 1  ; (= hi 1431655765)
+  1080 - 0x12000440 - JMP 1088  ; (= hi 1431655765)
+  1084 - 0x01700000 - LDI R7, 0  ; (= hi 1431655765)
+  1088 - 0x01800000 - LDI R8, 0  ; 0
+  1092 - 0x01900FBC - LDI R9, 4028  ; carry
+  1096 - 0x02990000 - LD R9, R9, 0  ; carry
+  1100 - 0x0B890000 - CMP R8, R9  ; (> carry 0)
+  1104 - 0x1600045C - JGE 1116  ; (> carry 0)
+  1108 - 0x01800001 - LDI R8, 1  ; (> carry 0)
+  1112 - 0x12000460 - JMP 1120  ; (> carry 0)
+  1116 - 0x01800000 - LDI R8, 0  ; (> carry 0)
+  1120 - 0x0C778000 - AND R7, R7, R8  ; (and (= hi 1431655765) (> carry 0))
+  1124 - 0x0D667000 - OR R6, R6, R7  ; (or (> hi 1431655765) (and (= hi 1431655765) (> carry 0)))
+  1128 - 0x0D556000 - OR R5, R5, R6  ; (or (< hi 0) (or (> hi 1431655765) (and (= hi 1431655765) (> carry 0))))
+  1132 - 0x0B500000 - CMP R5, R0  ; (defun collatz (hi lo count) (if (and (= hi 0) (= lo 1)) count (if (= (and lo 1) 0) (collatz (lsr hi 1) (or (lsr lo 1) (lsl (and hi 1) 31)) (+ count 1)) (progn (setq low_half (+ (* 3 (and lo 65535)) 1)) (setq high_half (+ (* 3 (lsr lo 16)) (lsr low_half 16))) (setq carry (lsr high_half 16)) (if (or (< hi 0) (or (> hi 1431655765) (and (= hi 1431655765) (> carry 0)))) -1 (collatz (+ (* 3 hi) carry) (or (lsl high_half 16) (and low_half 65535)) (+ count 1)))))))
+  1136 - 0x13000490 - JZ 1168  ; (defun collatz (hi lo count) (if (and (= hi 0) (= lo 1)) count (if (= (and lo 1) 0) (collatz (lsr hi 1) (or (lsr lo 1) (lsl (and hi 1) 31)) (+ count 1)) (progn (setq low_half (+ (* 3 (and lo 65535)) 1)) (setq high_half (+ (* 3 (lsr lo 16)) (lsr low_half 16))) (setq carry (lsr high_half 16)) (if (or (< hi 0) (or (> hi 1431655765) (and (= hi 1431655765) (> carry 0)))) -1 (collatz (+ (* 3 hi) carry) (or (lsl high_half 16) (and low_half 65535)) (+ count 1)))))))
+  1140 - 0x0150FFFF - LDI R5, 65535  ; -1
+  1144 - 0x01600010 - LDI R6, 16  ; -1
+  1148 - 0x10556000 - LSL R5, R5, R6  ; -1
+  1152 - 0x0160FFFF - LDI R6, 65535  ; -1
+  1156 - 0x0D556000 - OR R5, R5, R6  ; -1
+  1160 - 0x04450000 - ADD R4, R5, R0  ; (defun collatz (hi lo count) (if (and (= hi 0) (= lo 1)) count (if (= (and lo 1) 0) (collatz (lsr hi 1) (or (lsr lo 1) (lsl (and hi 1) 31)) (+ count 1)) (progn (setq low_half (+ (* 3 (and lo 65535)) 1)) (setq high_half (+ (* 3 (lsr lo 16)) (lsr low_half 16))) (setq carry (lsr high_half 16)) (if (or (< hi 0) (or (> hi 1431655765) (and (= hi 1431655765) (> carry 0)))) -1 (collatz (+ (* 3 hi) carry) (or (lsl high_half 16) (and low_half 65535)) (+ count 1)))))))
+  1164 - 0x120004E8 - JMP 1256  ; (defun collatz (hi lo count) (if (and (= hi 0) (= lo 1)) count (if (= (and lo 1) 0) (collatz (lsr hi 1) (or (lsr lo 1) (lsl (and hi 1) 31)) (+ count 1)) (progn (setq low_half (+ (* 3 (and lo 65535)) 1)) (setq high_half (+ (* 3 (lsr lo 16)) (lsr low_half 16))) (setq carry (lsr high_half 16)) (if (or (< hi 0) (or (> hi 1431655765) (and (= hi 1431655765) (> carry 0)))) -1 (collatz (+ (* 3 hi) carry) (or (lsl high_half 16) (and low_half 65535)) (+ count 1)))))))
+  1168 - 0x01500003 - LDI R5, 3  ; 3
+  1172 - 0x04610000 - ADD R6, R1, R0  ; hi
+  1176 - 0x06556000 - MUL R5, R5, R6  ; (* 3 hi)
+  1180 - 0x01600FBC - LDI R6, 4028  ; carry
+  1184 - 0x02660000 - LD R6, R6, 0  ; carry
+  1188 - 0x04556000 - ADD R5, R5, R6  ; (+ (* 3 hi) carry)
+  1192 - 0x01600FB8 - LDI R6, 4024  ; high_half
+  1196 - 0x02660000 - LD R6, R6, 0  ; high_half
+  1200 - 0x01700010 - LDI R7, 16  ; 16
+  1204 - 0x10667000 - LSL R6, R6, R7  ; (lsl high_half 16)
+  1208 - 0x01700FB4 - LDI R7, 4020  ; low_half
+  1212 - 0x02770000 - LD R7, R7, 0  ; low_half
+  1216 - 0x0180FFFF - LDI R8, 65535  ; 65535
+  1220 - 0x0C778000 - AND R7, R7, R8  ; (and low_half 65535)
+  1224 - 0x0D667000 - OR R6, R6, R7  ; (or (lsl high_half 16) (and low_half 65535))
+  1228 - 0x04730000 - ADD R7, R3, R0  ; count
+  1232 - 0x01800001 - LDI R8, 1  ; 1
+  1236 - 0x04778000 - ADD R7, R7, R8  ; (+ count 1)
+  1240 - 0x04150000 - ADD R1, R5, R0  ; (defun collatz (hi lo count) (if (and (= hi 0) (= lo 1)) count (if (= (and lo 1) 0) (collatz (lsr hi 1) (or (lsr lo 1) (lsl (and hi 1) 31)) (+ count 1)) (progn (setq low_half (+ (* 3 (and lo 65535)) 1)) (setq high_half (+ (* 3 (lsr lo 16)) (lsr low_half 16))) (setq carry (lsr high_half 16)) (if (or (< hi 0) (or (> hi 1431655765) (and (= hi 1431655765) (> carry 0)))) -1 (collatz (+ (* 3 hi) carry) (or (lsl high_half 16) (and low_half 65535)) (+ count 1)))))))
+  1244 - 0x04260000 - ADD R2, R6, R0  ; (defun collatz (hi lo count) (if (and (= hi 0) (= lo 1)) count (if (= (and lo 1) 0) (collatz (lsr hi 1) (or (lsr lo 1) (lsl (and hi 1) 31)) (+ count 1)) (progn (setq low_half (+ (* 3 (and lo 65535)) 1)) (setq high_half (+ (* 3 (lsr lo 16)) (lsr low_half 16))) (setq carry (lsr high_half 16)) (if (or (< hi 0) (or (> hi 1431655765) (and (= hi 1431655765) (> carry 0)))) -1 (collatz (+ (* 3 hi) carry) (or (lsl high_half 16) (and low_half 65535)) (+ count 1)))))))
+  1248 - 0x04370000 - ADD R3, R7, R0  ; (defun collatz (hi lo count) (if (and (= hi 0) (= lo 1)) count (if (= (and lo 1) 0) (collatz (lsr hi 1) (or (lsr lo 1) (lsl (and hi 1) 31)) (+ count 1)) (progn (setq low_half (+ (* 3 (and lo 65535)) 1)) (setq high_half (+ (* 3 (lsr lo 16)) (lsr low_half 16))) (setq carry (lsr high_half 16)) (if (or (< hi 0) (or (> hi 1431655765) (and (= hi 1431655765) (> carry 0)))) -1 (collatz (+ (* 3 hi) carry) (or (lsl high_half 16) (and low_half 65535)) (+ count 1)))))))
+  1252 - 0x120002AC - JMP 684  ; (defun collatz (hi lo count) (if (and (= hi 0) (= lo 1)) count (if (= (and lo 1) 0) (collatz (lsr hi 1) (or (lsr lo 1) (lsl (and hi 1) 31)) (+ count 1)) (progn (setq low_half (+ (* 3 (and lo 65535)) 1)) (setq high_half (+ (* 3 (lsr lo 16)) (lsr low_half 16))) (setq carry (lsr high_half 16)) (if (or (< hi 0) (or (> hi 1431655765) (and (= hi 1431655765) (> carry 0)))) -1 (collatz (+ (* 3 hi) carry) (or (lsl high_half 16) (and low_half 65535)) (+ count 1)))))))
+  1256 - 0x04140000 - ADD R1, R4, R0  ; (defun collatz (hi lo count) (if (and (= hi 0) (= lo 1)) count (if (= (and lo 1) 0) (collatz (lsr hi 1) (or (lsr lo 1) (lsl (and hi 1) 31)) (+ count 1)) (progn (setq low_half (+ (* 3 (and lo 65535)) 1)) (setq high_half (+ (* 3 (lsr lo 16)) (lsr low_half 16))) (setq carry (lsr high_half 16)) (if (or (< hi 0) (or (> hi 1431655765) (and (= hi 1431655765) (> carry 0)))) -1 (collatz (+ (* 3 hi) carry) (or (lsl high_half 16) (and low_half 65535)) (+ count 1)))))))
+  1260 - 0x18000000 - RET  ; (defun collatz (hi lo count) (if (and (= hi 0) (= lo 1)) count (if (= (and lo 1) 0) (collatz (lsr hi 1) (or (lsr lo 1) (lsl (and hi 1) 31)) (+ count 1)) (progn (setq low_half (+ (* 3 (and lo 65535)) 1)) (setq high_half (+ (* 3 (lsr lo 16)) (lsr low_half 16))) (setq carry (lsr high_half 16)) (if (or (< hi 0) (or (> hi 1431655765) (and (= hi 1431655765) (> carry 0)))) -1 (collatz (+ (* 3 hi) carry) (or (lsl high_half 16) (and low_half 65535)) (+ count 1)))))))
+  1264 - 0x01100FA8 - LDI R1, 4008  ; bad
+  1268 - 0x02110000 - LD R1, R1, 0  ; bad
+  1272 - 0x01200FA0 - LDI R2, 4000  ; num
+  1276 - 0x02220000 - LD R2, R2, 0  ; num
+  1280 - 0x01300000 - LDI R3, 0  ; 0
+  1284 - 0x0B230000 - CMP R2, R3  ; (= num 0)
+  1288 - 0x14000514 - JNZ 1300  ; (= num 0)
+  1292 - 0x01200001 - LDI R2, 1  ; (= num 0)
+  1296 - 0x12000518 - JMP 1304  ; (= num 0)
+  1300 - 0x01200000 - LDI R2, 0  ; (= num 0)
+  1304 - 0x0D112000 - OR R1, R1, R2  ; (or bad (= num 0))
+  1308 - 0x0B100000 - CMP R1, R0  ; (if (or bad (= num 0)) (progn (out 1 45) (out 1 49)) (progn (setq length (collatz 0 num 0)) (if (< length 0) (progn (out 1 45) (out 1 49)) (print_num length))))
+  1312 - 0x1300053C - JZ 1340  ; (if (or bad (= num 0)) (progn (out 1 45) (out 1 49)) (progn (setq length (collatz 0 num 0)) (if (< length 0) (progn (out 1 45) (out 1 49)) (print_num length))))
+  1316 - 0x0120002D - LDI R2, 45  ; 45
+  1320 - 0x1C200001 - OUT 1, R2  ; (out 1 45)
+  1324 - 0x01200031 - LDI R2, 49  ; 49
+  1328 - 0x1C200001 - OUT 1, R2  ; (out 1 49)
+  1332 - 0x04120000 - ADD R1, R2, R0  ; (if (or bad (= num 0)) (progn (out 1 45) (out 1 49)) (progn (setq length (collatz 0 num 0)) (if (< length 0) (progn (out 1 45) (out 1 49)) (print_num length))))
+  1336 - 0x120005C8 - JMP 1480  ; (if (or bad (= num 0)) (progn (out 1 45) (out 1 49)) (progn (setq length (collatz 0 num 0)) (if (< length 0) (progn (out 1 45) (out 1 49)) (print_num length))))
+  1340 - 0x19100000 - PUSH R1  ; (collatz 0 num 0)
+  1344 - 0x01200000 - LDI R2, 0  ; 0
+  1348 - 0x01300FA0 - LDI R3, 4000  ; num
+  1352 - 0x02330000 - LD R3, R3, 0  ; num
+  1356 - 0x01400000 - LDI R4, 0  ; 0
+  1360 - 0x04120000 - ADD R1, R2, R0  ; (collatz 0 num 0)
+  1364 - 0x04230000 - ADD R2, R3, R0  ; (collatz 0 num 0)
+  1368 - 0x04340000 - ADD R3, R4, R0  ; (collatz 0 num 0)
+  1372 - 0x170002AC - CALL 684  ; (collatz 0 num 0)
+  1376 - 0x04210000 - ADD R2, R1, R0  ; (collatz 0 num 0)
+  1380 - 0x1A100000 - POP R1  ; (collatz 0 num 0)
+  1384 - 0x01300FC0 - LDI R3, 4032  ; (setq length (collatz 0 num 0))
+  1388 - 0x03230000 - ST R2, R3, 0  ; (setq length (collatz 0 num 0))
+  1392 - 0x01200FC0 - LDI R2, 4032  ; length
+  1396 - 0x02220000 - LD R2, R2, 0  ; length
+  1400 - 0x01300000 - LDI R3, 0  ; 0
+  1404 - 0x0B230000 - CMP R2, R3  ; (if (< length 0) (progn (out 1 45) (out 1 49)) (print_num length))
+  1408 - 0x1600059C - JGE 1436  ; (if (< length 0) (progn (out 1 45) (out 1 49)) (print_num length))
+  1412 - 0x0130002D - LDI R3, 45  ; 45
+  1416 - 0x1C300001 - OUT 1, R3  ; (out 1 45)
+  1420 - 0x01300031 - LDI R3, 49  ; 49
+  1424 - 0x1C300001 - OUT 1, R3  ; (out 1 49)
+  1428 - 0x04230000 - ADD R2, R3, R0  ; (if (< length 0) (progn (out 1 45) (out 1 49)) (print_num length))
+  1432 - 0x120005C4 - JMP 1476  ; (if (< length 0) (progn (out 1 45) (out 1 49)) (print_num length))
+  1436 - 0x19100000 - PUSH R1  ; (print_num length)
+  1440 - 0x19200000 - PUSH R2  ; (print_num length)
+  1444 - 0x01300FC0 - LDI R3, 4032  ; length
+  1448 - 0x02330000 - LD R3, R3, 0  ; length
+  1452 - 0x04130000 - ADD R1, R3, R0  ; (print_num length)
+  1456 - 0x17000230 - CALL 560  ; (print_num length)
+  1460 - 0x04310000 - ADD R3, R1, R0  ; (print_num length)
+  1464 - 0x1A200000 - POP R2  ; (print_num length)
+  1468 - 0x1A100000 - POP R1  ; (print_num length)
+  1472 - 0x04230000 - ADD R2, R3, R0  ; (if (< length 0) (progn (out 1 45) (out 1 49)) (print_num length))
+  1476 - 0x04120000 - ADD R1, R2, R0  ; (if (or bad (= num 0)) (progn (out 1 45) (out 1 49)) (progn (setq length (collatz 0 num 0)) (if (< length 0) (progn (out 1 45) (out 1 49)) (print_num length))))
+  1480 - 0x20000000 - HLT
 
 out_stdout: '111'
 
@@ -219,38 +484,38 @@ out_log: |-
   [ТАКТ 200] Вход в прерывание: начинаем сохранять PC и PS
   ... пропущено строк: 19 ...
   [ТАКТ 219] PC и PS сохранены в стек, переход на вектор
-  ... пропущено строк: 267 ...
-  [ТАКТ 486] Выход из прерывания (IRET)
-  ... пропущено строк: 414 ...
+  ... пропущено строк: 681 ...
   [ТАКТ 900] ВУ прислало символ '7' (ASCII 55), провод IntRq = 1!
-  ... пропущено строк: 3 ...
-  [ТАКТ 903] Вход в прерывание: начинаем сохранять PC и PS
+  ... пропущено строк: 87 ...
+  [ТАКТ 987] Выход из прерывания (IRET)
+  ... пропущено строк: 1 ...
+  [ТАКТ 988] Вход в прерывание: начинаем сохранять PC и PS
   ... пропущено строк: 19 ...
-  [ТАКТ 922] PC и PS сохранены в стек, переход на вектор
-  ... пропущено строк: 267 ...
-  [ТАКТ 1189] Выход из прерывания (IRET)
-  ... пропущено строк: 411 ...
+  [ТАКТ 1007] PC и PS сохранены в стек, переход на вектор
+  ... пропущено строк: 593 ...
   [ТАКТ 1600] ВУ прислало символ '\x0a' (ASCII 10), провод IntRq = 1!
-  ... пропущено строк: 2 ...
-  [ТАКТ 1602] Вход в прерывание: начинаем сохранять PC и PS
+  ... пропущено строк: 184 ...
+  [ТАКТ 1784] Выход из прерывания (IRET)
+  ... пропущено строк: 1 ...
+  [ТАКТ 1785] Вход в прерывание: начинаем сохранять PC и PS
   ... пропущено строк: 19 ...
-  [ТАКТ 1621] PC и PS сохранены в стек, переход на вектор
-  ... пропущено строк: 217 ...
-  [ТАКТ 1838] Выход из прерывания (IRET)
-  ... пропущено строк: 7838 ...
-  [ТАКТ 9676] Процессор вывел в порт 1 символ '1' (код 49)
-  ... пропущено строк: 97 ...
-  [ТАКТ 9773] Процессор вывел в порт 1 символ '1' (код 49)
-  ... пропущено строк: 79 ...
-  [ТАКТ 9852] Процессор вывел в порт 1 символ '1' (код 49)
-  ... пропущено строк: 42 ...
-  |  9894  | STALL     |  528  | 04110000 | ADD R1, R1, 0          | 16380  |  0000  | MISS(10)  |  -   |     0    49    49    49     1    10     1     0     0     0     0     0     0     0     0     0 | 
-  |  9895  | STALL     |  528  | 04110000 | ADD R1, R1, 0          | 16380  |  0000  | MISS(10)  |  -   |     0    49    49    49     1    10     1     0     0     0     0     0     0     0     0     0 | 
-  |  9896  | MEM READY |  528  | 20000000 | HLT R0, R0, 0          | 16380  |  0000  | MISS(10)  |  -   |     0    49    49    49     1    10     1     0     0     0     0     0     0     0     0     0 | 
-  |  9897  | T1 DECODE |  528  | 20000000 | HLT R0, R0, 0          | 16380  |  0000  | MISS(10)  |  -   |     0    49    49    49     1    10     1     0     0     0     0     0     0     0     0     0 | 
+  [ТАКТ 1804] PC и PS сохранены в стек, переход на вектор
+  ... пропущено строк: 323 ...
+  [ТАКТ 2127] Выход из прерывания (IRET)
+  ... пропущено строк: 41843 ...
+  [ТАКТ 43970] Процессор вывел в порт 1 символ '1' (код 49)
+  ... пропущено строк: 88 ...
+  [ТАКТ 44058] Процессор вывел в порт 1 символ '1' (код 49)
+  ... пропущено строк: 115 ...
+  [ТАКТ 44173] Процессор вывел в порт 1 символ '1' (код 49)
+  ... пропущено строк: 56 ...
+  | 44229  | T1 DECODE | 1476  | 04120000 | ADD R1, R2, 0          | 16380  |  0000  |  HIT (1)  |  -   |     0     0    49    49     1    10     1     1     1     0     0     0     0     0     0     0 | (if (or bad (= num 0)) (progn (ou…
+  | 44230  | T2 EXEC   | 1480  | 04120000 | ADD R1, R2, 0          | 16380  |  0000  |  HIT (1)  |  -   |     0    49    49    49     1    10     1     1     1     0     0     0     0     0     0     0 | (if (or bad (= num 0)) (progn (ou…
+  | 44231  | T0 FETCH  | 1480  | 20000000 | HLT R0, R0, 0          | 16380  |  0000  |  HIT (1)  |  -   |     0    49    49    49     1    10     1     1     1     0     0     0     0     0     0     0 | 
+  | 44232  | T1 DECODE | 1480  | 20000000 | HLT R0, R0, 0          | 16380  |  0000  |  HIT (1)  |  -   |     0    49    49    49     1    10     1     1     1     0     0     0     0     0     0     0 | 
   ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  Процессор остановлен, выполнено тактов: 9897
-  Выполнено инструкций: 2644
+  Процессор остановлен, выполнено тактов: 44232
+  Выполнено инструкций: 7333
   Вывод в порт 1:
   Статистика кеш-попаданий:
-  Попаданий (Hits): 2558 | Промахов (Misses): 168 | Hit Rate: 93.84%
+  Попаданий (Hits): 5405 | Промахов (Misses): 2243 | Hit Rate: 70.67%
