@@ -2,8 +2,10 @@
 import logging
 import os
 import sys
+from pathlib import Path
 
 import pytest
+import yaml
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
@@ -69,3 +71,28 @@ def test_golden(golden, tmp_path, caplog):
     assert listing_content == golden.out["out_code_hex"]
     assert output == golden.out["out_stdout"]
     assert trim_journal(caplog.messages) == golden.out["out_log"]
+
+
+@pytest.mark.parametrize(
+    ("expression", "expected"),
+    [
+        ("10-2-3", "10 2 - 3 -"),
+        ("1 + 2 * 30", "1 2 30 * +"),
+        ("(1 + 2) * 30", "1 2 + 30 *"),
+        ("1+(2*3", "-1"),
+        ("1 2", "-1"),
+        ("1+", "-1"),
+        ("1" * 33, "-1"),
+    ],
+)
+def test_rpn_tokenization_and_validation(tmp_path, expression, expected):
+    case = Path(__file__).with_name("golden") / "infix_to_rpn.yml"
+    source = tmp_path / "rpn.lisp"
+    binary = tmp_path / "rpn.bin"
+    source.write_text(
+        yaml.safe_load(case.read_text(encoding="utf-8"))["in_source"], encoding="utf-8"
+    )
+    translator.compile_file(str(source), str(binary))
+    schedule = [(200 + 700 * i, ch) for i, ch in enumerate(expression + "\n")]
+    output, _ = run_simulation(str(binary), schedule, max_ticks=120000)
+    assert output == expected
