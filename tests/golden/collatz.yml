@@ -121,10 +121,10 @@ out_code_hex: |-
   0176 - 0x01300001 - LDI R3, 1  ; (< digit 0)
   0180 - 0x120000BC - JMP 188  ; (< digit 0)
   0184 - 0x01300000 - LDI R3, 0  ; (< digit 0)
-  0188 - 0x01400009 - LDI R4, 9  ; 9
-  0192 - 0x01500FB0 - LDI R5, 4016  ; digit
-  0196 - 0x02550000 - LD R5, R5, 0  ; digit
-  0200 - 0x0B450000 - CMP R4, R5  ; (> digit 9)
+  0188 - 0x01400FB0 - LDI R4, 4016  ; digit
+  0192 - 0x02440000 - LD R4, R4, 0  ; digit
+  0196 - 0x01500009 - LDI R5, 9  ; 9
+  0200 - 0x0B540000 - CMP R5, R4  ; (> digit 9)
   0204 - 0x160000D8 - JGE 216  ; (> digit 9)
   0208 - 0x01400001 - LDI R4, 1  ; (> digit 9)
   0212 - 0x120000DC - JMP 220  ; (> digit 9)
@@ -138,14 +138,14 @@ out_code_hex: |-
   0244 - 0x03340000 - ST R3, R4, 0  ; (setq bad 1)
   0248 - 0x04230000 - ADD R2, R3, R0  ; (if (or bad (or (< digit 0) (> digit 9))) (setq bad 1) (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit))))
   0252 - 0x120001D0 - JMP 464  ; (if (or bad (or (< digit 0) (> digit 9))) (setq bad 1) (if (or (> num 214748364) (and (= num 214748364) (> digit 7))) (setq bad 1) (setq num (+ (* num 10) digit))))
-  0256 - 0x01300CCC - LDI R3, 3276  ; 214748364
-  0260 - 0x01400010 - LDI R4, 16  ; 214748364
-  0264 - 0x10334000 - LSL R3, R3, R4  ; 214748364
-  0268 - 0x0140CCCC - LDI R4, 52428  ; 214748364
-  0272 - 0x0D334000 - OR R3, R3, R4  ; 214748364
-  0276 - 0x01400FA0 - LDI R4, 4000  ; num
-  0280 - 0x02440000 - LD R4, R4, 0  ; num
-  0284 - 0x0B340000 - CMP R3, R4  ; (> num 214748364)
+  0256 - 0x01300FA0 - LDI R3, 4000  ; num
+  0260 - 0x02330000 - LD R3, R3, 0  ; num
+  0264 - 0x01400CCC - LDI R4, 3276  ; 214748364
+  0268 - 0x01500010 - LDI R5, 16  ; 214748364
+  0272 - 0x10445000 - LSL R4, R4, R5  ; 214748364
+  0276 - 0x0150CCCC - LDI R5, 52428  ; 214748364
+  0280 - 0x0D445000 - OR R4, R4, R5  ; 214748364
+  0284 - 0x0B430000 - CMP R4, R3  ; (> num 214748364)
   0288 - 0x1600012C - JGE 300  ; (> num 214748364)
   0292 - 0x01300001 - LDI R3, 1  ; (> num 214748364)
   0296 - 0x12000130 - JMP 304  ; (> num 214748364)
@@ -162,10 +162,10 @@ out_code_hex: |-
   0340 - 0x01400001 - LDI R4, 1  ; (= num 214748364)
   0344 - 0x12000160 - JMP 352  ; (= num 214748364)
   0348 - 0x01400000 - LDI R4, 0  ; (= num 214748364)
-  0352 - 0x01500007 - LDI R5, 7  ; 7
-  0356 - 0x01600FB0 - LDI R6, 4016  ; digit
-  0360 - 0x02660000 - LD R6, R6, 0  ; digit
-  0364 - 0x0B560000 - CMP R5, R6  ; (> digit 7)
+  0352 - 0x01500FB0 - LDI R5, 4016  ; digit
+  0356 - 0x02550000 - LD R5, R5, 0  ; digit
+  0360 - 0x01600007 - LDI R6, 7  ; 7
+  0364 - 0x0B650000 - CMP R6, R5  ; (> digit 7)
   0368 - 0x1600017C - JGE 380  ; (> digit 7)
   0372 - 0x01500001 - LDI R5, 1  ; (> digit 7)
   0376 - 0x12000180 - JMP 384  ; (> digit 7)
@@ -214,16 +214,16 @@ out_code_hex: |-
   0548 - 0x04110000 - ADD R1, R1, R0  ; (wait)
   0552 - 0x1E000000 - DI  ; (di)
   0556 - 0x120002A8 - JMP 680  ; (defun print_num (n) (progn (if (> n 9) (print_num (/ n 10)) 0) (out 1 (+ 48 (% n 10)))))
-  0560 - 0x01300009 - LDI R3, 9  ; 9
-  0564 - 0x04410000 - ADD R4, R1, R0  ; n
-  0568 - 0x0B340000 - CMP R3, R4  ; (if (> n 9) (print_num (/ n 10)) 0)
+  0560 - 0x04310000 - ADD R3, R1, R0  ; n
+  0564 - 0x01400009 - LDI R4, 9  ; 9
+  0568 - 0x0B430000 - CMP R4, R3  ; (if (> n 9) (print_num (/ n 10)) 0)
   0572 - 0x16000278 - JGE 632  ; (if (> n 9) (print_num (/ n 10)) 0)
-  0576 - 0x19100000 - PUSH R1  ; (print_num (/ n 10))
-  0580 - 0x19200000 - PUSH R2  ; (print_num (/ n 10))
-  0584 - 0x19300000 - PUSH R3  ; (print_num (/ n 10))
-  0588 - 0x04410000 - ADD R4, R1, R0  ; n
-  0592 - 0x0150000A - LDI R5, 10  ; 10
-  0596 - 0x07445000 - DIV R4, R4, R5  ; (/ n 10)
+  0576 - 0x04410000 - ADD R4, R1, R0  ; n
+  0580 - 0x0150000A - LDI R5, 10  ; 10
+  0584 - 0x07445000 - DIV R4, R4, R5  ; (/ n 10)
+  0588 - 0x19100000 - PUSH R1  ; (print_num (/ n 10))
+  0592 - 0x19200000 - PUSH R2  ; (print_num (/ n 10))
+  0596 - 0x19300000 - PUSH R3  ; (print_num (/ n 10))
   0600 - 0x04140000 - ADD R1, R4, R0  ; (print_num (/ n 10))
   0604 - 0x17000230 - CALL 560  ; (print_num (/ n 10))
   0608 - 0x04410000 - ADD R4, R1, R0  ; (print_num (/ n 10))
@@ -324,13 +324,13 @@ out_code_hex: |-
   0988 - 0x01500001 - LDI R5, 1  ; (< hi 0)
   0992 - 0x120003E8 - JMP 1000  ; (< hi 0)
   0996 - 0x01500000 - LDI R5, 0  ; (< hi 0)
-  1000 - 0x01605555 - LDI R6, 21845  ; 1431655765
-  1004 - 0x01700010 - LDI R7, 16  ; 1431655765
-  1008 - 0x10667000 - LSL R6, R6, R7  ; 1431655765
-  1012 - 0x01705555 - LDI R7, 21845  ; 1431655765
-  1016 - 0x0D667000 - OR R6, R6, R7  ; 1431655765
-  1020 - 0x04710000 - ADD R7, R1, R0  ; hi
-  1024 - 0x0B670000 - CMP R6, R7  ; (> hi 1431655765)
+  1000 - 0x04610000 - ADD R6, R1, R0  ; hi
+  1004 - 0x01705555 - LDI R7, 21845  ; 1431655765
+  1008 - 0x01800010 - LDI R8, 16  ; 1431655765
+  1012 - 0x10778000 - LSL R7, R7, R8  ; 1431655765
+  1016 - 0x01805555 - LDI R8, 21845  ; 1431655765
+  1020 - 0x0D778000 - OR R7, R7, R8  ; 1431655765
+  1024 - 0x0B760000 - CMP R7, R6  ; (> hi 1431655765)
   1028 - 0x16000410 - JGE 1040  ; (> hi 1431655765)
   1032 - 0x01600001 - LDI R6, 1  ; (> hi 1431655765)
   1036 - 0x12000414 - JMP 1044  ; (> hi 1431655765)
@@ -346,10 +346,10 @@ out_code_hex: |-
   1076 - 0x01700001 - LDI R7, 1  ; (= hi 1431655765)
   1080 - 0x12000440 - JMP 1088  ; (= hi 1431655765)
   1084 - 0x01700000 - LDI R7, 0  ; (= hi 1431655765)
-  1088 - 0x01800000 - LDI R8, 0  ; 0
-  1092 - 0x01900FBC - LDI R9, 4028  ; carry
-  1096 - 0x02990000 - LD R9, R9, 0  ; carry
-  1100 - 0x0B890000 - CMP R8, R9  ; (> carry 0)
+  1088 - 0x01800FBC - LDI R8, 4028  ; carry
+  1092 - 0x02880000 - LD R8, R8, 0  ; carry
+  1096 - 0x01900000 - LDI R9, 0  ; 0
+  1100 - 0x0B980000 - CMP R9, R8  ; (> carry 0)
   1104 - 0x1600045C - JGE 1116  ; (> carry 0)
   1108 - 0x01800001 - LDI R8, 1  ; (> carry 0)
   1112 - 0x12000460 - JMP 1120  ; (> carry 0)
@@ -409,11 +409,11 @@ out_code_hex: |-
   1328 - 0x1C200001 - OUT 1, R2  ; (out 1 49)
   1332 - 0x04120000 - ADD R1, R2, R0  ; (if (or bad (= num 0)) (progn (out 1 45) (out 1 49)) (progn (setq length (collatz 0 num 0)) (if (< length 0) (progn (out 1 45) (out 1 49)) (print_num length))))
   1336 - 0x120005C8 - JMP 1480  ; (if (or bad (= num 0)) (progn (out 1 45) (out 1 49)) (progn (setq length (collatz 0 num 0)) (if (< length 0) (progn (out 1 45) (out 1 49)) (print_num length))))
-  1340 - 0x19100000 - PUSH R1  ; (collatz 0 num 0)
-  1344 - 0x01200000 - LDI R2, 0  ; 0
-  1348 - 0x01300FA0 - LDI R3, 4000  ; num
-  1352 - 0x02330000 - LD R3, R3, 0  ; num
-  1356 - 0x01400000 - LDI R4, 0  ; 0
+  1340 - 0x01200000 - LDI R2, 0  ; 0
+  1344 - 0x01300FA0 - LDI R3, 4000  ; num
+  1348 - 0x02330000 - LD R3, R3, 0  ; num
+  1352 - 0x01400000 - LDI R4, 0  ; 0
+  1356 - 0x19100000 - PUSH R1  ; (collatz 0 num 0)
   1360 - 0x04120000 - ADD R1, R2, R0  ; (collatz 0 num 0)
   1364 - 0x04230000 - ADD R2, R3, R0  ; (collatz 0 num 0)
   1368 - 0x04340000 - ADD R3, R4, R0  ; (collatz 0 num 0)
@@ -433,10 +433,10 @@ out_code_hex: |-
   1424 - 0x1C300001 - OUT 1, R3  ; (out 1 49)
   1428 - 0x04230000 - ADD R2, R3, R0  ; (if (< length 0) (progn (out 1 45) (out 1 49)) (print_num length))
   1432 - 0x120005C4 - JMP 1476  ; (if (< length 0) (progn (out 1 45) (out 1 49)) (print_num length))
-  1436 - 0x19100000 - PUSH R1  ; (print_num length)
-  1440 - 0x19200000 - PUSH R2  ; (print_num length)
-  1444 - 0x01300FC0 - LDI R3, 4032  ; length
-  1448 - 0x02330000 - LD R3, R3, 0  ; length
+  1436 - 0x01300FC0 - LDI R3, 4032  ; length
+  1440 - 0x02330000 - LD R3, R3, 0  ; length
+  1444 - 0x19100000 - PUSH R1  ; (print_num length)
+  1448 - 0x19200000 - PUSH R2  ; (print_num length)
   1452 - 0x04130000 - ADD R1, R3, R0  ; (print_num length)
   1456 - 0x17000230 - CALL 560  ; (print_num length)
   1460 - 0x04310000 - ADD R3, R1, R0  ; (print_num length)

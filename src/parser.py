@@ -18,16 +18,10 @@ Node = int | str | StringLiteral | list["Node"]
 
 
 def tokenize(code: str) -> list[str]:
-
-    # "[^"]*" - текст в кавычках
-    # \( - левая скобка
-    # \) - правая скобка
-    # ;.* - комментарии
-    # [^\s()] - ищет всё остальное (кроме скобок, и пробела)
-
-    pattern = r'"[^"]*"|;.*|\(|\)|[^\s()]+'
+    pattern = r'"[^"]*"|;[^\n]*|[()]|[^\s();"]+|"'
     tokens = re.findall(pattern, code)
-
+    if '"' in tokens:
+        raise SyntaxError("Ожидалась закрывающая кавычка")
     return [t for t in tokens if not t.startswith(";")]
 
 

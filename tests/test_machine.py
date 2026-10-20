@@ -3,6 +3,8 @@ import os
 import struct
 import sys
 
+import pytest
+
 # Добавляем путь к папке src
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
@@ -330,6 +332,29 @@ def test_interrupt_preserves_registers_across_function_call(tmp_path):
     assert entered
     assert not cu.int_active
     assert dp.registers == before
+
+
+@pytest.mark.parametrize(
+    ("source_text", "expected"),
+    [
+        ("(progn (> (print 65) (print 66)) (<= (print 67) (print 68)))", "ABCD"),
+        (
+            (
+                "(progn (setq a 67) (defun id (x) x) "
+                "(defun f (a) (progn (id (setq a 66)) (print a))) (f 65) (print a))"
+            ),
+            "BC",
+        ),
+        ("(progn (defun _start (x) x) (defun R1 () 65) (print (_start (R1))))", "A"),
+    ],
+)
+def test_lisp_evaluation_semantics(tmp_path, source_text, expected):
+    source = tmp_path / "test.lisp"
+    binary = tmp_path / "test.bin"
+    source.write_text(source_text, encoding="utf-8")
+    translator.compile_file(str(source), str(binary))
+    output, _ = run_simulation(str(binary), [], max_ticks=1000)
+    assert output == expected
 
 
 def test_timeout_execution(tmp_path):

@@ -358,13 +358,13 @@ out_code_hex: |-
   0752 - 0x04120000 - ADD R1, R2, R0  ; (defun emit (c) (progn (setq result_len (+ result_len 1)) (aset result result_len c)))
   0756 - 0x18000000 - RET  ; (defun emit (c) (progn (setq result_len (+ result_len 1)) (aset result result_len c)))
   0760 - 0x12000340 - JMP 832  ; (defun separator () (if (> result_len 0) (emit 32) 0))
-  0764 - 0x01200000 - LDI R2, 0  ; 0
-  0768 - 0x013011CC - LDI R3, 4556  ; result_len
-  0772 - 0x02330000 - LD R3, R3, 0  ; result_len
-  0776 - 0x0B230000 - CMP R2, R3  ; (defun separator () (if (> result_len 0) (emit 32) 0))
+  0764 - 0x012011CC - LDI R2, 4556  ; result_len
+  0768 - 0x02220000 - LD R2, R2, 0  ; result_len
+  0772 - 0x01300000 - LDI R3, 0  ; 0
+  0776 - 0x0B320000 - CMP R3, R2  ; (defun separator () (if (> result_len 0) (emit 32) 0))
   0780 - 0x16000330 - JGE 816  ; (defun separator () (if (> result_len 0) (emit 32) 0))
-  0784 - 0x19100000 - PUSH R1  ; (emit 32)
-  0788 - 0x01200020 - LDI R2, 32  ; 32
+  0784 - 0x01200020 - LDI R2, 32  ; 32
+  0788 - 0x19100000 - PUSH R1  ; (emit 32)
   0792 - 0x04120000 - ADD R1, R2, R0  ; (emit 32)
   0796 - 0x170002A8 - CALL 680  ; (emit 32)
   0800 - 0x04210000 - ADD R2, R1, R0  ; (emit 32)
@@ -382,9 +382,9 @@ out_code_hex: |-
   0848 - 0x04310000 - ADD R3, R1, R0  ; (separator)
   0852 - 0x1A200000 - POP R2  ; (separator)
   0856 - 0x1A100000 - POP R1  ; (separator)
-  0860 - 0x19100000 - PUSH R1  ; (emit c)
-  0864 - 0x19200000 - PUSH R2  ; (emit c)
-  0868 - 0x04310000 - ADD R3, R1, R0  ; c
+  0860 - 0x04310000 - ADD R3, R1, R0  ; c
+  0864 - 0x19100000 - PUSH R1  ; (emit c)
+  0868 - 0x19200000 - PUSH R2  ; (emit c)
   0872 - 0x04130000 - ADD R1, R3, R0  ; (emit c)
   0876 - 0x170002A8 - CALL 680  ; (emit c)
   0880 - 0x04310000 - ADD R3, R1, R0  ; (emit c)
@@ -402,9 +402,9 @@ out_code_hex: |-
   0928 - 0x01300001 - LDI R3, 1  ; (>= c 48)
   0932 - 0x120003AC - JMP 940  ; (>= c 48)
   0936 - 0x01300000 - LDI R3, 0  ; (>= c 48)
-  0940 - 0x01400039 - LDI R4, 57  ; 57
-  0944 - 0x04510000 - ADD R5, R1, R0  ; c
-  0948 - 0x0B450000 - CMP R4, R5  ; (<= c 57)
+  0940 - 0x04410000 - ADD R4, R1, R0  ; c
+  0944 - 0x01500039 - LDI R5, 57  ; 57
+  0948 - 0x0B540000 - CMP R5, R4  ; (<= c 57)
   0952 - 0x150003C4 - JL 964  ; (<= c 57)
   0956 - 0x01400001 - LDI R4, 1  ; (<= c 57)
   0960 - 0x120003C8 - JMP 968  ; (<= c 57)
@@ -415,23 +415,23 @@ out_code_hex: |-
   0980 - 0x04120000 - ADD R1, R2, R0  ; (defun digit (c) (and (>= c 48) (<= c 57)))
   0984 - 0x18000000 - RET  ; (defun digit (c) (and (>= c 48) (<= c 57)))
   0988 - 0x120004A0 - JMP 1184  ; (defun emit_num (i) (if (> i idx) i (if (digit (aref expr i)) (progn (emit (aref expr i)) (emit_num (+ i 1))) i)))
-  0992 - 0x013011B8 - LDI R3, 4536  ; idx
-  0996 - 0x02330000 - LD R3, R3, 0  ; idx
-  1000 - 0x04410000 - ADD R4, R1, R0  ; i
-  1004 - 0x0B340000 - CMP R3, R4  ; (defun emit_num (i) (if (> i idx) i (if (digit (aref expr i)) (progn (emit (aref expr i)) (emit_num (+ i 1))) i)))
+  0992 - 0x04310000 - ADD R3, R1, R0  ; i
+  0996 - 0x014011B8 - LDI R4, 4536  ; idx
+  1000 - 0x02440000 - LD R4, R4, 0  ; idx
+  1004 - 0x0B430000 - CMP R4, R3  ; (defun emit_num (i) (if (> i idx) i (if (digit (aref expr i)) (progn (emit (aref expr i)) (emit_num (+ i 1))) i)))
   1008 - 0x16000400 - JGE 1024  ; (defun emit_num (i) (if (> i idx) i (if (digit (aref expr i)) (progn (emit (aref expr i)) (emit_num (+ i 1))) i)))
   1012 - 0x04310000 - ADD R3, R1, R0  ; i
   1016 - 0x04230000 - ADD R2, R3, R0  ; (defun emit_num (i) (if (> i idx) i (if (digit (aref expr i)) (progn (emit (aref expr i)) (emit_num (+ i 1))) i)))
   1020 - 0x12000498 - JMP 1176  ; (defun emit_num (i) (if (> i idx) i (if (digit (aref expr i)) (progn (emit (aref expr i)) (emit_num (+ i 1))) i)))
-  1024 - 0x19100000 - PUSH R1  ; (digit (aref expr i))
-  1028 - 0x19200000 - PUSH R2  ; (digit (aref expr i))
-  1032 - 0x01300FA0 - LDI R3, 4000  ; expr
-  1036 - 0x02330000 - LD R3, R3, 0  ; expr
-  1040 - 0x04410000 - ADD R4, R1, R0  ; i
-  1044 - 0x01500002 - LDI R5, 2  ; (aref expr i)
-  1048 - 0x10445000 - LSL R4, R4, R5  ; (aref expr i)
-  1052 - 0x04334000 - ADD R3, R3, R4  ; (aref expr i)
-  1056 - 0x02330000 - LD R3, R3, 0  ; (aref expr i)
+  1024 - 0x01300FA0 - LDI R3, 4000  ; expr
+  1028 - 0x02330000 - LD R3, R3, 0  ; expr
+  1032 - 0x04410000 - ADD R4, R1, R0  ; i
+  1036 - 0x01500002 - LDI R5, 2  ; (aref expr i)
+  1040 - 0x10445000 - LSL R4, R4, R5  ; (aref expr i)
+  1044 - 0x04334000 - ADD R3, R3, R4  ; (aref expr i)
+  1048 - 0x02330000 - LD R3, R3, 0  ; (aref expr i)
+  1052 - 0x19100000 - PUSH R1  ; (digit (aref expr i))
+  1056 - 0x19200000 - PUSH R2  ; (digit (aref expr i))
   1060 - 0x04130000 - ADD R1, R3, R0  ; (digit (aref expr i))
   1064 - 0x17000390 - CALL 912  ; (digit (aref expr i))
   1068 - 0x04310000 - ADD R3, R1, R0  ; (digit (aref expr i))
@@ -439,15 +439,15 @@ out_code_hex: |-
   1076 - 0x1A100000 - POP R1  ; (digit (aref expr i))
   1080 - 0x0B300000 - CMP R3, R0  ; (defun emit_num (i) (if (> i idx) i (if (digit (aref expr i)) (progn (emit (aref expr i)) (emit_num (+ i 1))) i)))
   1084 - 0x1300048C - JZ 1164  ; (defun emit_num (i) (if (> i idx) i (if (digit (aref expr i)) (progn (emit (aref expr i)) (emit_num (+ i 1))) i)))
-  1088 - 0x19100000 - PUSH R1  ; (emit (aref expr i))
-  1092 - 0x19200000 - PUSH R2  ; (emit (aref expr i))
-  1096 - 0x01300FA0 - LDI R3, 4000  ; expr
-  1100 - 0x02330000 - LD R3, R3, 0  ; expr
-  1104 - 0x04410000 - ADD R4, R1, R0  ; i
-  1108 - 0x01500002 - LDI R5, 2  ; (aref expr i)
-  1112 - 0x10445000 - LSL R4, R4, R5  ; (aref expr i)
-  1116 - 0x04334000 - ADD R3, R3, R4  ; (aref expr i)
-  1120 - 0x02330000 - LD R3, R3, 0  ; (aref expr i)
+  1088 - 0x01300FA0 - LDI R3, 4000  ; expr
+  1092 - 0x02330000 - LD R3, R3, 0  ; expr
+  1096 - 0x04410000 - ADD R4, R1, R0  ; i
+  1100 - 0x01500002 - LDI R5, 2  ; (aref expr i)
+  1104 - 0x10445000 - LSL R4, R4, R5  ; (aref expr i)
+  1108 - 0x04334000 - ADD R3, R3, R4  ; (aref expr i)
+  1112 - 0x02330000 - LD R3, R3, 0  ; (aref expr i)
+  1116 - 0x19100000 - PUSH R1  ; (emit (aref expr i))
+  1120 - 0x19200000 - PUSH R2  ; (emit (aref expr i))
   1124 - 0x04130000 - ADD R1, R3, R0  ; (emit (aref expr i))
   1128 - 0x170002A8 - CALL 680  ; (emit (aref expr i))
   1132 - 0x04310000 - ADD R3, R1, R0  ; (emit (aref expr i))
@@ -464,10 +464,10 @@ out_code_hex: |-
   1176 - 0x04120000 - ADD R1, R2, R0  ; (defun emit_num (i) (if (> i idx) i (if (digit (aref expr i)) (progn (emit (aref expr i)) (emit_num (+ i 1))) i)))
   1180 - 0x18000000 - RET  ; (defun emit_num (i) (if (> i idx) i (if (digit (aref expr i)) (progn (emit (aref expr i)) (emit_num (+ i 1))) i)))
   1184 - 0x120005B8 - JMP 1464  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (emit_op (aref ops top)) (setq top (- top 1)) (pop_while p))))))
-  1188 - 0x01300000 - LDI R3, 0  ; 0
-  1192 - 0x014011BC - LDI R4, 4540  ; top
-  1196 - 0x02440000 - LD R4, R4, 0  ; top
-  1200 - 0x0B340000 - CMP R3, R4  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (emit_op (aref ops top)) (setq top (- top 1)) (pop_while p))))))
+  1188 - 0x013011BC - LDI R3, 4540  ; top
+  1192 - 0x02330000 - LD R3, R3, 0  ; top
+  1196 - 0x01400000 - LDI R4, 0  ; 0
+  1200 - 0x0B430000 - CMP R4, R3  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (emit_op (aref ops top)) (setq top (- top 1)) (pop_while p))))))
   1204 - 0x150004C4 - JL 1220  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (emit_op (aref ops top)) (setq top (- top 1)) (pop_while p))))))
   1208 - 0x01300000 - LDI R3, 0  ; 0
   1212 - 0x04230000 - ADD R2, R3, R0  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (emit_op (aref ops top)) (setq top (- top 1)) (pop_while p))))))
@@ -486,16 +486,16 @@ out_code_hex: |-
   1264 - 0x01300000 - LDI R3, 0  ; 0
   1268 - 0x04230000 - ADD R2, R3, R0  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (emit_op (aref ops top)) (setq top (- top 1)) (pop_while p))))))
   1272 - 0x120005B0 - JMP 1456  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (emit_op (aref ops top)) (setq top (- top 1)) (pop_while p))))))
-  1276 - 0x19100000 - PUSH R1  ; (prec (aref ops top))
-  1280 - 0x19200000 - PUSH R2  ; (prec (aref ops top))
-  1284 - 0x01301028 - LDI R3, 4136  ; ops
-  1288 - 0x02330000 - LD R3, R3, 0  ; ops
-  1292 - 0x014011BC - LDI R4, 4540  ; top
-  1296 - 0x02440000 - LD R4, R4, 0  ; top
-  1300 - 0x01500002 - LDI R5, 2  ; (aref ops top)
-  1304 - 0x10445000 - LSL R4, R4, R5  ; (aref ops top)
-  1308 - 0x04334000 - ADD R3, R3, R4  ; (aref ops top)
-  1312 - 0x02330000 - LD R3, R3, 0  ; (aref ops top)
+  1276 - 0x01301028 - LDI R3, 4136  ; ops
+  1280 - 0x02330000 - LD R3, R3, 0  ; ops
+  1284 - 0x014011BC - LDI R4, 4540  ; top
+  1288 - 0x02440000 - LD R4, R4, 0  ; top
+  1292 - 0x01500002 - LDI R5, 2  ; (aref ops top)
+  1296 - 0x10445000 - LSL R4, R4, R5  ; (aref ops top)
+  1300 - 0x04334000 - ADD R3, R3, R4  ; (aref ops top)
+  1304 - 0x02330000 - LD R3, R3, 0  ; (aref ops top)
+  1308 - 0x19100000 - PUSH R1  ; (prec (aref ops top))
+  1312 - 0x19200000 - PUSH R2  ; (prec (aref ops top))
   1316 - 0x04130000 - ADD R1, R3, R0  ; (prec (aref ops top))
   1320 - 0x170001CC - CALL 460  ; (prec (aref ops top))
   1324 - 0x04310000 - ADD R3, R1, R0  ; (prec (aref ops top))
@@ -507,16 +507,16 @@ out_code_hex: |-
   1348 - 0x01300000 - LDI R3, 0  ; 0
   1352 - 0x04230000 - ADD R2, R3, R0  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (emit_op (aref ops top)) (setq top (- top 1)) (pop_while p))))))
   1356 - 0x120005B0 - JMP 1456  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (emit_op (aref ops top)) (setq top (- top 1)) (pop_while p))))))
-  1360 - 0x19100000 - PUSH R1  ; (emit_op (aref ops top))
-  1364 - 0x19200000 - PUSH R2  ; (emit_op (aref ops top))
-  1368 - 0x01301028 - LDI R3, 4136  ; ops
-  1372 - 0x02330000 - LD R3, R3, 0  ; ops
-  1376 - 0x014011BC - LDI R4, 4540  ; top
-  1380 - 0x02440000 - LD R4, R4, 0  ; top
-  1384 - 0x01500002 - LDI R5, 2  ; (aref ops top)
-  1388 - 0x10445000 - LSL R4, R4, R5  ; (aref ops top)
-  1392 - 0x04334000 - ADD R3, R3, R4  ; (aref ops top)
-  1396 - 0x02330000 - LD R3, R3, 0  ; (aref ops top)
+  1360 - 0x01301028 - LDI R3, 4136  ; ops
+  1364 - 0x02330000 - LD R3, R3, 0  ; ops
+  1368 - 0x014011BC - LDI R4, 4540  ; top
+  1372 - 0x02440000 - LD R4, R4, 0  ; top
+  1376 - 0x01500002 - LDI R5, 2  ; (aref ops top)
+  1380 - 0x10445000 - LSL R4, R4, R5  ; (aref ops top)
+  1384 - 0x04334000 - ADD R3, R3, R4  ; (aref ops top)
+  1388 - 0x02330000 - LD R3, R3, 0  ; (aref ops top)
+  1392 - 0x19100000 - PUSH R1  ; (emit_op (aref ops top))
+  1396 - 0x19200000 - PUSH R2  ; (emit_op (aref ops top))
   1400 - 0x04130000 - ADD R1, R3, R0  ; (emit_op (aref ops top))
   1404 - 0x17000344 - CALL 836  ; (emit_op (aref ops top))
   1408 - 0x04310000 - ADD R3, R1, R0  ; (emit_op (aref ops top))
@@ -534,10 +534,10 @@ out_code_hex: |-
   1456 - 0x04120000 - ADD R1, R2, R0  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (emit_op (aref ops top)) (setq top (- top 1)) (pop_while p))))))
   1460 - 0x18000000 - RET  ; (defun pop_while (p) (if (<= top 0) 0 (if (= (aref ops top) 40) 0 (if (< (prec (aref ops top)) p) 0 (progn (emit_op (aref ops top)) (setq top (- top 1)) (pop_while p))))))
   1464 - 0x12000684 - JMP 1668  ; (defun pop_paren () (if (<= top 0) (setq bad 1) (if (= (aref ops top) 40) (setq top (- top 1)) (progn (emit_op (aref ops top)) (setq top (- top 1)) (pop_paren)))))
-  1468 - 0x01200000 - LDI R2, 0  ; 0
-  1472 - 0x013011BC - LDI R3, 4540  ; top
-  1476 - 0x02330000 - LD R3, R3, 0  ; top
-  1480 - 0x0B230000 - CMP R2, R3  ; (defun pop_paren () (if (<= top 0) (setq bad 1) (if (= (aref ops top) 40) (setq top (- top 1)) (progn (emit_op (aref ops top)) (setq top (- top 1)) (pop_paren)))))
+  1468 - 0x012011BC - LDI R2, 4540  ; top
+  1472 - 0x02220000 - LD R2, R2, 0  ; top
+  1476 - 0x01300000 - LDI R3, 0  ; 0
+  1480 - 0x0B320000 - CMP R3, R2  ; (defun pop_paren () (if (<= top 0) (setq bad 1) (if (= (aref ops top) 40) (setq top (- top 1)) (progn (emit_op (aref ops top)) (setq top (- top 1)) (pop_paren)))))
   1484 - 0x150005E4 - JL 1508  ; (defun pop_paren () (if (<= top 0) (setq bad 1) (if (= (aref ops top) 40) (setq top (- top 1)) (progn (emit_op (aref ops top)) (setq top (- top 1)) (pop_paren)))))
   1488 - 0x01200001 - LDI R2, 1  ; 1
   1492 - 0x013011C4 - LDI R3, 4548  ; (setq bad 1)
@@ -563,15 +563,15 @@ out_code_hex: |-
   1572 - 0x03230000 - ST R2, R3, 0  ; (setq top (- top 1))
   1576 - 0x04120000 - ADD R1, R2, R0  ; (defun pop_paren () (if (<= top 0) (setq bad 1) (if (= (aref ops top) 40) (setq top (- top 1)) (progn (emit_op (aref ops top)) (setq top (- top 1)) (pop_paren)))))
   1580 - 0x12000680 - JMP 1664  ; (defun pop_paren () (if (<= top 0) (setq bad 1) (if (= (aref ops top) 40) (setq top (- top 1)) (progn (emit_op (aref ops top)) (setq top (- top 1)) (pop_paren)))))
-  1584 - 0x19100000 - PUSH R1  ; (emit_op (aref ops top))
-  1588 - 0x01201028 - LDI R2, 4136  ; ops
-  1592 - 0x02220000 - LD R2, R2, 0  ; ops
-  1596 - 0x013011BC - LDI R3, 4540  ; top
-  1600 - 0x02330000 - LD R3, R3, 0  ; top
-  1604 - 0x01400002 - LDI R4, 2  ; (aref ops top)
-  1608 - 0x10334000 - LSL R3, R3, R4  ; (aref ops top)
-  1612 - 0x04223000 - ADD R2, R2, R3  ; (aref ops top)
-  1616 - 0x02220000 - LD R2, R2, 0  ; (aref ops top)
+  1584 - 0x01201028 - LDI R2, 4136  ; ops
+  1588 - 0x02220000 - LD R2, R2, 0  ; ops
+  1592 - 0x013011BC - LDI R3, 4540  ; top
+  1596 - 0x02330000 - LD R3, R3, 0  ; top
+  1600 - 0x01400002 - LDI R4, 2  ; (aref ops top)
+  1604 - 0x10334000 - LSL R3, R3, R4  ; (aref ops top)
+  1608 - 0x04223000 - ADD R2, R2, R3  ; (aref ops top)
+  1612 - 0x02220000 - LD R2, R2, 0  ; (aref ops top)
+  1616 - 0x19100000 - PUSH R1  ; (emit_op (aref ops top))
   1620 - 0x04120000 - ADD R1, R2, R0  ; (emit_op (aref ops top))
   1624 - 0x17000344 - CALL 836  ; (emit_op (aref ops top))
   1628 - 0x04210000 - ADD R2, R1, R0  ; (emit_op (aref ops top))
@@ -585,10 +585,10 @@ out_code_hex: |-
   1660 - 0x120005BC - JMP 1468  ; (defun pop_paren () (if (<= top 0) (setq bad 1) (if (= (aref ops top) 40) (setq top (- top 1)) (progn (emit_op (aref ops top)) (setq top (- top 1)) (pop_paren)))))
   1664 - 0x18000000 - RET  ; (defun pop_paren () (if (<= top 0) (setq bad 1) (if (= (aref ops top) 40) (setq top (- top 1)) (progn (emit_op (aref ops top)) (setq top (- top 1)) (pop_paren)))))
   1668 - 0x1200073C - JMP 1852  ; (defun flush () (if (<= top 0) 0 (if (= (aref ops top) 40) (setq bad 1) (progn (emit_op (aref ops top)) (setq top (- top 1)) (flush)))))
-  1672 - 0x01200000 - LDI R2, 0  ; 0
-  1676 - 0x013011BC - LDI R3, 4540  ; top
-  1680 - 0x02330000 - LD R3, R3, 0  ; top
-  1684 - 0x0B230000 - CMP R2, R3  ; (defun flush () (if (<= top 0) 0 (if (= (aref ops top) 40) (setq bad 1) (progn (emit_op (aref ops top)) (setq top (- top 1)) (flush)))))
+  1672 - 0x012011BC - LDI R2, 4540  ; top
+  1676 - 0x02220000 - LD R2, R2, 0  ; top
+  1680 - 0x01300000 - LDI R3, 0  ; 0
+  1684 - 0x0B320000 - CMP R3, R2  ; (defun flush () (if (<= top 0) 0 (if (= (aref ops top) 40) (setq bad 1) (progn (emit_op (aref ops top)) (setq top (- top 1)) (flush)))))
   1688 - 0x150006A8 - JL 1704  ; (defun flush () (if (<= top 0) 0 (if (= (aref ops top) 40) (setq bad 1) (progn (emit_op (aref ops top)) (setq top (- top 1)) (flush)))))
   1692 - 0x01200000 - LDI R2, 0  ; 0
   1696 - 0x04120000 - ADD R1, R2, R0  ; (defun flush () (if (<= top 0) 0 (if (= (aref ops top) 40) (setq bad 1) (progn (emit_op (aref ops top)) (setq top (- top 1)) (flush)))))
@@ -609,15 +609,15 @@ out_code_hex: |-
   1756 - 0x03230000 - ST R2, R3, 0  ; (setq bad 1)
   1760 - 0x04120000 - ADD R1, R2, R0  ; (defun flush () (if (<= top 0) 0 (if (= (aref ops top) 40) (setq bad 1) (progn (emit_op (aref ops top)) (setq top (- top 1)) (flush)))))
   1764 - 0x12000738 - JMP 1848  ; (defun flush () (if (<= top 0) 0 (if (= (aref ops top) 40) (setq bad 1) (progn (emit_op (aref ops top)) (setq top (- top 1)) (flush)))))
-  1768 - 0x19100000 - PUSH R1  ; (emit_op (aref ops top))
-  1772 - 0x01201028 - LDI R2, 4136  ; ops
-  1776 - 0x02220000 - LD R2, R2, 0  ; ops
-  1780 - 0x013011BC - LDI R3, 4540  ; top
-  1784 - 0x02330000 - LD R3, R3, 0  ; top
-  1788 - 0x01400002 - LDI R4, 2  ; (aref ops top)
-  1792 - 0x10334000 - LSL R3, R3, R4  ; (aref ops top)
-  1796 - 0x04223000 - ADD R2, R2, R3  ; (aref ops top)
-  1800 - 0x02220000 - LD R2, R2, 0  ; (aref ops top)
+  1768 - 0x01201028 - LDI R2, 4136  ; ops
+  1772 - 0x02220000 - LD R2, R2, 0  ; ops
+  1776 - 0x013011BC - LDI R3, 4540  ; top
+  1780 - 0x02330000 - LD R3, R3, 0  ; top
+  1784 - 0x01400002 - LDI R4, 2  ; (aref ops top)
+  1788 - 0x10334000 - LSL R3, R3, R4  ; (aref ops top)
+  1792 - 0x04223000 - ADD R2, R2, R3  ; (aref ops top)
+  1796 - 0x02220000 - LD R2, R2, 0  ; (aref ops top)
+  1800 - 0x19100000 - PUSH R1  ; (emit_op (aref ops top))
   1804 - 0x04120000 - ADD R1, R2, R0  ; (emit_op (aref ops top))
   1808 - 0x17000344 - CALL 836  ; (emit_op (aref ops top))
   1812 - 0x04210000 - ADD R2, R1, R0  ; (emit_op (aref ops top))
@@ -630,7 +630,7 @@ out_code_hex: |-
   1840 - 0x03230000 - ST R2, R3, 0  ; (setq top (- top 1))
   1844 - 0x12000688 - JMP 1672  ; (defun flush () (if (<= top 0) 0 (if (= (aref ops top) 40) (setq bad 1) (progn (emit_op (aref ops top)) (setq top (- top 1)) (flush)))))
   1848 - 0x18000000 - RET  ; (defun flush () (if (<= top 0) 0 (if (= (aref ops top) 40) (setq bad 1) (progn (emit_op (aref ops top)) (setq top (- top 1)) (flush)))))
-  1852 - 0x12000870 - JMP 2160  ; (defun after_operand (i c) (if (= c 41) (progn (pop_paren) (+ i 1)) (if (> (prec c) 0) (progn (pop_while (prec c)) (push_op c) (setq need_operand 1) (+ i 1)) (setq bad 1))))
+  1852 - 0x12000868 - JMP 2152  ; (defun after_operand (i c) (if (= c 41) (progn (pop_paren) (+ i 1)) (if (> (prec c) 0) (progn (pop_while (prec c)) (push_op c) (setq need_operand 1) (+ i 1)) (setq bad 1))))
   1856 - 0x04420000 - ADD R4, R2, R0  ; c
   1860 - 0x01500029 - LDI R5, 41  ; 41
   1864 - 0x0B450000 - CMP R4, R5  ; (defun after_operand (i c) (if (= c 41) (progn (pop_paren) (+ i 1)) (if (> (prec c) 0) (progn (pop_while (prec c)) (push_op c) (setq need_operand 1) (+ i 1)) (setq bad 1))))
@@ -647,270 +647,268 @@ out_code_hex: |-
   1908 - 0x01500001 - LDI R5, 1  ; 1
   1912 - 0x04445000 - ADD R4, R4, R5  ; (+ i 1)
   1916 - 0x04340000 - ADD R3, R4, R0  ; (defun after_operand (i c) (if (= c 41) (progn (pop_paren) (+ i 1)) (if (> (prec c) 0) (progn (pop_while (prec c)) (push_op c) (setq need_operand 1) (+ i 1)) (setq bad 1))))
-  1920 - 0x12000868 - JMP 2152  ; (defun after_operand (i c) (if (= c 41) (progn (pop_paren) (+ i 1)) (if (> (prec c) 0) (progn (pop_while (prec c)) (push_op c) (setq need_operand 1) (+ i 1)) (setq bad 1))))
-  1924 - 0x01400000 - LDI R4, 0  ; 0
+  1920 - 0x12000860 - JMP 2144  ; (defun after_operand (i c) (if (= c 41) (progn (pop_paren) (+ i 1)) (if (> (prec c) 0) (progn (pop_while (prec c)) (push_op c) (setq need_operand 1) (+ i 1)) (setq bad 1))))
+  1924 - 0x04420000 - ADD R4, R2, R0  ; c
   1928 - 0x19100000 - PUSH R1  ; (prec c)
   1932 - 0x19200000 - PUSH R2  ; (prec c)
   1936 - 0x19300000 - PUSH R3  ; (prec c)
-  1940 - 0x19400000 - PUSH R4  ; (prec c)
-  1944 - 0x04520000 - ADD R5, R2, R0  ; c
-  1948 - 0x04150000 - ADD R1, R5, R0  ; (prec c)
-  1952 - 0x170001CC - CALL 460  ; (prec c)
-  1956 - 0x04510000 - ADD R5, R1, R0  ; (prec c)
-  1960 - 0x1A400000 - POP R4  ; (prec c)
-  1964 - 0x1A300000 - POP R3  ; (prec c)
-  1968 - 0x1A200000 - POP R2  ; (prec c)
-  1972 - 0x1A100000 - POP R1  ; (prec c)
-  1976 - 0x0B450000 - CMP R4, R5  ; (defun after_operand (i c) (if (= c 41) (progn (pop_paren) (+ i 1)) (if (> (prec c) 0) (progn (pop_while (prec c)) (push_op c) (setq need_operand 1) (+ i 1)) (setq bad 1))))
-  1980 - 0x16000854 - JGE 2132  ; (defun after_operand (i c) (if (= c 41) (progn (pop_paren) (+ i 1)) (if (> (prec c) 0) (progn (pop_while (prec c)) (push_op c) (setq need_operand 1) (+ i 1)) (setq bad 1))))
-  1984 - 0x19100000 - PUSH R1  ; (pop_while (prec c))
-  1988 - 0x19200000 - PUSH R2  ; (pop_while (prec c))
-  1992 - 0x19300000 - PUSH R3  ; (pop_while (prec c))
-  1996 - 0x19100000 - PUSH R1  ; (prec c)
-  2000 - 0x19200000 - PUSH R2  ; (prec c)
-  2004 - 0x19300000 - PUSH R3  ; (prec c)
-  2008 - 0x04420000 - ADD R4, R2, R0  ; c
-  2012 - 0x04140000 - ADD R1, R4, R0  ; (prec c)
-  2016 - 0x170001CC - CALL 460  ; (prec c)
-  2020 - 0x04410000 - ADD R4, R1, R0  ; (prec c)
-  2024 - 0x1A300000 - POP R3  ; (prec c)
-  2028 - 0x1A200000 - POP R2  ; (prec c)
-  2032 - 0x1A100000 - POP R1  ; (prec c)
-  2036 - 0x04140000 - ADD R1, R4, R0  ; (pop_while (prec c))
-  2040 - 0x170004A4 - CALL 1188  ; (pop_while (prec c))
-  2044 - 0x04410000 - ADD R4, R1, R0  ; (pop_while (prec c))
-  2048 - 0x1A300000 - POP R3  ; (pop_while (prec c))
-  2052 - 0x1A200000 - POP R2  ; (pop_while (prec c))
-  2056 - 0x1A100000 - POP R1  ; (pop_while (prec c))
-  2060 - 0x19100000 - PUSH R1  ; (push_op c)
-  2064 - 0x19200000 - PUSH R2  ; (push_op c)
-  2068 - 0x19300000 - PUSH R3  ; (push_op c)
-  2072 - 0x04420000 - ADD R4, R2, R0  ; c
-  2076 - 0x04140000 - ADD R1, R4, R0  ; (push_op c)
-  2080 - 0x17000254 - CALL 596  ; (push_op c)
-  2084 - 0x04410000 - ADD R4, R1, R0  ; (push_op c)
-  2088 - 0x1A300000 - POP R3  ; (push_op c)
-  2092 - 0x1A200000 - POP R2  ; (push_op c)
-  2096 - 0x1A100000 - POP R1  ; (push_op c)
-  2100 - 0x01400001 - LDI R4, 1  ; 1
-  2104 - 0x015011C8 - LDI R5, 4552  ; (setq need_operand 1)
-  2108 - 0x03450000 - ST R4, R5, 0  ; (setq need_operand 1)
-  2112 - 0x04410000 - ADD R4, R1, R0  ; i
-  2116 - 0x01500001 - LDI R5, 1  ; 1
-  2120 - 0x04445000 - ADD R4, R4, R5  ; (+ i 1)
-  2124 - 0x04340000 - ADD R3, R4, R0  ; (defun after_operand (i c) (if (= c 41) (progn (pop_paren) (+ i 1)) (if (> (prec c) 0) (progn (pop_while (prec c)) (push_op c) (setq need_operand 1) (+ i 1)) (setq bad 1))))
-  2128 - 0x12000868 - JMP 2152  ; (defun after_operand (i c) (if (= c 41) (progn (pop_paren) (+ i 1)) (if (> (prec c) 0) (progn (pop_while (prec c)) (push_op c) (setq need_operand 1) (+ i 1)) (setq bad 1))))
-  2132 - 0x01400001 - LDI R4, 1  ; 1
-  2136 - 0x015011C4 - LDI R5, 4548  ; (setq bad 1)
-  2140 - 0x03450000 - ST R4, R5, 0  ; (setq bad 1)
-  2144 - 0x04340000 - ADD R3, R4, R0  ; (defun after_operand (i c) (if (= c 41) (progn (pop_paren) (+ i 1)) (if (> (prec c) 0) (progn (pop_while (prec c)) (push_op c) (setq need_operand 1) (+ i 1)) (setq bad 1))))
-  2148 - 0x12000868 - JMP 2152  ; (defun after_operand (i c) (if (= c 41) (progn (pop_paren) (+ i 1)) (if (> (prec c) 0) (progn (pop_while (prec c)) (push_op c) (setq need_operand 1) (+ i 1)) (setq bad 1))))
-  2152 - 0x04130000 - ADD R1, R3, R0  ; (defun after_operand (i c) (if (= c 41) (progn (pop_paren) (+ i 1)) (if (> (prec c) 0) (progn (pop_while (prec c)) (push_op c) (setq need_operand 1) (+ i 1)) (setq bad 1))))
-  2156 - 0x18000000 - RET  ; (defun after_operand (i c) (if (= c 41) (progn (pop_paren) (+ i 1)) (if (> (prec c) 0) (progn (pop_while (prec c)) (push_op c) (setq need_operand 1) (+ i 1)) (setq bad 1))))
-  2160 - 0x12000968 - JMP 2408  ; (defun before_operand (i c) (if (= c 40) (progn (push_op c) (+ i 1)) (if (digit c) (progn (separator) (setq need_operand 0) (emit_num i)) (setq bad 1))))
-  2164 - 0x04420000 - ADD R4, R2, R0  ; c
-  2168 - 0x01500028 - LDI R5, 40  ; 40
-  2172 - 0x0B450000 - CMP R4, R5  ; (defun before_operand (i c) (if (= c 40) (progn (push_op c) (+ i 1)) (if (digit c) (progn (separator) (setq need_operand 0) (emit_num i)) (setq bad 1))))
-  2176 - 0x140008C0 - JNZ 2240  ; (defun before_operand (i c) (if (= c 40) (progn (push_op c) (+ i 1)) (if (digit c) (progn (separator) (setq need_operand 0) (emit_num i)) (setq bad 1))))
-  2180 - 0x19100000 - PUSH R1  ; (push_op c)
-  2184 - 0x19200000 - PUSH R2  ; (push_op c)
-  2188 - 0x19300000 - PUSH R3  ; (push_op c)
-  2192 - 0x04420000 - ADD R4, R2, R0  ; c
-  2196 - 0x04140000 - ADD R1, R4, R0  ; (push_op c)
-  2200 - 0x17000254 - CALL 596  ; (push_op c)
-  2204 - 0x04410000 - ADD R4, R1, R0  ; (push_op c)
-  2208 - 0x1A300000 - POP R3  ; (push_op c)
-  2212 - 0x1A200000 - POP R2  ; (push_op c)
-  2216 - 0x1A100000 - POP R1  ; (push_op c)
-  2220 - 0x04410000 - ADD R4, R1, R0  ; i
-  2224 - 0x01500001 - LDI R5, 1  ; 1
-  2228 - 0x04445000 - ADD R4, R4, R5  ; (+ i 1)
-  2232 - 0x04340000 - ADD R3, R4, R0  ; (defun before_operand (i c) (if (= c 40) (progn (push_op c) (+ i 1)) (if (digit c) (progn (separator) (setq need_operand 0) (emit_num i)) (setq bad 1))))
-  2236 - 0x12000960 - JMP 2400  ; (defun before_operand (i c) (if (= c 40) (progn (push_op c) (+ i 1)) (if (digit c) (progn (separator) (setq need_operand 0) (emit_num i)) (setq bad 1))))
-  2240 - 0x19100000 - PUSH R1  ; (digit c)
-  2244 - 0x19200000 - PUSH R2  ; (digit c)
-  2248 - 0x19300000 - PUSH R3  ; (digit c)
-  2252 - 0x04420000 - ADD R4, R2, R0  ; c
-  2256 - 0x04140000 - ADD R1, R4, R0  ; (digit c)
-  2260 - 0x17000390 - CALL 912  ; (digit c)
-  2264 - 0x04410000 - ADD R4, R1, R0  ; (digit c)
-  2268 - 0x1A300000 - POP R3  ; (digit c)
-  2272 - 0x1A200000 - POP R2  ; (digit c)
-  2276 - 0x1A100000 - POP R1  ; (digit c)
-  2280 - 0x0B400000 - CMP R4, R0  ; (defun before_operand (i c) (if (= c 40) (progn (push_op c) (+ i 1)) (if (digit c) (progn (separator) (setq need_operand 0) (emit_num i)) (setq bad 1))))
-  2284 - 0x1300094C - JZ 2380  ; (defun before_operand (i c) (if (= c 40) (progn (push_op c) (+ i 1)) (if (digit c) (progn (separator) (setq need_operand 0) (emit_num i)) (setq bad 1))))
-  2288 - 0x19100000 - PUSH R1  ; (separator)
-  2292 - 0x19200000 - PUSH R2  ; (separator)
-  2296 - 0x19300000 - PUSH R3  ; (separator)
-  2300 - 0x170002FC - CALL 764  ; (separator)
-  2304 - 0x04410000 - ADD R4, R1, R0  ; (separator)
-  2308 - 0x1A300000 - POP R3  ; (separator)
-  2312 - 0x1A200000 - POP R2  ; (separator)
-  2316 - 0x1A100000 - POP R1  ; (separator)
-  2320 - 0x01400000 - LDI R4, 0  ; 0
-  2324 - 0x015011C8 - LDI R5, 4552  ; (setq need_operand 0)
-  2328 - 0x03450000 - ST R4, R5, 0  ; (setq need_operand 0)
-  2332 - 0x19100000 - PUSH R1  ; (emit_num i)
-  2336 - 0x19200000 - PUSH R2  ; (emit_num i)
-  2340 - 0x19300000 - PUSH R3  ; (emit_num i)
-  2344 - 0x04410000 - ADD R4, R1, R0  ; i
-  2348 - 0x04140000 - ADD R1, R4, R0  ; (emit_num i)
-  2352 - 0x170003E0 - CALL 992  ; (emit_num i)
-  2356 - 0x04410000 - ADD R4, R1, R0  ; (emit_num i)
-  2360 - 0x1A300000 - POP R3  ; (emit_num i)
-  2364 - 0x1A200000 - POP R2  ; (emit_num i)
-  2368 - 0x1A100000 - POP R1  ; (emit_num i)
-  2372 - 0x04340000 - ADD R3, R4, R0  ; (defun before_operand (i c) (if (= c 40) (progn (push_op c) (+ i 1)) (if (digit c) (progn (separator) (setq need_operand 0) (emit_num i)) (setq bad 1))))
-  2376 - 0x12000960 - JMP 2400  ; (defun before_operand (i c) (if (= c 40) (progn (push_op c) (+ i 1)) (if (digit c) (progn (separator) (setq need_operand 0) (emit_num i)) (setq bad 1))))
-  2380 - 0x01400001 - LDI R4, 1  ; 1
-  2384 - 0x015011C4 - LDI R5, 4548  ; (setq bad 1)
-  2388 - 0x03450000 - ST R4, R5, 0  ; (setq bad 1)
-  2392 - 0x04340000 - ADD R3, R4, R0  ; (defun before_operand (i c) (if (= c 40) (progn (push_op c) (+ i 1)) (if (digit c) (progn (separator) (setq need_operand 0) (emit_num i)) (setq bad 1))))
-  2396 - 0x12000960 - JMP 2400  ; (defun before_operand (i c) (if (= c 40) (progn (push_op c) (+ i 1)) (if (digit c) (progn (separator) (setq need_operand 0) (emit_num i)) (setq bad 1))))
-  2400 - 0x04130000 - ADD R1, R3, R0  ; (defun before_operand (i c) (if (= c 40) (progn (push_op c) (+ i 1)) (if (digit c) (progn (separator) (setq need_operand 0) (emit_num i)) (setq bad 1))))
-  2404 - 0x18000000 - RET  ; (defun before_operand (i c) (if (= c 40) (progn (push_op c) (+ i 1)) (if (digit c) (progn (separator) (setq need_operand 0) (emit_num i)) (setq bad 1))))
-  2408 - 0x12000AD8 - JMP 2776  ; (defun scan (i) (if (or bad (> i idx)) 0 (progn (setq cur (aref expr i)) (scan (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))))))
-  2412 - 0x013011C4 - LDI R3, 4548  ; bad
-  2416 - 0x02330000 - LD R3, R3, 0  ; bad
-  2420 - 0x014011B8 - LDI R4, 4536  ; idx
-  2424 - 0x02440000 - LD R4, R4, 0  ; idx
-  2428 - 0x04510000 - ADD R5, R1, R0  ; i
-  2432 - 0x0B450000 - CMP R4, R5  ; (> i idx)
-  2436 - 0x16000990 - JGE 2448  ; (> i idx)
-  2440 - 0x01400001 - LDI R4, 1  ; (> i idx)
-  2444 - 0x12000994 - JMP 2452  ; (> i idx)
-  2448 - 0x01400000 - LDI R4, 0  ; (> i idx)
-  2452 - 0x0D334000 - OR R3, R3, R4  ; (or bad (> i idx))
-  2456 - 0x0B300000 - CMP R3, R0  ; (defun scan (i) (if (or bad (> i idx)) 0 (progn (setq cur (aref expr i)) (scan (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))))))
-  2460 - 0x130009AC - JZ 2476  ; (defun scan (i) (if (or bad (> i idx)) 0 (progn (setq cur (aref expr i)) (scan (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))))))
-  2464 - 0x01300000 - LDI R3, 0  ; 0
-  2468 - 0x04230000 - ADD R2, R3, R0  ; (defun scan (i) (if (or bad (> i idx)) 0 (progn (setq cur (aref expr i)) (scan (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))))))
-  2472 - 0x12000AD0 - JMP 2768  ; (defun scan (i) (if (or bad (> i idx)) 0 (progn (setq cur (aref expr i)) (scan (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))))))
-  2476 - 0x01300FA0 - LDI R3, 4000  ; expr
-  2480 - 0x02330000 - LD R3, R3, 0  ; expr
-  2484 - 0x04410000 - ADD R4, R1, R0  ; i
-  2488 - 0x01500002 - LDI R5, 2  ; (aref expr i)
-  2492 - 0x10445000 - LSL R4, R4, R5  ; (aref expr i)
-  2496 - 0x04334000 - ADD R3, R3, R4  ; (aref expr i)
-  2500 - 0x02330000 - LD R3, R3, 0  ; (aref expr i)
-  2504 - 0x014011D4 - LDI R4, 4564  ; (setq cur (aref expr i))
-  2508 - 0x03340000 - ST R3, R4, 0  ; (setq cur (aref expr i))
-  2512 - 0x013011D4 - LDI R3, 4564  ; cur
-  2516 - 0x02330000 - LD R3, R3, 0  ; cur
-  2520 - 0x01400020 - LDI R4, 32  ; 32
-  2524 - 0x0B340000 - CMP R3, R4  ; (= cur 32)
-  2528 - 0x140009EC - JNZ 2540  ; (= cur 32)
-  2532 - 0x01300001 - LDI R3, 1  ; (= cur 32)
-  2536 - 0x120009F0 - JMP 2544  ; (= cur 32)
-  2540 - 0x01300000 - LDI R3, 0  ; (= cur 32)
-  2544 - 0x014011D4 - LDI R4, 4564  ; cur
-  2548 - 0x02440000 - LD R4, R4, 0  ; cur
-  2552 - 0x01500009 - LDI R5, 9  ; 9
-  2556 - 0x0B450000 - CMP R4, R5  ; (= cur 9)
-  2560 - 0x14000A0C - JNZ 2572  ; (= cur 9)
-  2564 - 0x01400001 - LDI R4, 1  ; (= cur 9)
-  2568 - 0x12000A10 - JMP 2576  ; (= cur 9)
-  2572 - 0x01400000 - LDI R4, 0  ; (= cur 9)
-  2576 - 0x0D334000 - OR R3, R3, R4  ; (or (= cur 32) (= cur 9))
-  2580 - 0x0B300000 - CMP R3, R0  ; (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))
-  2584 - 0x13000A30 - JZ 2608  ; (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))
-  2588 - 0x04410000 - ADD R4, R1, R0  ; i
-  2592 - 0x01500001 - LDI R5, 1  ; 1
-  2596 - 0x04445000 - ADD R4, R4, R5  ; (+ i 1)
-  2600 - 0x04340000 - ADD R3, R4, R0  ; (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))
-  2604 - 0x12000AC8 - JMP 2760  ; (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))
-  2608 - 0x014011C8 - LDI R4, 4552  ; need_operand
-  2612 - 0x02440000 - LD R4, R4, 0  ; need_operand
-  2616 - 0x0B400000 - CMP R4, R0  ; (if need_operand (before_operand i cur) (after_operand i cur))
-  2620 - 0x13000A84 - JZ 2692  ; (if need_operand (before_operand i cur) (after_operand i cur))
-  2624 - 0x19100000 - PUSH R1  ; (before_operand i cur)
-  2628 - 0x19200000 - PUSH R2  ; (before_operand i cur)
-  2632 - 0x19300000 - PUSH R3  ; (before_operand i cur)
-  2636 - 0x19400000 - PUSH R4  ; (before_operand i cur)
-  2640 - 0x04510000 - ADD R5, R1, R0  ; i
-  2644 - 0x016011D4 - LDI R6, 4564  ; cur
-  2648 - 0x02660000 - LD R6, R6, 0  ; cur
-  2652 - 0x04150000 - ADD R1, R5, R0  ; (before_operand i cur)
-  2656 - 0x04260000 - ADD R2, R6, R0  ; (before_operand i cur)
-  2660 - 0x17000874 - CALL 2164  ; (before_operand i cur)
-  2664 - 0x04510000 - ADD R5, R1, R0  ; (before_operand i cur)
-  2668 - 0x1A400000 - POP R4  ; (before_operand i cur)
-  2672 - 0x1A300000 - POP R3  ; (before_operand i cur)
-  2676 - 0x1A200000 - POP R2  ; (before_operand i cur)
-  2680 - 0x1A100000 - POP R1  ; (before_operand i cur)
-  2684 - 0x04450000 - ADD R4, R5, R0  ; (if need_operand (before_operand i cur) (after_operand i cur))
-  2688 - 0x12000AC4 - JMP 2756  ; (if need_operand (before_operand i cur) (after_operand i cur))
-  2692 - 0x19100000 - PUSH R1  ; (after_operand i cur)
-  2696 - 0x19200000 - PUSH R2  ; (after_operand i cur)
-  2700 - 0x19300000 - PUSH R3  ; (after_operand i cur)
-  2704 - 0x19400000 - PUSH R4  ; (after_operand i cur)
-  2708 - 0x04510000 - ADD R5, R1, R0  ; i
-  2712 - 0x016011D4 - LDI R6, 4564  ; cur
-  2716 - 0x02660000 - LD R6, R6, 0  ; cur
-  2720 - 0x04150000 - ADD R1, R5, R0  ; (after_operand i cur)
-  2724 - 0x04260000 - ADD R2, R6, R0  ; (after_operand i cur)
-  2728 - 0x17000740 - CALL 1856  ; (after_operand i cur)
-  2732 - 0x04510000 - ADD R5, R1, R0  ; (after_operand i cur)
-  2736 - 0x1A400000 - POP R4  ; (after_operand i cur)
-  2740 - 0x1A300000 - POP R3  ; (after_operand i cur)
-  2744 - 0x1A200000 - POP R2  ; (after_operand i cur)
-  2748 - 0x1A100000 - POP R1  ; (after_operand i cur)
-  2752 - 0x04450000 - ADD R4, R5, R0  ; (if need_operand (before_operand i cur) (after_operand i cur))
-  2756 - 0x04340000 - ADD R3, R4, R0  ; (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))
-  2760 - 0x04130000 - ADD R1, R3, R0  ; (defun scan (i) (if (or bad (> i idx)) 0 (progn (setq cur (aref expr i)) (scan (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))))))
-  2764 - 0x1200096C - JMP 2412  ; (defun scan (i) (if (or bad (> i idx)) 0 (progn (setq cur (aref expr i)) (scan (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))))))
-  2768 - 0x04120000 - ADD R1, R2, R0  ; (defun scan (i) (if (or bad (> i idx)) 0 (progn (setq cur (aref expr i)) (scan (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))))))
-  2772 - 0x18000000 - RET  ; (defun scan (i) (if (or bad (> i idx)) 0 (progn (setq cur (aref expr i)) (scan (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))))))
-  2776 - 0x12000B38 - JMP 2872  ; (defun print_result (i) (if (> i result_len) 0 (progn (out 1 (aref result i)) (print_result (+ i 1)))))
-  2780 - 0x013011CC - LDI R3, 4556  ; result_len
-  2784 - 0x02330000 - LD R3, R3, 0  ; result_len
-  2788 - 0x04410000 - ADD R4, R1, R0  ; i
-  2792 - 0x0B340000 - CMP R3, R4  ; (defun print_result (i) (if (> i result_len) 0 (progn (out 1 (aref result i)) (print_result (+ i 1)))))
-  2796 - 0x16000AFC - JGE 2812  ; (defun print_result (i) (if (> i result_len) 0 (progn (out 1 (aref result i)) (print_result (+ i 1)))))
-  2800 - 0x01300000 - LDI R3, 0  ; 0
-  2804 - 0x04230000 - ADD R2, R3, R0  ; (defun print_result (i) (if (> i result_len) 0 (progn (out 1 (aref result i)) (print_result (+ i 1)))))
-  2808 - 0x12000B30 - JMP 2864  ; (defun print_result (i) (if (> i result_len) 0 (progn (out 1 (aref result i)) (print_result (+ i 1)))))
-  2812 - 0x013010B0 - LDI R3, 4272  ; result
-  2816 - 0x02330000 - LD R3, R3, 0  ; result
-  2820 - 0x04410000 - ADD R4, R1, R0  ; i
-  2824 - 0x01500002 - LDI R5, 2  ; (aref result i)
-  2828 - 0x10445000 - LSL R4, R4, R5  ; (aref result i)
-  2832 - 0x04334000 - ADD R3, R3, R4  ; (aref result i)
-  2836 - 0x02330000 - LD R3, R3, 0  ; (aref result i)
-  2840 - 0x1C300001 - OUT 1, R3  ; (out 1 (aref result i))
-  2844 - 0x04310000 - ADD R3, R1, R0  ; i
-  2848 - 0x01400001 - LDI R4, 1  ; 1
-  2852 - 0x04334000 - ADD R3, R3, R4  ; (+ i 1)
-  2856 - 0x04130000 - ADD R1, R3, R0  ; (defun print_result (i) (if (> i result_len) 0 (progn (out 1 (aref result i)) (print_result (+ i 1)))))
-  2860 - 0x12000ADC - JMP 2780  ; (defun print_result (i) (if (> i result_len) 0 (progn (out 1 (aref result i)) (print_result (+ i 1)))))
-  2864 - 0x04120000 - ADD R1, R2, R0  ; (defun print_result (i) (if (> i result_len) 0 (progn (out 1 (aref result i)) (print_result (+ i 1)))))
-  2868 - 0x18000000 - RET  ; (defun print_result (i) (if (> i result_len) 0 (progn (out 1 (aref result i)) (print_result (+ i 1)))))
-  2872 - 0x01100001 - LDI R1, 1  ; 1
-  2876 - 0x1700096C - CALL 2412  ; (scan 1)
-  2880 - 0x04110000 - ADD R1, R1, R0  ; (scan 1)
-  2884 - 0x17000688 - CALL 1672  ; (flush)
-  2888 - 0x04110000 - ADD R1, R1, R0  ; (flush)
-  2892 - 0x011011C4 - LDI R1, 4548  ; bad
-  2896 - 0x02110000 - LD R1, R1, 0  ; bad
-  2900 - 0x012011C8 - LDI R2, 4552  ; need_operand
-  2904 - 0x02220000 - LD R2, R2, 0  ; need_operand
-  2908 - 0x0D112000 - OR R1, R1, R2  ; (or bad need_operand)
-  2912 - 0x0B100000 - CMP R1, R0  ; (if (or bad need_operand) (progn (out 1 45) (out 1 49)) (print_result 1))
-  2916 - 0x13000B80 - JZ 2944  ; (if (or bad need_operand) (progn (out 1 45) (out 1 49)) (print_result 1))
-  2920 - 0x0120002D - LDI R2, 45  ; 45
-  2924 - 0x1C200001 - OUT 1, R2  ; (out 1 45)
-  2928 - 0x01200031 - LDI R2, 49  ; 49
-  2932 - 0x1C200001 - OUT 1, R2  ; (out 1 49)
-  2936 - 0x04120000 - ADD R1, R2, R0  ; (if (or bad need_operand) (progn (out 1 45) (out 1 49)) (print_result 1))
-  2940 - 0x12000B9C - JMP 2972  ; (if (or bad need_operand) (progn (out 1 45) (out 1 49)) (print_result 1))
-  2944 - 0x19100000 - PUSH R1  ; (print_result 1)
-  2948 - 0x01200001 - LDI R2, 1  ; 1
-  2952 - 0x04120000 - ADD R1, R2, R0  ; (print_result 1)
-  2956 - 0x17000ADC - CALL 2780  ; (print_result 1)
-  2960 - 0x04210000 - ADD R2, R1, R0  ; (print_result 1)
-  2964 - 0x1A100000 - POP R1  ; (print_result 1)
-  2968 - 0x04120000 - ADD R1, R2, R0  ; (if (or bad need_operand) (progn (out 1 45) (out 1 49)) (print_result 1))
-  2972 - 0x20000000 - HLT
+  1940 - 0x04140000 - ADD R1, R4, R0  ; (prec c)
+  1944 - 0x170001CC - CALL 460  ; (prec c)
+  1948 - 0x04410000 - ADD R4, R1, R0  ; (prec c)
+  1952 - 0x1A300000 - POP R3  ; (prec c)
+  1956 - 0x1A200000 - POP R2  ; (prec c)
+  1960 - 0x1A100000 - POP R1  ; (prec c)
+  1964 - 0x01500000 - LDI R5, 0  ; 0
+  1968 - 0x0B540000 - CMP R5, R4  ; (defun after_operand (i c) (if (= c 41) (progn (pop_paren) (+ i 1)) (if (> (prec c) 0) (progn (pop_while (prec c)) (push_op c) (setq need_operand 1) (+ i 1)) (setq bad 1))))
+  1972 - 0x1600084C - JGE 2124  ; (defun after_operand (i c) (if (= c 41) (progn (pop_paren) (+ i 1)) (if (> (prec c) 0) (progn (pop_while (prec c)) (push_op c) (setq need_operand 1) (+ i 1)) (setq bad 1))))
+  1976 - 0x04420000 - ADD R4, R2, R0  ; c
+  1980 - 0x19100000 - PUSH R1  ; (prec c)
+  1984 - 0x19200000 - PUSH R2  ; (prec c)
+  1988 - 0x19300000 - PUSH R3  ; (prec c)
+  1992 - 0x04140000 - ADD R1, R4, R0  ; (prec c)
+  1996 - 0x170001CC - CALL 460  ; (prec c)
+  2000 - 0x04410000 - ADD R4, R1, R0  ; (prec c)
+  2004 - 0x1A300000 - POP R3  ; (prec c)
+  2008 - 0x1A200000 - POP R2  ; (prec c)
+  2012 - 0x1A100000 - POP R1  ; (prec c)
+  2016 - 0x19100000 - PUSH R1  ; (pop_while (prec c))
+  2020 - 0x19200000 - PUSH R2  ; (pop_while (prec c))
+  2024 - 0x19300000 - PUSH R3  ; (pop_while (prec c))
+  2028 - 0x04140000 - ADD R1, R4, R0  ; (pop_while (prec c))
+  2032 - 0x170004A4 - CALL 1188  ; (pop_while (prec c))
+  2036 - 0x04410000 - ADD R4, R1, R0  ; (pop_while (prec c))
+  2040 - 0x1A300000 - POP R3  ; (pop_while (prec c))
+  2044 - 0x1A200000 - POP R2  ; (pop_while (prec c))
+  2048 - 0x1A100000 - POP R1  ; (pop_while (prec c))
+  2052 - 0x04420000 - ADD R4, R2, R0  ; c
+  2056 - 0x19100000 - PUSH R1  ; (push_op c)
+  2060 - 0x19200000 - PUSH R2  ; (push_op c)
+  2064 - 0x19300000 - PUSH R3  ; (push_op c)
+  2068 - 0x04140000 - ADD R1, R4, R0  ; (push_op c)
+  2072 - 0x17000254 - CALL 596  ; (push_op c)
+  2076 - 0x04410000 - ADD R4, R1, R0  ; (push_op c)
+  2080 - 0x1A300000 - POP R3  ; (push_op c)
+  2084 - 0x1A200000 - POP R2  ; (push_op c)
+  2088 - 0x1A100000 - POP R1  ; (push_op c)
+  2092 - 0x01400001 - LDI R4, 1  ; 1
+  2096 - 0x015011C8 - LDI R5, 4552  ; (setq need_operand 1)
+  2100 - 0x03450000 - ST R4, R5, 0  ; (setq need_operand 1)
+  2104 - 0x04410000 - ADD R4, R1, R0  ; i
+  2108 - 0x01500001 - LDI R5, 1  ; 1
+  2112 - 0x04445000 - ADD R4, R4, R5  ; (+ i 1)
+  2116 - 0x04340000 - ADD R3, R4, R0  ; (defun after_operand (i c) (if (= c 41) (progn (pop_paren) (+ i 1)) (if (> (prec c) 0) (progn (pop_while (prec c)) (push_op c) (setq need_operand 1) (+ i 1)) (setq bad 1))))
+  2120 - 0x12000860 - JMP 2144  ; (defun after_operand (i c) (if (= c 41) (progn (pop_paren) (+ i 1)) (if (> (prec c) 0) (progn (pop_while (prec c)) (push_op c) (setq need_operand 1) (+ i 1)) (setq bad 1))))
+  2124 - 0x01400001 - LDI R4, 1  ; 1
+  2128 - 0x015011C4 - LDI R5, 4548  ; (setq bad 1)
+  2132 - 0x03450000 - ST R4, R5, 0  ; (setq bad 1)
+  2136 - 0x04340000 - ADD R3, R4, R0  ; (defun after_operand (i c) (if (= c 41) (progn (pop_paren) (+ i 1)) (if (> (prec c) 0) (progn (pop_while (prec c)) (push_op c) (setq need_operand 1) (+ i 1)) (setq bad 1))))
+  2140 - 0x12000860 - JMP 2144  ; (defun after_operand (i c) (if (= c 41) (progn (pop_paren) (+ i 1)) (if (> (prec c) 0) (progn (pop_while (prec c)) (push_op c) (setq need_operand 1) (+ i 1)) (setq bad 1))))
+  2144 - 0x04130000 - ADD R1, R3, R0  ; (defun after_operand (i c) (if (= c 41) (progn (pop_paren) (+ i 1)) (if (> (prec c) 0) (progn (pop_while (prec c)) (push_op c) (setq need_operand 1) (+ i 1)) (setq bad 1))))
+  2148 - 0x18000000 - RET  ; (defun after_operand (i c) (if (= c 41) (progn (pop_paren) (+ i 1)) (if (> (prec c) 0) (progn (pop_while (prec c)) (push_op c) (setq need_operand 1) (+ i 1)) (setq bad 1))))
+  2152 - 0x12000960 - JMP 2400  ; (defun before_operand (i c) (if (= c 40) (progn (push_op c) (+ i 1)) (if (digit c) (progn (separator) (setq need_operand 0) (emit_num i)) (setq bad 1))))
+  2156 - 0x04420000 - ADD R4, R2, R0  ; c
+  2160 - 0x01500028 - LDI R5, 40  ; 40
+  2164 - 0x0B450000 - CMP R4, R5  ; (defun before_operand (i c) (if (= c 40) (progn (push_op c) (+ i 1)) (if (digit c) (progn (separator) (setq need_operand 0) (emit_num i)) (setq bad 1))))
+  2168 - 0x140008B8 - JNZ 2232  ; (defun before_operand (i c) (if (= c 40) (progn (push_op c) (+ i 1)) (if (digit c) (progn (separator) (setq need_operand 0) (emit_num i)) (setq bad 1))))
+  2172 - 0x04420000 - ADD R4, R2, R0  ; c
+  2176 - 0x19100000 - PUSH R1  ; (push_op c)
+  2180 - 0x19200000 - PUSH R2  ; (push_op c)
+  2184 - 0x19300000 - PUSH R3  ; (push_op c)
+  2188 - 0x04140000 - ADD R1, R4, R0  ; (push_op c)
+  2192 - 0x17000254 - CALL 596  ; (push_op c)
+  2196 - 0x04410000 - ADD R4, R1, R0  ; (push_op c)
+  2200 - 0x1A300000 - POP R3  ; (push_op c)
+  2204 - 0x1A200000 - POP R2  ; (push_op c)
+  2208 - 0x1A100000 - POP R1  ; (push_op c)
+  2212 - 0x04410000 - ADD R4, R1, R0  ; i
+  2216 - 0x01500001 - LDI R5, 1  ; 1
+  2220 - 0x04445000 - ADD R4, R4, R5  ; (+ i 1)
+  2224 - 0x04340000 - ADD R3, R4, R0  ; (defun before_operand (i c) (if (= c 40) (progn (push_op c) (+ i 1)) (if (digit c) (progn (separator) (setq need_operand 0) (emit_num i)) (setq bad 1))))
+  2228 - 0x12000958 - JMP 2392  ; (defun before_operand (i c) (if (= c 40) (progn (push_op c) (+ i 1)) (if (digit c) (progn (separator) (setq need_operand 0) (emit_num i)) (setq bad 1))))
+  2232 - 0x04420000 - ADD R4, R2, R0  ; c
+  2236 - 0x19100000 - PUSH R1  ; (digit c)
+  2240 - 0x19200000 - PUSH R2  ; (digit c)
+  2244 - 0x19300000 - PUSH R3  ; (digit c)
+  2248 - 0x04140000 - ADD R1, R4, R0  ; (digit c)
+  2252 - 0x17000390 - CALL 912  ; (digit c)
+  2256 - 0x04410000 - ADD R4, R1, R0  ; (digit c)
+  2260 - 0x1A300000 - POP R3  ; (digit c)
+  2264 - 0x1A200000 - POP R2  ; (digit c)
+  2268 - 0x1A100000 - POP R1  ; (digit c)
+  2272 - 0x0B400000 - CMP R4, R0  ; (defun before_operand (i c) (if (= c 40) (progn (push_op c) (+ i 1)) (if (digit c) (progn (separator) (setq need_operand 0) (emit_num i)) (setq bad 1))))
+  2276 - 0x13000944 - JZ 2372  ; (defun before_operand (i c) (if (= c 40) (progn (push_op c) (+ i 1)) (if (digit c) (progn (separator) (setq need_operand 0) (emit_num i)) (setq bad 1))))
+  2280 - 0x19100000 - PUSH R1  ; (separator)
+  2284 - 0x19200000 - PUSH R2  ; (separator)
+  2288 - 0x19300000 - PUSH R3  ; (separator)
+  2292 - 0x170002FC - CALL 764  ; (separator)
+  2296 - 0x04410000 - ADD R4, R1, R0  ; (separator)
+  2300 - 0x1A300000 - POP R3  ; (separator)
+  2304 - 0x1A200000 - POP R2  ; (separator)
+  2308 - 0x1A100000 - POP R1  ; (separator)
+  2312 - 0x01400000 - LDI R4, 0  ; 0
+  2316 - 0x015011C8 - LDI R5, 4552  ; (setq need_operand 0)
+  2320 - 0x03450000 - ST R4, R5, 0  ; (setq need_operand 0)
+  2324 - 0x04410000 - ADD R4, R1, R0  ; i
+  2328 - 0x19100000 - PUSH R1  ; (emit_num i)
+  2332 - 0x19200000 - PUSH R2  ; (emit_num i)
+  2336 - 0x19300000 - PUSH R3  ; (emit_num i)
+  2340 - 0x04140000 - ADD R1, R4, R0  ; (emit_num i)
+  2344 - 0x170003E0 - CALL 992  ; (emit_num i)
+  2348 - 0x04410000 - ADD R4, R1, R0  ; (emit_num i)
+  2352 - 0x1A300000 - POP R3  ; (emit_num i)
+  2356 - 0x1A200000 - POP R2  ; (emit_num i)
+  2360 - 0x1A100000 - POP R1  ; (emit_num i)
+  2364 - 0x04340000 - ADD R3, R4, R0  ; (defun before_operand (i c) (if (= c 40) (progn (push_op c) (+ i 1)) (if (digit c) (progn (separator) (setq need_operand 0) (emit_num i)) (setq bad 1))))
+  2368 - 0x12000958 - JMP 2392  ; (defun before_operand (i c) (if (= c 40) (progn (push_op c) (+ i 1)) (if (digit c) (progn (separator) (setq need_operand 0) (emit_num i)) (setq bad 1))))
+  2372 - 0x01400001 - LDI R4, 1  ; 1
+  2376 - 0x015011C4 - LDI R5, 4548  ; (setq bad 1)
+  2380 - 0x03450000 - ST R4, R5, 0  ; (setq bad 1)
+  2384 - 0x04340000 - ADD R3, R4, R0  ; (defun before_operand (i c) (if (= c 40) (progn (push_op c) (+ i 1)) (if (digit c) (progn (separator) (setq need_operand 0) (emit_num i)) (setq bad 1))))
+  2388 - 0x12000958 - JMP 2392  ; (defun before_operand (i c) (if (= c 40) (progn (push_op c) (+ i 1)) (if (digit c) (progn (separator) (setq need_operand 0) (emit_num i)) (setq bad 1))))
+  2392 - 0x04130000 - ADD R1, R3, R0  ; (defun before_operand (i c) (if (= c 40) (progn (push_op c) (+ i 1)) (if (digit c) (progn (separator) (setq need_operand 0) (emit_num i)) (setq bad 1))))
+  2396 - 0x18000000 - RET  ; (defun before_operand (i c) (if (= c 40) (progn (push_op c) (+ i 1)) (if (digit c) (progn (separator) (setq need_operand 0) (emit_num i)) (setq bad 1))))
+  2400 - 0x12000AD0 - JMP 2768  ; (defun scan (i) (if (or bad (> i idx)) 0 (progn (setq cur (aref expr i)) (scan (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))))))
+  2404 - 0x013011C4 - LDI R3, 4548  ; bad
+  2408 - 0x02330000 - LD R3, R3, 0  ; bad
+  2412 - 0x04410000 - ADD R4, R1, R0  ; i
+  2416 - 0x015011B8 - LDI R5, 4536  ; idx
+  2420 - 0x02550000 - LD R5, R5, 0  ; idx
+  2424 - 0x0B540000 - CMP R5, R4  ; (> i idx)
+  2428 - 0x16000988 - JGE 2440  ; (> i idx)
+  2432 - 0x01400001 - LDI R4, 1  ; (> i idx)
+  2436 - 0x1200098C - JMP 2444  ; (> i idx)
+  2440 - 0x01400000 - LDI R4, 0  ; (> i idx)
+  2444 - 0x0D334000 - OR R3, R3, R4  ; (or bad (> i idx))
+  2448 - 0x0B300000 - CMP R3, R0  ; (defun scan (i) (if (or bad (> i idx)) 0 (progn (setq cur (aref expr i)) (scan (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))))))
+  2452 - 0x130009A4 - JZ 2468  ; (defun scan (i) (if (or bad (> i idx)) 0 (progn (setq cur (aref expr i)) (scan (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))))))
+  2456 - 0x01300000 - LDI R3, 0  ; 0
+  2460 - 0x04230000 - ADD R2, R3, R0  ; (defun scan (i) (if (or bad (> i idx)) 0 (progn (setq cur (aref expr i)) (scan (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))))))
+  2464 - 0x12000AC8 - JMP 2760  ; (defun scan (i) (if (or bad (> i idx)) 0 (progn (setq cur (aref expr i)) (scan (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))))))
+  2468 - 0x01300FA0 - LDI R3, 4000  ; expr
+  2472 - 0x02330000 - LD R3, R3, 0  ; expr
+  2476 - 0x04410000 - ADD R4, R1, R0  ; i
+  2480 - 0x01500002 - LDI R5, 2  ; (aref expr i)
+  2484 - 0x10445000 - LSL R4, R4, R5  ; (aref expr i)
+  2488 - 0x04334000 - ADD R3, R3, R4  ; (aref expr i)
+  2492 - 0x02330000 - LD R3, R3, 0  ; (aref expr i)
+  2496 - 0x014011D4 - LDI R4, 4564  ; (setq cur (aref expr i))
+  2500 - 0x03340000 - ST R3, R4, 0  ; (setq cur (aref expr i))
+  2504 - 0x013011D4 - LDI R3, 4564  ; cur
+  2508 - 0x02330000 - LD R3, R3, 0  ; cur
+  2512 - 0x01400020 - LDI R4, 32  ; 32
+  2516 - 0x0B340000 - CMP R3, R4  ; (= cur 32)
+  2520 - 0x140009E4 - JNZ 2532  ; (= cur 32)
+  2524 - 0x01300001 - LDI R3, 1  ; (= cur 32)
+  2528 - 0x120009E8 - JMP 2536  ; (= cur 32)
+  2532 - 0x01300000 - LDI R3, 0  ; (= cur 32)
+  2536 - 0x014011D4 - LDI R4, 4564  ; cur
+  2540 - 0x02440000 - LD R4, R4, 0  ; cur
+  2544 - 0x01500009 - LDI R5, 9  ; 9
+  2548 - 0x0B450000 - CMP R4, R5  ; (= cur 9)
+  2552 - 0x14000A04 - JNZ 2564  ; (= cur 9)
+  2556 - 0x01400001 - LDI R4, 1  ; (= cur 9)
+  2560 - 0x12000A08 - JMP 2568  ; (= cur 9)
+  2564 - 0x01400000 - LDI R4, 0  ; (= cur 9)
+  2568 - 0x0D334000 - OR R3, R3, R4  ; (or (= cur 32) (= cur 9))
+  2572 - 0x0B300000 - CMP R3, R0  ; (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))
+  2576 - 0x13000A28 - JZ 2600  ; (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))
+  2580 - 0x04410000 - ADD R4, R1, R0  ; i
+  2584 - 0x01500001 - LDI R5, 1  ; 1
+  2588 - 0x04445000 - ADD R4, R4, R5  ; (+ i 1)
+  2592 - 0x04340000 - ADD R3, R4, R0  ; (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))
+  2596 - 0x12000AC0 - JMP 2752  ; (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))
+  2600 - 0x014011C8 - LDI R4, 4552  ; need_operand
+  2604 - 0x02440000 - LD R4, R4, 0  ; need_operand
+  2608 - 0x0B400000 - CMP R4, R0  ; (if need_operand (before_operand i cur) (after_operand i cur))
+  2612 - 0x13000A7C - JZ 2684  ; (if need_operand (before_operand i cur) (after_operand i cur))
+  2616 - 0x04510000 - ADD R5, R1, R0  ; i
+  2620 - 0x016011D4 - LDI R6, 4564  ; cur
+  2624 - 0x02660000 - LD R6, R6, 0  ; cur
+  2628 - 0x19100000 - PUSH R1  ; (before_operand i cur)
+  2632 - 0x19200000 - PUSH R2  ; (before_operand i cur)
+  2636 - 0x19300000 - PUSH R3  ; (before_operand i cur)
+  2640 - 0x19400000 - PUSH R4  ; (before_operand i cur)
+  2644 - 0x04150000 - ADD R1, R5, R0  ; (before_operand i cur)
+  2648 - 0x04260000 - ADD R2, R6, R0  ; (before_operand i cur)
+  2652 - 0x1700086C - CALL 2156  ; (before_operand i cur)
+  2656 - 0x04510000 - ADD R5, R1, R0  ; (before_operand i cur)
+  2660 - 0x1A400000 - POP R4  ; (before_operand i cur)
+  2664 - 0x1A300000 - POP R3  ; (before_operand i cur)
+  2668 - 0x1A200000 - POP R2  ; (before_operand i cur)
+  2672 - 0x1A100000 - POP R1  ; (before_operand i cur)
+  2676 - 0x04450000 - ADD R4, R5, R0  ; (if need_operand (before_operand i cur) (after_operand i cur))
+  2680 - 0x12000ABC - JMP 2748  ; (if need_operand (before_operand i cur) (after_operand i cur))
+  2684 - 0x04510000 - ADD R5, R1, R0  ; i
+  2688 - 0x016011D4 - LDI R6, 4564  ; cur
+  2692 - 0x02660000 - LD R6, R6, 0  ; cur
+  2696 - 0x19100000 - PUSH R1  ; (after_operand i cur)
+  2700 - 0x19200000 - PUSH R2  ; (after_operand i cur)
+  2704 - 0x19300000 - PUSH R3  ; (after_operand i cur)
+  2708 - 0x19400000 - PUSH R4  ; (after_operand i cur)
+  2712 - 0x04150000 - ADD R1, R5, R0  ; (after_operand i cur)
+  2716 - 0x04260000 - ADD R2, R6, R0  ; (after_operand i cur)
+  2720 - 0x17000740 - CALL 1856  ; (after_operand i cur)
+  2724 - 0x04510000 - ADD R5, R1, R0  ; (after_operand i cur)
+  2728 - 0x1A400000 - POP R4  ; (after_operand i cur)
+  2732 - 0x1A300000 - POP R3  ; (after_operand i cur)
+  2736 - 0x1A200000 - POP R2  ; (after_operand i cur)
+  2740 - 0x1A100000 - POP R1  ; (after_operand i cur)
+  2744 - 0x04450000 - ADD R4, R5, R0  ; (if need_operand (before_operand i cur) (after_operand i cur))
+  2748 - 0x04340000 - ADD R3, R4, R0  ; (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))
+  2752 - 0x04130000 - ADD R1, R3, R0  ; (defun scan (i) (if (or bad (> i idx)) 0 (progn (setq cur (aref expr i)) (scan (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))))))
+  2756 - 0x12000964 - JMP 2404  ; (defun scan (i) (if (or bad (> i idx)) 0 (progn (setq cur (aref expr i)) (scan (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))))))
+  2760 - 0x04120000 - ADD R1, R2, R0  ; (defun scan (i) (if (or bad (> i idx)) 0 (progn (setq cur (aref expr i)) (scan (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))))))
+  2764 - 0x18000000 - RET  ; (defun scan (i) (if (or bad (> i idx)) 0 (progn (setq cur (aref expr i)) (scan (if (or (= cur 32) (= cur 9)) (+ i 1) (if need_operand (before_operand i cur) (after_operand i cur)))))))
+  2768 - 0x12000B30 - JMP 2864  ; (defun print_result (i) (if (> i result_len) 0 (progn (out 1 (aref result i)) (print_result (+ i 1)))))
+  2772 - 0x04310000 - ADD R3, R1, R0  ; i
+  2776 - 0x014011CC - LDI R4, 4556  ; result_len
+  2780 - 0x02440000 - LD R4, R4, 0  ; result_len
+  2784 - 0x0B430000 - CMP R4, R3  ; (defun print_result (i) (if (> i result_len) 0 (progn (out 1 (aref result i)) (print_result (+ i 1)))))
+  2788 - 0x16000AF4 - JGE 2804  ; (defun print_result (i) (if (> i result_len) 0 (progn (out 1 (aref result i)) (print_result (+ i 1)))))
+  2792 - 0x01300000 - LDI R3, 0  ; 0
+  2796 - 0x04230000 - ADD R2, R3, R0  ; (defun print_result (i) (if (> i result_len) 0 (progn (out 1 (aref result i)) (print_result (+ i 1)))))
+  2800 - 0x12000B28 - JMP 2856  ; (defun print_result (i) (if (> i result_len) 0 (progn (out 1 (aref result i)) (print_result (+ i 1)))))
+  2804 - 0x013010B0 - LDI R3, 4272  ; result
+  2808 - 0x02330000 - LD R3, R3, 0  ; result
+  2812 - 0x04410000 - ADD R4, R1, R0  ; i
+  2816 - 0x01500002 - LDI R5, 2  ; (aref result i)
+  2820 - 0x10445000 - LSL R4, R4, R5  ; (aref result i)
+  2824 - 0x04334000 - ADD R3, R3, R4  ; (aref result i)
+  2828 - 0x02330000 - LD R3, R3, 0  ; (aref result i)
+  2832 - 0x1C300001 - OUT 1, R3  ; (out 1 (aref result i))
+  2836 - 0x04310000 - ADD R3, R1, R0  ; i
+  2840 - 0x01400001 - LDI R4, 1  ; 1
+  2844 - 0x04334000 - ADD R3, R3, R4  ; (+ i 1)
+  2848 - 0x04130000 - ADD R1, R3, R0  ; (defun print_result (i) (if (> i result_len) 0 (progn (out 1 (aref result i)) (print_result (+ i 1)))))
+  2852 - 0x12000AD4 - JMP 2772  ; (defun print_result (i) (if (> i result_len) 0 (progn (out 1 (aref result i)) (print_result (+ i 1)))))
+  2856 - 0x04120000 - ADD R1, R2, R0  ; (defun print_result (i) (if (> i result_len) 0 (progn (out 1 (aref result i)) (print_result (+ i 1)))))
+  2860 - 0x18000000 - RET  ; (defun print_result (i) (if (> i result_len) 0 (progn (out 1 (aref result i)) (print_result (+ i 1)))))
+  2864 - 0x01100001 - LDI R1, 1  ; 1
+  2868 - 0x17000964 - CALL 2404  ; (scan 1)
+  2872 - 0x04110000 - ADD R1, R1, R0  ; (scan 1)
+  2876 - 0x17000688 - CALL 1672  ; (flush)
+  2880 - 0x04110000 - ADD R1, R1, R0  ; (flush)
+  2884 - 0x011011C4 - LDI R1, 4548  ; bad
+  2888 - 0x02110000 - LD R1, R1, 0  ; bad
+  2892 - 0x012011C8 - LDI R2, 4552  ; need_operand
+  2896 - 0x02220000 - LD R2, R2, 0  ; need_operand
+  2900 - 0x0D112000 - OR R1, R1, R2  ; (or bad need_operand)
+  2904 - 0x0B100000 - CMP R1, R0  ; (if (or bad need_operand) (progn (out 1 45) (out 1 49)) (print_result 1))
+  2908 - 0x13000B78 - JZ 2936  ; (if (or bad need_operand) (progn (out 1 45) (out 1 49)) (print_result 1))
+  2912 - 0x0120002D - LDI R2, 45  ; 45
+  2916 - 0x1C200001 - OUT 1, R2  ; (out 1 45)
+  2920 - 0x01200031 - LDI R2, 49  ; 49
+  2924 - 0x1C200001 - OUT 1, R2  ; (out 1 49)
+  2928 - 0x04120000 - ADD R1, R2, R0  ; (if (or bad need_operand) (progn (out 1 45) (out 1 49)) (print_result 1))
+  2932 - 0x12000B94 - JMP 2964  ; (if (or bad need_operand) (progn (out 1 45) (out 1 49)) (print_result 1))
+  2936 - 0x01200001 - LDI R2, 1  ; 1
+  2940 - 0x19100000 - PUSH R1  ; (print_result 1)
+  2944 - 0x04120000 - ADD R1, R2, R0  ; (print_result 1)
+  2948 - 0x17000AD4 - CALL 2772  ; (print_result 1)
+  2952 - 0x04210000 - ADD R2, R1, R0  ; (print_result 1)
+  2956 - 0x1A100000 - POP R1  ; (print_result 1)
+  2960 - 0x04120000 - ADD R1, R2, R0  ; (if (or bad need_operand) (progn (out 1 45) (out 1 49)) (print_result 1))
+  2964 - 0x20000000 - HLT
 
 out_stdout: 1 2 + 3 *
 
@@ -1007,32 +1005,32 @@ out_log: |-
   [ТАКТ 5119] PC и PS сохранены в стек, переход на вектор
   ... пропущено строк: 339 ...
   [ТАКТ 5458] Выход из прерывания (IRET)
-  ... пропущено строк: 14250 ...
-  [ТАКТ 19708] Процессор вывел в порт 1 символ '1' (код 49)
+  ... пропущено строк: 14117 ...
+  [ТАКТ 19575] Процессор вывел в порт 1 символ '1' (код 49)
   ... пропущено строк: 66 ...
-  [ТАКТ 19774] Процессор вывел в порт 1 символ ' ' (код 32)
+  [ТАКТ 19641] Процессор вывел в порт 1 символ ' ' (код 32)
   ... пропущено строк: 66 ...
-  [ТАКТ 19840] Процессор вывел в порт 1 символ '2' (код 50)
+  [ТАКТ 19707] Процессор вывел в порт 1 символ '2' (код 50)
   ... пропущено строк: 75 ...
-  [ТАКТ 19915] Процессор вывел в порт 1 символ ' ' (код 32)
+  [ТАКТ 19782] Процессор вывел в порт 1 символ ' ' (код 32)
   ... пропущено строк: 75 ...
-  [ТАКТ 19990] Процессор вывел в порт 1 символ '+' (код 43)
+  [ТАКТ 19857] Процессор вывел в порт 1 символ '+' (код 43)
   ... пропущено строк: 75 ...
-  [ТАКТ 20065] Процессор вывел в порт 1 символ ' ' (код 32)
+  [ТАКТ 19932] Процессор вывел в порт 1 символ ' ' (код 32)
   ... пропущено строк: 75 ...
-  [ТАКТ 20140] Процессор вывел в порт 1 символ '3' (код 51)
+  [ТАКТ 20007] Процессор вывел в порт 1 символ '3' (код 51)
   ... пропущено строк: 75 ...
-  [ТАКТ 20215] Процессор вывел в порт 1 символ ' ' (код 32)
+  [ТАКТ 20082] Процессор вывел в порт 1 символ ' ' (код 32)
   ... пропущено строк: 75 ...
-  [ТАКТ 20290] Процессор вывел в порт 1 символ '*' (код 42)
+  [ТАКТ 20157] Процессор вывел в порт 1 символ '*' (код 42)
   ... пропущено строк: 92 ...
-  | 20382  | T1 DECODE | 2968  | 04120000 | ADD R1, R2, 0          | 16380  |  0100  |  HIT (1)  |  -   |     0     0     0     0    10     2    51     0     0     0     0     0     0     0     0     0 | (if (or bad need_operand) (progn …
-  | 20383  | T2 EXEC   | 2972  | 04120000 | ADD R1, R2, 0          | 16380  |  0100  |  HIT (1)  |  -   |     0     0     0     0    10     2    51     0     0     0     0     0     0     0     0     0 | (if (or bad need_operand) (progn …
-  | 20384  | T0 FETCH  | 2972  | 20000000 | HLT R0, R0, 0          | 16380  |  0100  |  HIT (1)  |  -   |     0     0     0     0    10     2    51     0     0     0     0     0     0     0     0     0 | 
-  | 20385  | T1 DECODE | 2972  | 20000000 | HLT R0, R0, 0          | 16380  |  0100  |  HIT (1)  |  -   |     0     0     0     0    10     2    51     0     0     0     0     0     0     0     0     0 | 
+  | 20249  | T1 DECODE | 2960  | 04120000 | ADD R1, R2, 0          | 16380  |  0100  | MISS(10)  |  -   |     0     0     0     0     9     2    51     0     0     0     0     0     0     0     0     0 | (if (or bad need_operand) (progn …
+  | 20250  | T2 EXEC   | 2964  | 04120000 | ADD R1, R2, 0          | 16380  |  0100  | MISS(10)  |  -   |     0     0     0     0     9     2    51     0     0     0     0     0     0     0     0     0 | (if (or bad need_operand) (progn …
+  | 20251  | T0 FETCH  | 2964  | 20000000 | HLT R0, R0, 0          | 16380  |  0100  |  HIT (1)  |  -   |     0     0     0     0     9     2    51     0     0     0     0     0     0     0     0     0 | 
+  | 20252  | T1 DECODE | 2964  | 20000000 | HLT R0, R0, 0          | 16380  |  0100  |  HIT (1)  |  -   |     0     0     0     0     9     2    51     0     0     0     0     0     0     0     0     0 | 
   ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  Процессор остановлен, выполнено тактов: 20385
-  Выполнено инструкций: 2588
+  Процессор остановлен, выполнено тактов: 20252
+  Выполнено инструкций: 2584
   Вывод в порт 1:
   Статистика кеш-попаданий:
-  Попаданий (Hits): 2098 | Промахов (Misses): 1017 | Hit Rate: 67.35%
+  Попаданий (Hits): 2103 | Промахов (Misses): 1006 | Hit Rate: 67.64%

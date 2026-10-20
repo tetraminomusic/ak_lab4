@@ -54,6 +54,8 @@ BINARY_OPS = {
 }
 
 RESERVED_KEYWORDS = {
+    "ei",
+    "di",
     "if",
     "defun",
     "setq",
@@ -123,6 +125,8 @@ def collect_function_signatures(node: Node) -> None:
 def allocate_pstr(text: str) -> int:
     global data_address_counter
     start_addr = data_address_counter
+    if not text.isascii():
+        raise ValueError("Pascal-строка допускает только однобайтовые ASCII-символы")
 
     data_memory[start_addr] = len(text)
     data_address_counter += WORD_SIZE
@@ -288,28 +292,17 @@ def compile_condition(condition_node: Node) -> Opcode:
         left = condition_node[1]
         right = condition_node[2]
 
-        if op == ">":
-            reg_right = compile_value(right)
-            reg_left = compile_value(left)
-            program.append(Instruction(Opcode.CMP, [reg_right, reg_left]))
-            free_reg()
-            free_reg()
-            return Opcode.JGE
-
-        if op == "<=":
-            reg_right = compile_value(right)
-            reg_left = compile_value(left)
-            program.append(Instruction(Opcode.CMP, [reg_right, reg_left]))
-            free_reg()
-            free_reg()
-            return Opcode.JL
-
         reg_left = compile_value(left)
         reg_right = compile_value(right)
-        program.append(Instruction(Opcode.CMP, [reg_left, reg_right]))
+        if op in (">", "<="):
+            program.append(Instruction(Opcode.CMP, [reg_right, reg_left]))
+            jump = Opcode.JGE if op == ">" else Opcode.JL
+        else:
+            program.append(Instruction(Opcode.CMP, [reg_left, reg_right]))
+            jump = INVERSE_JUMPS[op]
         free_reg()
         free_reg()
-        return INVERSE_JUMPS[op]
+        return jump
 
     cond_reg = compile_value(condition_node)
     program.append(Instruction(Opcode.CMP, [cond_reg, "R0"]))
@@ -355,14 +348,12 @@ def compile_tail_body(
             for _ in temp_regs:
                 free_reg()
 
-            program.append(Instruction(Opcode.JMP, [func_name]))
+            program.append(Instruction(Opcode.JMP, [f"fn:{func_name}"]))
             return
 
-    value_reg = compile_expr(node)
-
-    if value_reg is not None:
-        program.append(Instruction(Opcode.ADD, [result_reg, value_reg, "R0"]))
-        free_reg()
+    value_reg = compile_value(node)
+    program.append(Instruction(Opcode.ADD, [result_reg, value_reg, "R0"]))
+    free_reg()
 
     program.append(Instruction(Opcode.JMP, [epilogue_label]))
 
@@ -440,12 +431,16 @@ def compile_node(node: Node) -> str | None:
         # Разрешение прерывания
 
         if op == "ei":
+            if len(node) != 1:
+                raise SyntaxError("Команда 'ei' не принимает аргументы")
             program.append(Instruction(Opcode.EI))
             return None
 
         # Запрет прерывания
 
         if op == "di":
+            if len(node) != 1:
+                raise SyntaxError("Команда 'di' не принимает аргументы")
             program.append(Instruction(Opcode.DI))
             return None
 
@@ -521,12 +516,16 @@ def compile_node(node: Node) -> str | None:
                 raise TypeError(
                     f"Имя обработчика должно быть строкой, получено: {handler_name}",
                 )
+            if node[2] != []:
+                raise SyntaxError("У обработчика прерывания не должно быть аргументов")
+            if interrupt_handler is not None:
+                raise SyntaxError("Поддерживается один обработчик прерывания")
 
-            interrupt_handler = handler_name
+            interrupt_handler = f"isr:{handler_name}"
 
             label_skip = make_label(f"skip_intr_{handler_name}")
             program.append(Instruction(Opcode.JMP, [label_skip]))
-            program.append(f"{handler_name}:")
+            program.append(f"{interrupt_handler}:")
 
             outer_program = program
             program = []
@@ -572,22 +571,21 @@ def compile_node(node: Node) -> str | None:
                     "Список аргументов функции должен быть списком в скобках ()",
                 )
 
-            if len(arg_list) != len(set(arg_list)):
-                raise SyntaxError(
-                    f"Ошибка в функции '{func_name}': аргументы имеют одинаковые имена",
-                )
-
             arg_names = [name for name in arg_list if isinstance(name, str)]
 
             if not isinstance(func_name, str) or len(arg_names) != len(arg_list):
                 raise TypeError(
                     f"Имя функции и её аргументы должны быть строками: {node[1]}",
                 )
+            if len(arg_names) != len(set(arg_names)):
+                raise SyntaxError(
+                    f"Ошибка в функции '{func_name}': аргументы имеют одинаковые имена",
+                )
 
             label_after_func = make_label(f"skip_{func_name}")
             label_epilogue = make_label(f"ret_{func_name}")
             program.append(Instruction(Opcode.JMP, [label_after_func]))
-            program.append(f"{func_name}:")
+            program.append(f"fn:{func_name}:")
 
             old_locals = local_vars.copy()
             old_reg = current_reg
@@ -642,6 +640,13 @@ def compile_node(node: Node) -> str | None:
                     f"Нельзя использовать зарезервированное слово '{var_name}' в качестве имени переменной",
                 )
 
+            if var_name in local_vars:
+                val_reg = compile_value(value_expr)
+                program.append(
+                    Instruction(Opcode.ADD, [local_vars[var_name], val_reg, "R0"]),
+                )
+                return val_reg
+
             addr = get_or_allocate_var(var_name)
             val_reg = compile_value(value_expr)
 
@@ -688,6 +693,9 @@ def compile_node(node: Node) -> str | None:
 
             # END
             program.append(f"{label_end}:")
+            if then_reg is None or else_reg is None:
+                free_reg()
+                return None
             return result_reg
 
         # Вызов пользовательской функции
@@ -703,17 +711,17 @@ def compile_node(node: Node) -> str | None:
                 )
 
             active_regs = [f"R{i}" for i in range(1, current_reg)]
+            arg_temp_regs = [compile_value(arg) for arg in passed_args]
+
             for r in active_regs:
                 program.append(Instruction(Opcode.PUSH, [r]))
-
-            arg_temp_regs = [compile_value(arg) for arg in passed_args]
 
             for i, temp_r in enumerate(arg_temp_regs):
                 target_r = f"R{i + 1}"
                 if temp_r != target_r:
                     program.append(Instruction(Opcode.ADD, [target_r, temp_r, "R0"]))
 
-            program.append(Instruction(Opcode.CALL, [op]))
+            program.append(Instruction(Opcode.CALL, [f"fn:{op}"]))
 
             for _ in arg_temp_regs:
                 free_reg()
@@ -761,16 +769,22 @@ def compile_node(node: Node) -> str | None:
         # Унарные операции
 
         if op == "not":
+            if len(node) != 2:
+                raise SyntaxError("Команда 'not' требует один аргумент")
             arg_reg = compile_value(node[1])
             program.append(Instruction(Opcode.NOT, [arg_reg, arg_reg]))
             return arg_reg
 
         if op == "inc":
+            if len(node) != 2:
+                raise SyntaxError("Команда 'inc' требует один аргумент")
             arg_reg = compile_value(node[1])
             program.append(Instruction(Opcode.INC, [arg_reg]))
             return arg_reg
 
         if op == "dec":
+            if len(node) != 2:
+                raise SyntaxError("Команда 'dec' требует один аргумент")
             arg_reg = compile_value(node[1])
             program.append(Instruction(Opcode.DEC, [arg_reg]))
             return arg_reg
@@ -889,6 +903,8 @@ def compile_file(
 
     tokens = tokenize(code_text)
     ast = parse(tokens)
+    if tokens:
+        raise SyntaxError("После первого выражения остались лишние токены")
 
     collect_function_signatures(ast)
 

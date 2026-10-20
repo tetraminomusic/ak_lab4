@@ -50,6 +50,41 @@ def test_semicolon_inside_string():
     assert ast[2].text == "hello;world"
 
 
+def test_comment_without_space_before_semicolon():
+    assert parse(tokenize("(+ 1; comment\n 2)")) == ["+", 1, 2]
+
+
+def test_unclosed_string():
+    with pytest.raises(SyntaxError, match="закрывающая кавычка"):
+        tokenize('(print "abc)')
+
+
+def test_compile_rejects_trailing_expression(tmp_path):
+    source = tmp_path / "source.lisp"
+    source.write_text("(print 65) (print 66)", encoding="utf-8")
+    with pytest.raises(SyntaxError, match="лишние токены"):
+        translator.compile_file(str(source), str(tmp_path / "out.bin"))
+
+
+@pytest.mark.parametrize(
+    ("code", "error"),
+    [
+        ("(print (if 0 65 (ei)))", "не возвращает значения"),
+        ("(definterrupt isr (x) (in 0))", "не должно быть аргументов"),
+        ("(ei 1)", "не принимает аргументы"),
+        ("(inc 1 2)", "требует один аргумент"),
+    ],
+)
+def test_invalid_forms_are_rejected(code, error):
+    with pytest.raises(SyntaxError, match=error):
+        translator.compile_expr(parse(tokenize(code)))
+
+
+def test_pascal_string_rejects_multibyte_characters():
+    with pytest.raises(ValueError, match="ASCII"):
+        translator.allocate_pstr("ёж")
+
+
 def test_empty_string_literal():
     """Пустая строка Pascal должна иметь длину 0."""
     code = '(setq empty "")'
