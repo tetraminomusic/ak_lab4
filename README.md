@@ -43,8 +43,8 @@ if          = "if" , expression , expression , expression ;
 aref        = "aref" , expression , expression ;
 aset        = "aset" , expression , expression , expression ;
 
-io          = "in" , port
-            | "out" , port , expression
+io          = "in" , "0"
+            | "out" , "1" , expression
             | "print" , expression
             | "ei" | "di" ;
 
@@ -57,7 +57,6 @@ binary      = ( "+" | "*" ) , expression , expression , { expression }
 
 call        = name , { expression } ;
 
-port        = "0" | "1" ;
 number      = [ "-" ] , digit , { digit } ;
 string      = '"' , { character - '"' } , '"' ;
 name        = letter , { letter | digit | "_" } ;
@@ -109,7 +108,7 @@ comment     = ";" , { character - newline } , newline ;
 +--------------------------------------+
 ```
 
-Адреса в схеме байтовые, шаг между соседними ячейками равен 4.
+Адреса процессора байтовые. Память доступна командами чтения и записи целого слова, поэтому адрес слова должен быть кратен 4.
 
 * Сегмент кода: `0..3999` (`0x0000..0x0F9F`), 1000 команд.
 * Сегмент данных: `4000..12399` (`0x0FA0..0x306F`), 2100 слов.
@@ -173,7 +172,7 @@ comment     = ";" , { character - newline } , newline ;
 ```text
 0x04123000   ADD R1, R2, R3      opcode=04, Rd=1, Rs1=2, Rs2=3
 0x0110002A   LDI R1, 42          opcode=01, Rd=1, imm=0x002A
-0x02120005   LD  R1, R2, 5       opcode=02, Rd=1, Rs1=2, imm=5
+0x02120004   LD  R1, R2, 4       opcode=02, Rd=1, Rs1=2, imm=4
 0x1C100001   OUT 1, R1           opcode=1C, Rd=1, imm=1 (номер порта)
 0x12000044   JMP 68              opcode=12, imm=0x0044 (байтовый адрес)
 ```

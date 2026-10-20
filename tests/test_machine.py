@@ -158,6 +158,25 @@ def test_iret_checks_for_both_words_before_popping():
     assert dp.sp == sp_before
 
 
+@pytest.mark.parametrize(
+    ("opcode", "args", "message"),
+    [
+        (Opcode.LD, ["R1", "R0", 1], "Невыровненный адрес"),
+        (Opcode.IN, ["R1", 1], "Недопустимый порт IN"),
+        (Opcode.OUT, [0, "R1"], "Недопустимый порт OUT"),
+    ],
+)
+def test_invalid_machine_operands_stop_execution(caplog, opcode, args, message):
+    dp = DataPath()
+    dp.memory[0] = Instruction(opcode, args).encode()
+    cu = ControlUnit(dp)
+    for _ in range(30):
+        cu.tick()
+    assert cu.is_halted
+    assert cu.instruction_counter == 0
+    assert message in caplog.text
+
+
 def test_alu_flags_nzcv():
     """Проверка выставления флагов NZCV."""
     dp = DataPath()

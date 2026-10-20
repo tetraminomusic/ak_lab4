@@ -3,7 +3,7 @@ import struct
 import sys
 from pathlib import Path
 
-from isa import WORD_SIZE, Instruction, Opcode
+from isa import INPUT_PORT, OUTPUT_PORT, WORD_SIZE, Instruction, Opcode
 from parser import Node, StringLiteral, parse, tokenize
 
 current_reg = 1
@@ -14,8 +14,6 @@ DATA_SEGMENT_START = 4000
 STACK_LIMIT = 12400
 
 data_address_counter = DATA_SEGMENT_START
-
-available_ports = [0, 1]
 
 interrupt_handler: str | None = None
 
@@ -616,7 +614,7 @@ def compile_node(node: Node) -> str | None:
                     "Команда 'print' требует 1 аргумент: (print значение)",
                 )
             val_reg = compile_value(node[1])
-            program.append(Instruction(Opcode.OUT, [1, val_reg]))
+            program.append(Instruction(Opcode.OUT, [OUTPUT_PORT, val_reg]))
             return val_reg
 
         # Присваивание setq
@@ -745,8 +743,8 @@ def compile_node(node: Node) -> str | None:
             port_num = node[1]
             val_expr = node[2]
 
-            if not isinstance(port_num, int) or port_num not in available_ports:
-                raise ValueError(f"Некорректный номер порта: {port_num}")
+            if not isinstance(port_num, int) or port_num != OUTPUT_PORT:
+                raise ValueError(f"Для 'out' доступен только порт {OUTPUT_PORT}")
 
             val_reg = compile_value(val_expr)
             program.append(Instruction(Opcode.OUT, [port_num, val_reg]))
@@ -759,8 +757,8 @@ def compile_node(node: Node) -> str | None:
                 raise SyntaxError("Команда 'in' требует 1 аргумент: (in порт)")
 
             port_num = node[1]
-            if not isinstance(port_num, int) or port_num not in available_ports:
-                raise ValueError(f"Некорректный номер порта: {port_num}")
+            if not isinstance(port_num, int) or port_num != INPUT_PORT:
+                raise ValueError(f"Для 'in' доступен только порт {INPUT_PORT}")
 
             reg = allocate_reg()
             program.append(Instruction(Opcode.IN, [reg, port_num]))
@@ -911,6 +909,8 @@ def compile_file(
     compile_expr(ast)
 
     machine_code = link_program(program)
+    if interrupt_handler is None and any(i.opcode == Opcode.EI for i in machine_code):
+        raise SyntaxError("Для 'ei' нужен обработчик 'definterrupt'")
 
     if len(machine_code) * WORD_SIZE > DATA_SEGMENT_START:
         raise RuntimeError(

@@ -66,6 +66,19 @@ def test_compile_rejects_trailing_expression(tmp_path):
         translator.compile_file(str(source), str(tmp_path / "out.bin"))
 
 
+def test_compile_rejects_ei_without_handler(tmp_path):
+    source = tmp_path / "source.lisp"
+    source.write_text("(ei)", encoding="utf-8")
+    with pytest.raises(SyntaxError, match="нужен обработчик"):
+        translator.compile_file(str(source), str(tmp_path / "out.bin"))
+
+
+@pytest.mark.parametrize("code", ["(in 1)", "(out 0 65)"])
+def test_ports_respect_direction(code):
+    with pytest.raises(ValueError, match="только порт"):
+        translator.compile_expr(parse(tokenize(code)))
+
+
 @pytest.mark.parametrize(
     ("code", "error"),
     [

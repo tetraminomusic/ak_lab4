@@ -1,14 +1,16 @@
 from enum import IntEnum
 
 WORD_SIZE = 4  # Размер машинного слова в байтах
+INPUT_PORT = 0
+OUTPUT_PORT = 1
 
 
 class Opcode(IntEnum):
     # Работа с памятью + регистры
 
     LDI = 0x01  # 0000 0001 - Load Immediate: LDI R1, 10 (10 -> R1)
-    LD = 0x02  # 0000 0010 - Load: LD R1, R2, offset (R1 -> Mem[R2+offset])
-    ST = 0x03  # 0000 0011 - Store: ST R1, R2, offset (Mem[R2+offset] -> R1)
+    LD = 0x02  # 0000 0010 - Load: LD R1, R2, offset (Mem[R2+offset] -> R1)
+    ST = 0x03  # 0000 0011 - Store: ST R1, R2, offset (R1 -> Mem[R2+offset])
 
     # Арифметика (чисто регистры)
 
@@ -45,8 +47,8 @@ class Opcode(IntEnum):
 
     CALL = 0x17  # 0001 0111 - CALL ADDR: вызов функции: next_pc -> Stack; ADDR -> PC
     RET = 0x18  # 0001 1000 - Возврат из функции: Stack -> PC
-    PUSH = 0x19  # 0001 1001 - PUSH R1: R1 -> Mem[SP], SP - 1 -> SP
-    POP = 0x1A  # 0001 1010 - POP R1: SP + 1 -> SP, MEM[SP] -> R1
+    PUSH = 0x19  # 0001 1001 - PUSH R1: R1 -> Mem[SP], SP - 4 -> SP
+    POP = 0x1A  # 0001 1010 - POP R1: SP + 4 -> SP, MEM[SP] -> R1
 
     # Порты + прерывания
 

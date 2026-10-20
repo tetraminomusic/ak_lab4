@@ -2,7 +2,7 @@ import logging
 
 from cache import Cache
 from datapath import STACK_LIMIT, DataPath
-from isa import WORD_SIZE, Opcode
+from isa import INPUT_PORT, OUTPUT_PORT, WORD_SIZE, Opcode
 
 T0_FETCH = 0
 T1_DECODE = 1
@@ -78,7 +78,7 @@ class ControlUnit:
 
         # Расписание прерываний
 
-        self.schedule = schedule if schedule is not None else []
+        self.schedule = sorted(schedule or [], key=lambda event: event[0])
         self.sources = sources if sources is not None else {}
 
         self.check_interrupt_schedule()
@@ -86,7 +86,7 @@ class ControlUnit:
     def check_interrupt_schedule(self) -> None:
         while self.schedule and self.current_tick >= self.schedule[0][0]:
             _, char = self.schedule.pop(0)
-            ascii_code = ord(char) if isinstance(char, str) else int(char)
+            ascii_code = (ord(char) if isinstance(char, str) else char) & 0xFFFF_FFFF
 
             if self.dp.dev_signal:
                 logging.warning(
@@ -297,22 +297,26 @@ class ControlUnit:
             self.step = T3_MEMORY
 
         elif op == Opcode.OUT:
-            port = self.imm
+            if self.imm != OUTPUT_PORT:
+                self.halt_with_error(f"Недопустимый порт OUT: {self.imm}")
+                return
             self.dp.out_reg = self.dp.read_reg(rd)
-            if port == 1:
-                self.dp.port_1_out.append(self.dp.out_reg)
+            self.dp.port_1_out.append(self.dp.out_reg)
 
-                value = self.dp.out_reg
-                shown = chr(value) if 32 <= value <= 126 else f"\\x{value:02x}"
-                logging.info(
-                    "[ТАКТ %d] Процессор вывел в порт 1 символ '%s' (код %d)",
-                    self.current_tick,
-                    shown,
-                    value,
-                )
+            value = self.dp.out_reg
+            shown = chr(value) if 32 <= value <= 126 else f"\\x{value:02x}"
+            logging.info(
+                "[ТАКТ %d] Процессор вывел в порт 1 символ '%s' (код %d)",
+                self.current_tick,
+                shown,
+                value,
+            )
             self.finish_instruction()
 
         elif op == Opcode.IN:
+            if self.imm != INPUT_PORT:
+                self.halt_with_error(f"Недопустимый порт IN: {self.imm}")
+                return
             self.dp.write_reg(rd, self.dp.in_reg)
 
             self.dp.dev_signal = 0
@@ -343,17 +347,18 @@ class ControlUnit:
         return False
 
     def check_address(self, addr: int) -> bool:
-        if 0 <= addr < len(self.dp.memory) * WORD_SIZE:
-            return True
+        if not 0 <= addr < len(self.dp.memory) * WORD_SIZE:
+            self.halt_with_error(f"Обращение по адресу {addr} за пределами памяти")
+            return False
+        if addr % WORD_SIZE:
+            self.halt_with_error(f"Невыровненный адрес слова: {addr}")
+            return False
+        return True
 
-        logging.error(
-            "[ТАКТ %d] Обращение по адресу %d за пределами памяти",
-            self.current_tick,
-            addr,
-        )
+    def halt_with_error(self, message: str) -> None:
+        logging.error("[ТАКТ %d] %s", self.current_tick, message)
         self.is_halted = True
         self.dp.flag_p = 0
-        return False
 
     def check_stack_bottom(self, words: int = 1) -> bool:
         if self.dp.sp + words * WORD_SIZE < len(self.dp.memory) * WORD_SIZE:
