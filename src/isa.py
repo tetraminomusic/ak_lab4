@@ -63,6 +63,21 @@ class Opcode(IntEnum):
     HLT = 0x20  # 0010 0000 - Остановка процессора
 
 
+ALU_BINARY_OPS = (
+    Opcode.ADD,
+    Opcode.SUB,
+    Opcode.MUL,
+    Opcode.DIV,
+    Opcode.MOD,
+    Opcode.AND,
+    Opcode.OR,
+    Opcode.XOR,
+    Opcode.LSL,
+    Opcode.LSR,
+)
+BRANCH_OPS = (Opcode.JMP, Opcode.JZ, Opcode.JNZ, Opcode.JL, Opcode.JGE)
+
+
 class Instruction:
     def __init__(self, opcode: Opcode, args: list[str | int] | None = None) -> None:
         self.opcode = opcode
@@ -72,6 +87,33 @@ class Instruction:
     def __repr__(self) -> str:
         args_str = ", ".join(map(str, self.args))
         return f"{self.opcode.name} {args_str}".strip()
+
+    @classmethod
+    def decode(cls, word: int) -> "Instruction":
+        op = Opcode((word >> 24) & 0xFF)
+        rd = f"R{(word >> 20) & 0xF}"
+        rs1 = f"R{(word >> 16) & 0xF}"
+        rs2 = f"R{(word >> 12) & 0xF}"
+        imm = word & 0xFFFF
+
+        args: list[str | int]
+        if op in ALU_BINARY_OPS:
+            args = [rd, rs1, rs2]
+        elif op in (Opcode.LD, Opcode.ST):
+            args = [rd, rs1, imm]
+        elif op in (Opcode.LDI, Opcode.IN):
+            args = [rd, imm]
+        elif op in (Opcode.NOT, Opcode.CMP):
+            args = [rd, rs1]
+        elif op in (Opcode.INC, Opcode.DEC, Opcode.PUSH, Opcode.POP):
+            args = [rd]
+        elif op in (*BRANCH_OPS, Opcode.CALL):
+            args = [imm]
+        elif op == Opcode.OUT:
+            args = [imm, rd]
+        else:
+            args = []
+        return cls(op, args)
 
     def encode(self) -> int:
         op_code_num = int(self.opcode) & 0xFF

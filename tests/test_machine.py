@@ -11,7 +11,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "s
 import translator
 from cache import Cache
 from isa import Instruction, Opcode
-from machine import ControlUnit, DataPath, run_simulation
+from machine import ControlUnit, DataPath, load_input_schedule, run_simulation
 
 
 def test_cache_hit_and_miss_latencies():
@@ -175,6 +175,33 @@ def test_invalid_machine_operands_stop_execution(caplog, opcode, args, message):
     assert cu.is_halted
     assert cu.instruction_counter == 0
     assert message in caplog.text
+
+
+def test_instruction_log_decodes_third_register():
+    word = Instruction(Opcode.ADD, ["R1", "R2", "R3"]).encode()
+    assert str(Instruction.decode(word)) == "ADD R1, R2, R3"
+
+
+def test_text_input_preserves_line_ending(tmp_path):
+    path = tmp_path / "input.txt"
+    path.write_text(" A\n", encoding="utf-8")
+    assert load_input_schedule(path) == [(50, " "), (150, "A"), (250, "\n")]
+
+
+def test_schedule_is_sorted_without_mutating_input():
+    schedule = [(5, "B"), (0, "A")]
+    dp = DataPath()
+    ControlUnit(dp, schedule=schedule)
+    assert dp.in_reg == ord("A")
+    assert schedule == [(5, "B"), (0, "A")]
+
+
+@pytest.mark.parametrize("image", [b"", b"\0", b"\0" * 16388])
+def test_invalid_binary_image_is_rejected(tmp_path, image):
+    binary = tmp_path / "program.bin"
+    binary.write_bytes(image)
+    with pytest.raises(ValueError, match="Бинарник должен содержать"):
+        run_simulation(str(binary), [])
 
 
 def test_alu_flags_nzcv():
@@ -393,7 +420,7 @@ def test_timeout_execution(tmp_path):
 
     translator.compile_file(str(source_file), str(bin_file))
     _, ticks = run_simulation(str(bin_file), schedule=[], max_ticks=150)
-    assert ticks >= 150
+    assert ticks == 150
 
 
 def test_tail_recursion_does_not_grow_stack(tmp_path):

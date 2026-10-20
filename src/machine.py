@@ -7,6 +7,7 @@ from pathlib import Path
 
 from controlunit import ControlUnit
 from datapath import DataPath
+from isa import WORD_SIZE
 
 # Загружает бинарник с диска и запускает процессор
 
@@ -30,17 +31,19 @@ def run_simulation(
     *,
     cache_enabled: bool = True,
 ) -> tuple[str, int]:
+    if max_ticks < 0:
+        raise ValueError("Лимит тактов не может быть отрицательным")
     dp = DataPath(4096)
 
     # Читаем 32-битные слова из файла обратно в память
 
+    capacity = len(dp.memory) * WORD_SIZE
     with Path(binary_file).open("rb") as f:
-        for i in range(4096):
-            chunk = f.read(4)
-            if not chunk:
-                break
-            word = struct.unpack(">I", chunk)[0]
-            dp.memory[i] = word
+        image = f.read(capacity + 1)
+    if not image or len(image) > capacity or len(image) % WORD_SIZE:
+        raise ValueError("Бинарник должен содержать от 1 до 4096 полных 32-битных слов")
+    for i, (word,) in enumerate(struct.iter_unpack(">I", image)):
+        dp.memory[i] = word
 
     cu = ControlUnit(
         dp,
@@ -74,24 +77,19 @@ def run_simulation(
     logging.debug(separator)
 
     # Главный цикл симуляции
-    try:
-        while not cu.is_halted and cu.current_tick <= max_ticks:
-            cu.tick()
+    while not cu.is_halted and cu.current_tick < max_ticks:
+        cu.tick()
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
             logging.debug("%s", str(cu))
-    except EOFError:
-        logging.warning("Ошибка: буфер ввода пуст, но программа запрашивает IN")
 
-    if cu.current_tick >= max_ticks:
-        logging.warning("Превышен лимит тактов, процессор принудительно остановлен")
+    if not cu.is_halted:
+        logging.warning("Достигнут лимит тактов, процессор принудительно остановлен")
 
     # Собираем вывод из порта 1
 
-    output_chars = ""
-    for c in dp.port_1_out:
-        if 32 <= c <= 126 or c == 10:
-            output_chars += chr(c)
-        else:
-            output_chars += f"\\x{c:02x}"
+    output_chars = "".join(
+        chr(c) if 32 <= c <= 126 or c == 10 else f"\\x{c:02x}" for c in dp.port_1_out
+    )
 
     logging.info(separator)
     logging.info("Процессор остановлен, выполнено тактов: %d", cu.current_tick)
@@ -113,6 +111,43 @@ def run_simulation(
     )
 
     return output_chars, cu.current_tick
+
+
+def load_input_schedule(path: Path) -> list[tuple[int, str | int]]:
+    content = path.read_text(encoding="utf-8")
+    explicit_json = path.suffix.lower() == ".json"
+    if explicit_json or content.lstrip().startswith("["):
+        try:
+            events = json.loads(content)
+        except json.JSONDecodeError:
+            if explicit_json:
+                raise
+        else:
+            if not isinstance(events, list):
+                raise TypeError("Расписание должно быть списком пар [такт, значение]")
+            schedule: list[tuple[int, str | int]] = []
+            for event in events:
+                if not isinstance(event, list) or len(event) != 2:
+                    raise ValueError("Событие должно иметь вид [такт, значение]")
+                tick, value = event
+                if not isinstance(tick, int) or isinstance(tick, bool) or tick < 0:
+                    raise ValueError(f"Некорректный такт события: {tick}")
+                if isinstance(value, str):
+                    if len(value) != 1 or not value.isascii():
+                        raise ValueError("В событии ожидается один ASCII-символ")
+                elif (
+                    not isinstance(value, int)
+                    or isinstance(value, bool)
+                    or not -(1 << 31) <= value <= 0xFFFF_FFFF
+                ):
+                    raise ValueError(
+                        "Числовой токен должен помещаться в машинное слово"
+                    )
+                schedule.append((tick, value))
+            return schedule
+    if not content.isascii():
+        raise ValueError("Текстовый ввод должен содержать только ASCII-символы")
+    return [(50 + 100 * i, char) for i, char in enumerate(content)]
 
 
 # Точка входа в программу
@@ -163,26 +198,8 @@ def main() -> None:
     # Оставляем чистый формат логов
     logging.basicConfig(level=logging.DEBUG, format="%(message)s")
 
-    # Формируем расписание прерываний из файла
-
-    schedule = []
-    if args.input:
-        try:
-            content = Path(args.input).read_text(encoding="utf-8").strip()
-            if content.startswith("["):
-                schedule = json.loads(content)
-            else:
-                current_tick = 50
-                for char in content:
-                    schedule.append((current_tick, char))
-                    current_tick += 100
-        except FileNotFoundError:
-            print(f"Ошибка: файл ввода '{args.input}' не найден", file=sys.stderr)
-            sys.exit(1)
-
-    # Запуск симуляции
-
     try:
+        schedule = load_input_schedule(Path(args.input)) if args.input else []
         run_simulation(
             args.code,
             schedule,

@@ -2,7 +2,15 @@ import logging
 
 from cache import Cache
 from datapath import STACK_LIMIT, DataPath
-from isa import INPUT_PORT, OUTPUT_PORT, WORD_SIZE, Opcode
+from isa import (
+    ALU_BINARY_OPS,
+    BRANCH_OPS,
+    INPUT_PORT,
+    OUTPUT_PORT,
+    WORD_SIZE,
+    Instruction,
+    Opcode,
+)
 
 T0_FETCH = 0
 T1_DECODE = 1
@@ -21,21 +29,6 @@ STEP_NAMES = {
     T4_SAVE_PS: "T4 SAVE PS",
     T3_RESTORE_PC: "T3 IRET PC",
 }
-
-ALU_BINARY_OPS = (
-    Opcode.ADD,
-    Opcode.SUB,
-    Opcode.MUL,
-    Opcode.DIV,
-    Opcode.MOD,
-    Opcode.AND,
-    Opcode.OR,
-    Opcode.XOR,
-    Opcode.LSL,
-    Opcode.LSR,
-)
-
-BRANCH_OPS = (Opcode.JMP, Opcode.JZ, Opcode.JNZ, Opcode.JL, Opcode.JGE)
 
 # Устройство управления типа Hardwired
 
@@ -67,7 +60,7 @@ class ControlUnit:
         self.mem_addr = 0
         self.mem_value = 0
         self.next_pc = 0
-        self.current_addr = 0  # Адрес команды, которая сейчас в регистре команд
+        self.current_addr: int | None = None  # Адрес команды в IR
 
         self.stall_ticks = 0
 
@@ -148,20 +141,19 @@ class ControlUnit:
         nzcv = f"{self.dp.status_register & 0xF:04b}"
 
         word = self.dp.cr
-        op_code = (word >> 24) & 0xFF
         try:
-            op_name = Opcode(op_code).name
-            rd = (word >> 20) & 0xF
-            rs1 = (word >> 16) & 0xF
-            imm = word & 0xFFFF
-            instr_str = f"{op_name} R{rd}, R{rs1}, {imm}"
+            instr_str = str(Instruction.decode(word))
         except ValueError:
             instr_str = "DATA"
         hex_str = f"{word:08X}"
 
         registers = " ".join(f"{value:>5}" for value in self.dp.registers)
 
-        source = self.sources.get(self.current_addr, "")
+        source = (
+            self.sources.get(self.current_addr, "")
+            if self.current_addr is not None
+            else ""
+        )
         if len(source) > 34:
             source = source[:33] + "…"
 
@@ -176,11 +168,10 @@ class ControlUnit:
             f"| {self.cache.last_status:^9} "
             f"| {'INT' if self.int_active else '-':^4} "
             f"| {registers} "
-            f"| {source}"
+            f"| {source}".rstrip()
         )
 
     def instruction_fetch(self) -> None:
-        self.current_addr = self.dp.pc
         self.start_memory_access(self.dp.pc)
 
     def instruction_decode(self) -> None:
@@ -432,6 +423,7 @@ class ControlUnit:
     def complete_memory_read(self, value: int) -> None:
         if self.step == T0_FETCH:
             self.dp.cr = value
+            self.current_addr = self.mem_addr
             self.next_pc = self.dp.pc + WORD_SIZE
             self.step = T1_DECODE
         elif self.step == T3_RESTORE_PC:
