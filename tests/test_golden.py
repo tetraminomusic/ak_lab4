@@ -1,6 +1,7 @@
 # tests/test_golden.py
 import logging
 import os
+import struct
 import sys
 from pathlib import Path
 
@@ -19,7 +20,9 @@ JOURNAL_TAIL = 10
 def trim_journal(messages: list) -> str:
     lines = []
     for message in messages:
-        lines.extend(line for line in str(message).splitlines() if line.strip())
+        lines.extend(
+            line.rstrip() for line in str(message).splitlines() if line.strip()
+        )
 
     if len(lines) <= JOURNAL_HEAD + JOURNAL_TAIL:
         return "\n".join(lines)
@@ -58,6 +61,27 @@ def test_golden(golden, tmp_path, caplog):
     listing_content = listing_file.read_text(encoding="utf-8").strip()
     sources = load_sources(str(listing_file))
 
+    # Проверяем сам бинарник: листинг соответствует секции кода, а .data
+    # берём из образа памяти, который действительно получит симулятор.
+    image = bin_file.read_bytes()
+    code_words = [
+        int(line.split(" - ", 2)[1], 16) for line in listing_content.splitlines()
+    ]
+    code_end = len(code_words) * 4
+    data_start = translator.DATA_SEGMENT_START
+    data_end = translator.data_address_counter
+    assert [
+        word for (word,) in struct.iter_unpack(">I", image[:code_end])
+    ] == code_words
+    assert not any(image[code_end:data_start])
+    assert not any(image[data_end:])
+    data_dump = "\n".join(
+        f"{data_start + index * 4:04d} - 0x{word:08X}"
+        for index, (word,) in enumerate(
+            struct.iter_unpack(">I", image[data_start:data_end])
+        )
+    )
+
     # Симуляция
     with caplog.at_level(logging.DEBUG):
         output, _ = run_simulation(
@@ -69,6 +93,7 @@ def test_golden(golden, tmp_path, caplog):
 
     # Сверка с эталоном
     assert listing_content == golden.out["out_code_hex"]
+    assert data_dump == golden.out["out_data_hex"]
     assert output == golden.out["out_stdout"]
     assert trim_journal(caplog.messages) == golden.out["out_log"]
 
