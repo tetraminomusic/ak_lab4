@@ -9,6 +9,10 @@ from controlunit import ControlUnit
 from datapath import DataPath
 from isa import WORD_SIZE
 
+DEFAULT_TICKS = 5000
+TEXT_INPUT_START = 50
+TEXT_INPUT_PERIOD = 1500
+
 # Загружает бинарник с диска и запускает процессор
 
 
@@ -115,39 +119,35 @@ def run_simulation(
 
 def load_input_schedule(path: Path) -> list[tuple[int, str | int]]:
     content = path.read_text(encoding="utf-8")
-    explicit_json = path.suffix.lower() == ".json"
-    if explicit_json or content.lstrip().startswith("["):
-        try:
-            events = json.loads(content)
-        except json.JSONDecodeError:
-            if explicit_json:
-                raise
-        else:
-            if not isinstance(events, list):
-                raise TypeError("Расписание должно быть списком пар [такт, значение]")
-            schedule: list[tuple[int, str | int]] = []
-            for event in events:
-                if not isinstance(event, list) or len(event) != 2:
-                    raise ValueError("Событие должно иметь вид [такт, значение]")
-                tick, value = event
-                if not isinstance(tick, int) or isinstance(tick, bool) or tick < 0:
-                    raise ValueError(f"Некорректный такт события: {tick}")
-                if isinstance(value, str):
-                    if len(value) != 1 or not value.isascii():
-                        raise ValueError("В событии ожидается один ASCII-символ")
-                elif (
-                    not isinstance(value, int)
-                    or isinstance(value, bool)
-                    or not -(1 << 31) <= value <= 0xFFFF_FFFF
-                ):
-                    raise ValueError(
-                        "Числовой токен должен помещаться в машинное слово"
-                    )
-                schedule.append((tick, value))
-            return schedule
-    if not content.isascii():
-        raise ValueError("Текстовый ввод должен содержать только ASCII-символы")
-    return [(50 + 100 * i, char) for i, char in enumerate(content)]
+    if path.suffix.lower() != ".json":
+        if not content.isascii():
+            raise ValueError("Текстовый ввод должен содержать только ASCII-символы")
+        return [
+            (TEXT_INPUT_START + TEXT_INPUT_PERIOD * i, char)
+            for i, char in enumerate(content)
+        ]
+
+    events = json.loads(content)
+    if not isinstance(events, list):
+        raise TypeError("Расписание должно быть списком пар [такт, значение]")
+    schedule: list[tuple[int, str | int]] = []
+    for event in events:
+        if not isinstance(event, list) or len(event) != 2:
+            raise ValueError("Событие должно иметь вид [такт, значение]")
+        tick, value = event
+        if not isinstance(tick, int) or isinstance(tick, bool) or tick < 0:
+            raise ValueError(f"Некорректный такт события: {tick}")
+        if isinstance(value, str):
+            if len(value) != 1 or not value.isascii():
+                raise ValueError("В событии ожидается один ASCII-символ")
+        elif (
+            not isinstance(value, int)
+            or isinstance(value, bool)
+            or not -(1 << 31) <= value <= 0xFFFF_FFFF
+        ):
+            raise ValueError("Числовой токен должен помещаться в машинное слово")
+        schedule.append((tick, value))
+    return schedule
 
 
 # Точка входа в программу
@@ -169,15 +169,14 @@ def main() -> None:
         "-i",
         "--input",
         default=None,
-        help="Путь к текстовому файлу с входными данными (опционально)",
+        help="Текстовый ввод ASCII или точное расписание в файле .json",
     )
 
     parser.add_argument(
         "-t",
         "--ticks",
         type=int,
-        default=5000,
-        help="Лимит тактов симуляции (по умолчанию 5000)",
+        help=f"Лимит тактов (по умолчанию {DEFAULT_TICKS} после последнего события)",
     )
 
     parser.add_argument(
@@ -200,10 +199,13 @@ def main() -> None:
 
     try:
         schedule = load_input_schedule(Path(args.input)) if args.input else []
+        max_ticks = args.ticks
+        if max_ticks is None:
+            max_ticks = max((tick for tick, _ in schedule), default=0) + DEFAULT_TICKS
         run_simulation(
             args.code,
             schedule,
-            max_ticks=args.ticks,
+            max_ticks=max_ticks,
             sources=load_sources(args.listing) if args.listing else None,
             cache_enabled=not args.no_cache,
         )

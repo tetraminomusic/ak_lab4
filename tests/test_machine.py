@@ -184,8 +184,19 @@ def test_instruction_log_decodes_third_register():
 
 def test_text_input_preserves_line_ending(tmp_path):
     path = tmp_path / "input.txt"
-    path.write_text(" A\n", encoding="utf-8")
-    assert load_input_schedule(path) == [(50, " "), (150, "A"), (250, "\n")]
+    path.write_text(" []\n", encoding="utf-8")
+    assert load_input_schedule(path) == [
+        (50, " "),
+        (1550, "["),
+        (3050, "]"),
+        (4550, "\n"),
+    ]
+
+
+def test_json_input_uses_explicit_ticks(tmp_path):
+    path = tmp_path / "input.json"
+    path.write_text('[[100, "A"], [101, 42]]', encoding="utf-8")
+    assert load_input_schedule(path) == [(100, "A"), (101, 42)]
 
 
 def test_schedule_is_sorted_without_mutating_input():

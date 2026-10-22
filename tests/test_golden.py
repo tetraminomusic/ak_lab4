@@ -2,6 +2,7 @@
 import logging
 import os
 import struct
+import subprocess
 import sys
 from pathlib import Path
 
@@ -167,6 +168,22 @@ def test_name_cannot_write_past_buffer(tmp_path):
     schedule = [(200 + 1500 * i, token) for i, token in enumerate("ABCDEFGHIJKLMN\n")]
     output, _ = run_simulation(binary, schedule, max_ticks=100000)
     assert output == "What is your name?\nHello, ABCDEFGHIJKL!"
+
+
+def test_cli_reads_name_from_text_file(tmp_path):
+    binary = compile_golden_source(tmp_path, "hello_user_name")
+    input_file = tmp_path / "input.txt"
+    input_file.write_text("Alice\n", encoding="utf-8")
+    machine_script = Path(__file__).resolve().parents[1] / "src" / "machine.py"
+    # Запускаем свой CLI фиксированным интерпретатором и тестовыми файлами.
+    result = subprocess.run(  # noqa: S603
+        [sys.executable, str(machine_script), "-c", binary, "-i", str(input_file)],
+        capture_output=True,
+        check=True,
+        text=True,
+    )
+    assert "Hello, Alice!" in result.stdout
+    assert "затёрло" not in result.stderr
 
 
 def test_filter_cache_changes_time_but_not_result(tmp_path):
