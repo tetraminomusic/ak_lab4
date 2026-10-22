@@ -215,6 +215,26 @@ def test_invalid_binary_image_is_rejected(tmp_path, image):
         run_simulation(str(binary), [])
 
 
+@pytest.mark.parametrize(
+    ("word", "error"),
+    [
+        (0xFF000000, "Неизвестный код операции"),
+        (0x02100001, "Невыровненный адрес"),
+        (0x18000000, "недостаточно слов"),
+    ],
+)
+def test_machine_fault_is_reported_to_cli(tmp_path, monkeypatch, capsys, word, error):
+    from machine import main  # noqa: PLC0415
+
+    binary = tmp_path / "program.bin"
+    binary.write_bytes(struct.pack(">I", word))
+    monkeypatch.setattr(sys, "argv", ["machine.py", "-c", str(binary)])
+    with pytest.raises(SystemExit) as exc:
+        main()
+    assert exc.value.code == 1
+    assert error in capsys.readouterr().err
+
+
 def test_alu_flags_nzcv():
     """Проверка выставления флагов NZCV."""
     dp = DataPath()

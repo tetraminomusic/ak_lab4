@@ -47,6 +47,7 @@ class ControlUnit:
         self.current_tick = 0  # Счётчик прошедших тактов
         self.instruction_counter = 0  # Сколько инструкций выполнили
         self.is_halted = False  # Флаг остановки для команды HLT
+        self.fault: str | None = None
 
         self.step = T0_FETCH
 
@@ -186,13 +187,7 @@ class ControlUnit:
         try:
             self.op = Opcode(op_val)
         except ValueError:
-            logging.warning(
-                "[ТАКТ %d] Неизвестный код операции 0x%02X, останов",
-                self.current_tick,
-                op_val,
-            )
-            self.is_halted = True
-            self.dp.flag_p = 0
+            self.halt_with_error(f"Неизвестный код операции 0x{op_val:02X}")
             return
 
         self.rd_idx = (word >> 20) & 0xF
@@ -328,13 +323,9 @@ class ControlUnit:
         if self.dp.sp - (words - 1) * WORD_SIZE >= STACK_LIMIT:
             return True
 
-        logging.error(
-            "[ТАКТ %d] Переполнение стека: SP = %d залез в сегмент данных",
-            self.current_tick,
-            self.dp.sp,
+        self.halt_with_error(
+            f"Переполнение стека: SP = {self.dp.sp}, нужно слов: {words}"
         )
-        self.is_halted = True
-        self.dp.flag_p = 0
         return False
 
     def check_address(self, addr: int) -> bool:
@@ -348,6 +339,7 @@ class ControlUnit:
 
     def halt_with_error(self, message: str) -> None:
         logging.error("[ТАКТ %d] %s", self.current_tick, message)
+        self.fault = message
         self.is_halted = True
         self.dp.flag_p = 0
 
@@ -355,12 +347,7 @@ class ControlUnit:
         if self.dp.sp + words * WORD_SIZE < len(self.dp.memory) * WORD_SIZE:
             return True
 
-        logging.error(
-            "[ТАКТ %d] В стеке недостаточно слов для чтения",
-            self.current_tick,
-        )
-        self.is_halted = True
-        self.dp.flag_p = 0
+        self.halt_with_error("В стеке недостаточно слов для чтения")
         return False
 
     def branch_taken(self, op: Opcode) -> bool:

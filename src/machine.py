@@ -86,6 +86,8 @@ def run_simulation(
         if logging.getLogger().isEnabledFor(logging.DEBUG):
             logging.debug("%s", str(cu))
 
+    if cu.fault is not None:
+        raise RuntimeError(cu.fault)
     if not cu.is_halted:
         logging.warning("Достигнут лимит тактов, процессор принудительно остановлен")
 
