@@ -145,3 +145,38 @@ def test_collatz_input_and_wide_intermediates(tmp_path, number, expected):
     schedule = [(200 + 1500 * i, ch) for i, ch in enumerate(number + "\n")]
     output, _ = run_simulation(str(binary), schedule, max_ticks=600000)
     assert output == expected
+
+
+@pytest.mark.parametrize(
+    ("tokens", "expected"),
+    [
+        ([0], ""),
+        ([4, -1, 42, -2147483648, 0], "-2147483648 -1 0 42"),
+        ([13], "-1"),
+    ],
+)
+def test_sort_count_and_signed_values(tmp_path, tokens, expected):
+    case = Path(__file__).with_name("golden") / "sort.yml"
+    source = tmp_path / "sort.lisp"
+    binary = tmp_path / "sort.bin"
+    source.write_text(
+        yaml.safe_load(case.read_text(encoding="utf-8"))["in_source"], encoding="utf-8"
+    )
+    translator.compile_file(str(source), str(binary))
+    schedule = [(200 + 1500 * i, token) for i, token in enumerate(tokens)]
+    output, ticks = run_simulation(str(binary), schedule, max_ticks=100000)
+    assert output == expected
+    assert ticks < 100000
+
+
+def test_name_cannot_write_past_buffer(tmp_path):
+    case = Path(__file__).with_name("golden") / "hello_user_name.yml"
+    source = tmp_path / "hello.lisp"
+    binary = tmp_path / "hello.bin"
+    source.write_text(
+        yaml.safe_load(case.read_text(encoding="utf-8"))["in_source"], encoding="utf-8"
+    )
+    translator.compile_file(str(source), str(binary))
+    schedule = [(200 + 1500 * i, token) for i, token in enumerate("ABCDEFGHIJKLMN\n")]
+    output, _ = run_simulation(str(binary), schedule, max_ticks=100000)
+    assert output == "What is your name?\nHello, ABCDEFGHIJKL!"

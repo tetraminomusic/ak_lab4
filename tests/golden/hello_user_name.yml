@@ -22,9 +22,11 @@ in_source: |-
                   (progn
                       (aset name 0 idx)
                       (setq ready 1))
-                  (progn
-                      (setq idx (+ idx 1))
-                      (aset name idx ch)))))
+                  (if (and (= ready 0) (< idx (aref name 0)))
+                      (progn
+                          (setq idx (+ idx 1))
+                          (aset name idx ch))
+                      0))))
 
       (ei)
 
@@ -101,92 +103,125 @@ out_code_hex: |-
   0172 - 0x12000048 - JMP 72  ; (defun print_str (s i) (if (> i (aref s 0)) 0 (progn (out 1 (aref s i)) (print_str s (+ i 1)))))
   0176 - 0x04130000 - ADD R1, R3, R0  ; (defun print_str (s i) (if (> i (aref s 0)) 0 (progn (out 1 (aref s i)) (print_str s (+ i 1)))))
   0180 - 0x18000000 - RET  ; (defun print_str (s i) (if (> i (aref s 0)) 0 (progn (out 1 (aref s i)) (print_str s (+ i 1)))))
-  0184 - 0x12000184 - JMP 388  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset name idx ch)))))
-  0188 - 0x19100000 - PUSH R1  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset name idx ch)))))
-  0192 - 0x19200000 - PUSH R2  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset name idx ch)))))
-  0196 - 0x19300000 - PUSH R3  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset name idx ch)))))
-  0200 - 0x19400000 - PUSH R4  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset name idx ch)))))
-  0204 - 0x1B100000 - IN R1, 0  ; (in 0)
-  0208 - 0x01201054 - LDI R2, 4180  ; (setq ch (in 0))
-  0212 - 0x03120000 - ST R1, R2, 0  ; (setq ch (in 0))
-  0216 - 0x01101054 - LDI R1, 4180  ; ch
-  0220 - 0x02110000 - LD R1, R1, 0  ; ch
-  0224 - 0x0120000A - LDI R2, 10  ; 10
-  0228 - 0x0B120000 - CMP R1, R2  ; (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset name idx ch)))
-  0232 - 0x14000128 - JNZ 296  ; (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset name idx ch)))
-  0236 - 0x01201014 - LDI R2, 4116  ; name
-  0240 - 0x02220000 - LD R2, R2, 0  ; name
-  0244 - 0x01300000 - LDI R3, 0  ; 0
-  0248 - 0x01400002 - LDI R4, 2  ; (aset name 0 idx)
-  0252 - 0x10334000 - LSL R3, R3, R4  ; (aset name 0 idx)
-  0256 - 0x0140104C - LDI R4, 4172  ; idx
-  0260 - 0x02440000 - LD R4, R4, 0  ; idx
-  0264 - 0x04223000 - ADD R2, R2, R3  ; (aset name 0 idx)
-  0268 - 0x03420000 - ST R4, R2, 0  ; (aset name 0 idx)
-  0272 - 0x04240000 - ADD R2, R4, R0  ; (aset name 0 idx)
-  0276 - 0x01200001 - LDI R2, 1  ; 1
-  0280 - 0x01301050 - LDI R3, 4176  ; (setq ready 1)
-  0284 - 0x03230000 - ST R2, R3, 0  ; (setq ready 1)
-  0288 - 0x04120000 - ADD R1, R2, R0  ; (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset name idx ch)))
-  0292 - 0x12000170 - JMP 368  ; (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset name idx ch)))
-  0296 - 0x0120104C - LDI R2, 4172  ; idx
-  0300 - 0x02220000 - LD R2, R2, 0  ; idx
-  0304 - 0x01300001 - LDI R3, 1  ; 1
-  0308 - 0x04223000 - ADD R2, R2, R3  ; (+ idx 1)
-  0312 - 0x0130104C - LDI R3, 4172  ; (setq idx (+ idx 1))
-  0316 - 0x03230000 - ST R2, R3, 0  ; (setq idx (+ idx 1))
-  0320 - 0x01201014 - LDI R2, 4116  ; name
-  0324 - 0x02220000 - LD R2, R2, 0  ; name
-  0328 - 0x0130104C - LDI R3, 4172  ; idx
-  0332 - 0x02330000 - LD R3, R3, 0  ; idx
-  0336 - 0x01400002 - LDI R4, 2  ; (aset name idx ch)
-  0340 - 0x10334000 - LSL R3, R3, R4  ; (aset name idx ch)
-  0344 - 0x01401054 - LDI R4, 4180  ; ch
-  0348 - 0x02440000 - LD R4, R4, 0  ; ch
-  0352 - 0x04223000 - ADD R2, R2, R3  ; (aset name idx ch)
-  0356 - 0x03420000 - ST R4, R2, 0  ; (aset name idx ch)
-  0360 - 0x04240000 - ADD R2, R4, R0  ; (aset name idx ch)
-  0364 - 0x04120000 - ADD R1, R2, R0  ; (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset name idx ch)))
-  0368 - 0x1A400000 - POP R4  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset name idx ch)))))
-  0372 - 0x1A300000 - POP R3  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset name idx ch)))))
-  0376 - 0x1A200000 - POP R2  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset name idx ch)))))
-  0380 - 0x1A100000 - POP R1  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset name idx ch)))))
-  0384 - 0x1F000000 - IRET  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (progn (setq idx (+ idx 1)) (aset name idx ch)))))
-  0388 - 0x1D000000 - EI  ; (ei)
-  0392 - 0x01100FA0 - LDI R1, 4000  ; prompt
-  0396 - 0x02110000 - LD R1, R1, 0  ; prompt
-  0400 - 0x01200001 - LDI R2, 1  ; 1
-  0404 - 0x17000048 - CALL 72  ; (print_str prompt 1)
-  0408 - 0x04110000 - ADD R1, R1, R0  ; (print_str prompt 1)
-  0412 - 0x0110000A - LDI R1, 10  ; 10
-  0416 - 0x1C100001 - OUT 1, R1  ; (out 1 10)
-  0420 - 0x120001D0 - JMP 464  ; (defun wait () (if (= ready 1) 0 (wait)))
-  0424 - 0x01201050 - LDI R2, 4176  ; ready
-  0428 - 0x02220000 - LD R2, R2, 0  ; ready
-  0432 - 0x01300001 - LDI R3, 1  ; 1
-  0436 - 0x0B230000 - CMP R2, R3  ; (defun wait () (if (= ready 1) 0 (wait)))
-  0440 - 0x140001C8 - JNZ 456  ; (defun wait () (if (= ready 1) 0 (wait)))
-  0444 - 0x01200000 - LDI R2, 0  ; 0
-  0448 - 0x04120000 - ADD R1, R2, R0  ; (defun wait () (if (= ready 1) 0 (wait)))
-  0452 - 0x120001CC - JMP 460  ; (defun wait () (if (= ready 1) 0 (wait)))
-  0456 - 0x120001A8 - JMP 424  ; (defun wait () (if (= ready 1) 0 (wait)))
-  0460 - 0x18000000 - RET  ; (defun wait () (if (= ready 1) 0 (wait)))
-  0464 - 0x170001A8 - CALL 424  ; (wait)
-  0468 - 0x04110000 - ADD R1, R1, R0  ; (wait)
-  0472 - 0x1E000000 - DI  ; (di)
-  0476 - 0x01100FF0 - LDI R1, 4080  ; greet
-  0480 - 0x02110000 - LD R1, R1, 0  ; greet
-  0484 - 0x01200001 - LDI R2, 1  ; 1
-  0488 - 0x17000048 - CALL 72  ; (print_str greet 1)
-  0492 - 0x04110000 - ADD R1, R1, R0  ; (print_str greet 1)
-  0496 - 0x01101014 - LDI R1, 4116  ; name
-  0500 - 0x02110000 - LD R1, R1, 0  ; name
-  0504 - 0x01200001 - LDI R2, 1  ; 1
-  0508 - 0x17000048 - CALL 72  ; (print_str name 1)
-  0512 - 0x04110000 - ADD R1, R1, R0  ; (print_str name 1)
-  0516 - 0x01100021 - LDI R1, 33  ; 33
-  0520 - 0x1C100001 - OUT 1, R1  ; (out 1 33)
-  0524 - 0x20000000 - HLT
+  0184 - 0x12000208 - JMP 520  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (if (and (= ready 0) (< idx (aref name 0))) (progn (setq idx (+ idx 1)) (aset name idx ch)) 0))))
+  0188 - 0x19100000 - PUSH R1  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (if (and (= ready 0) (< idx (aref name 0))) (progn (setq idx (+ idx 1)) (aset name idx ch)) 0))))
+  0192 - 0x19200000 - PUSH R2  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (if (and (= ready 0) (< idx (aref name 0))) (progn (setq idx (+ idx 1)) (aset name idx ch)) 0))))
+  0196 - 0x19300000 - PUSH R3  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (if (and (= ready 0) (< idx (aref name 0))) (progn (setq idx (+ idx 1)) (aset name idx ch)) 0))))
+  0200 - 0x19400000 - PUSH R4  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (if (and (= ready 0) (< idx (aref name 0))) (progn (setq idx (+ idx 1)) (aset name idx ch)) 0))))
+  0204 - 0x19500000 - PUSH R5  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (if (and (= ready 0) (< idx (aref name 0))) (progn (setq idx (+ idx 1)) (aset name idx ch)) 0))))
+  0208 - 0x19600000 - PUSH R6  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (if (and (= ready 0) (< idx (aref name 0))) (progn (setq idx (+ idx 1)) (aset name idx ch)) 0))))
+  0212 - 0x1B100000 - IN R1, 0  ; (in 0)
+  0216 - 0x01201054 - LDI R2, 4180  ; (setq ch (in 0))
+  0220 - 0x03120000 - ST R1, R2, 0  ; (setq ch (in 0))
+  0224 - 0x01101054 - LDI R1, 4180  ; ch
+  0228 - 0x02110000 - LD R1, R1, 0  ; ch
+  0232 - 0x0120000A - LDI R2, 10  ; 10
+  0236 - 0x0B120000 - CMP R1, R2  ; (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (if (and (= ready 0) (< idx (aref name 0))) (progn (setq idx (+ idx 1)) (aset name idx ch)) 0))
+  0240 - 0x14000130 - JNZ 304  ; (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (if (and (= ready 0) (< idx (aref name 0))) (progn (setq idx (+ idx 1)) (aset name idx ch)) 0))
+  0244 - 0x01201014 - LDI R2, 4116  ; name
+  0248 - 0x02220000 - LD R2, R2, 0  ; name
+  0252 - 0x01300000 - LDI R3, 0  ; 0
+  0256 - 0x01400002 - LDI R4, 2  ; (aset name 0 idx)
+  0260 - 0x10334000 - LSL R3, R3, R4  ; (aset name 0 idx)
+  0264 - 0x0140104C - LDI R4, 4172  ; idx
+  0268 - 0x02440000 - LD R4, R4, 0  ; idx
+  0272 - 0x04223000 - ADD R2, R2, R3  ; (aset name 0 idx)
+  0276 - 0x03420000 - ST R4, R2, 0  ; (aset name 0 idx)
+  0280 - 0x04240000 - ADD R2, R4, R0  ; (aset name 0 idx)
+  0284 - 0x01200001 - LDI R2, 1  ; 1
+  0288 - 0x01301050 - LDI R3, 4176  ; (setq ready 1)
+  0292 - 0x03230000 - ST R2, R3, 0  ; (setq ready 1)
+  0296 - 0x04120000 - ADD R1, R2, R0  ; (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (if (and (= ready 0) (< idx (aref name 0))) (progn (setq idx (+ idx 1)) (aset name idx ch)) 0))
+  0300 - 0x120001EC - JMP 492  ; (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (if (and (= ready 0) (< idx (aref name 0))) (progn (setq idx (+ idx 1)) (aset name idx ch)) 0))
+  0304 - 0x01201050 - LDI R2, 4176  ; ready
+  0308 - 0x02220000 - LD R2, R2, 0  ; ready
+  0312 - 0x01300000 - LDI R3, 0  ; 0
+  0316 - 0x0B230000 - CMP R2, R3  ; (= ready 0)
+  0320 - 0x1400014C - JNZ 332  ; (= ready 0)
+  0324 - 0x01200001 - LDI R2, 1  ; (= ready 0)
+  0328 - 0x12000150 - JMP 336  ; (= ready 0)
+  0332 - 0x01200000 - LDI R2, 0  ; (= ready 0)
+  0336 - 0x0130104C - LDI R3, 4172  ; idx
+  0340 - 0x02330000 - LD R3, R3, 0  ; idx
+  0344 - 0x01401014 - LDI R4, 4116  ; name
+  0348 - 0x02440000 - LD R4, R4, 0  ; name
+  0352 - 0x01500000 - LDI R5, 0  ; 0
+  0356 - 0x01600002 - LDI R6, 2  ; (aref name 0)
+  0360 - 0x10556000 - LSL R5, R5, R6  ; (aref name 0)
+  0364 - 0x04445000 - ADD R4, R4, R5  ; (aref name 0)
+  0368 - 0x02440000 - LD R4, R4, 0  ; (aref name 0)
+  0372 - 0x0B340000 - CMP R3, R4  ; (< idx (aref name 0))
+  0376 - 0x16000184 - JGE 388  ; (< idx (aref name 0))
+  0380 - 0x01300001 - LDI R3, 1  ; (< idx (aref name 0))
+  0384 - 0x12000188 - JMP 392  ; (< idx (aref name 0))
+  0388 - 0x01300000 - LDI R3, 0  ; (< idx (aref name 0))
+  0392 - 0x0C223000 - AND R2, R2, R3  ; (and (= ready 0) (< idx (aref name 0)))
+  0396 - 0x0B200000 - CMP R2, R0  ; (if (and (= ready 0) (< idx (aref name 0))) (progn (setq idx (+ idx 1)) (aset name idx ch)) 0)
+  0400 - 0x130001E0 - JZ 480  ; (if (and (= ready 0) (< idx (aref name 0))) (progn (setq idx (+ idx 1)) (aset name idx ch)) 0)
+  0404 - 0x0130104C - LDI R3, 4172  ; idx
+  0408 - 0x02330000 - LD R3, R3, 0  ; idx
+  0412 - 0x01400001 - LDI R4, 1  ; 1
+  0416 - 0x04334000 - ADD R3, R3, R4  ; (+ idx 1)
+  0420 - 0x0140104C - LDI R4, 4172  ; (setq idx (+ idx 1))
+  0424 - 0x03340000 - ST R3, R4, 0  ; (setq idx (+ idx 1))
+  0428 - 0x01301014 - LDI R3, 4116  ; name
+  0432 - 0x02330000 - LD R3, R3, 0  ; name
+  0436 - 0x0140104C - LDI R4, 4172  ; idx
+  0440 - 0x02440000 - LD R4, R4, 0  ; idx
+  0444 - 0x01500002 - LDI R5, 2  ; (aset name idx ch)
+  0448 - 0x10445000 - LSL R4, R4, R5  ; (aset name idx ch)
+  0452 - 0x01501054 - LDI R5, 4180  ; ch
+  0456 - 0x02550000 - LD R5, R5, 0  ; ch
+  0460 - 0x04334000 - ADD R3, R3, R4  ; (aset name idx ch)
+  0464 - 0x03530000 - ST R5, R3, 0  ; (aset name idx ch)
+  0468 - 0x04350000 - ADD R3, R5, R0  ; (aset name idx ch)
+  0472 - 0x04230000 - ADD R2, R3, R0  ; (if (and (= ready 0) (< idx (aref name 0))) (progn (setq idx (+ idx 1)) (aset name idx ch)) 0)
+  0476 - 0x120001E8 - JMP 488  ; (if (and (= ready 0) (< idx (aref name 0))) (progn (setq idx (+ idx 1)) (aset name idx ch)) 0)
+  0480 - 0x01300000 - LDI R3, 0  ; 0
+  0484 - 0x04230000 - ADD R2, R3, R0  ; (if (and (= ready 0) (< idx (aref name 0))) (progn (setq idx (+ idx 1)) (aset name idx ch)) 0)
+  0488 - 0x04120000 - ADD R1, R2, R0  ; (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (if (and (= ready 0) (< idx (aref name 0))) (progn (setq idx (+ idx 1)) (aset name idx ch)) 0))
+  0492 - 0x1A600000 - POP R6  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (if (and (= ready 0) (< idx (aref name 0))) (progn (setq idx (+ idx 1)) (aset name idx ch)) 0))))
+  0496 - 0x1A500000 - POP R5  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (if (and (= ready 0) (< idx (aref name 0))) (progn (setq idx (+ idx 1)) (aset name idx ch)) 0))))
+  0500 - 0x1A400000 - POP R4  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (if (and (= ready 0) (< idx (aref name 0))) (progn (setq idx (+ idx 1)) (aset name idx ch)) 0))))
+  0504 - 0x1A300000 - POP R3  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (if (and (= ready 0) (< idx (aref name 0))) (progn (setq idx (+ idx 1)) (aset name idx ch)) 0))))
+  0508 - 0x1A200000 - POP R2  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (if (and (= ready 0) (< idx (aref name 0))) (progn (setq idx (+ idx 1)) (aset name idx ch)) 0))))
+  0512 - 0x1A100000 - POP R1  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (if (and (= ready 0) (< idx (aref name 0))) (progn (setq idx (+ idx 1)) (aset name idx ch)) 0))))
+  0516 - 0x1F000000 - IRET  ; (definterrupt isr () (progn (setq ch (in 0)) (if (= ch 10) (progn (aset name 0 idx) (setq ready 1)) (if (and (= ready 0) (< idx (aref name 0))) (progn (setq idx (+ idx 1)) (aset name idx ch)) 0))))
+  0520 - 0x1D000000 - EI  ; (ei)
+  0524 - 0x01100FA0 - LDI R1, 4000  ; prompt
+  0528 - 0x02110000 - LD R1, R1, 0  ; prompt
+  0532 - 0x01200001 - LDI R2, 1  ; 1
+  0536 - 0x17000048 - CALL 72  ; (print_str prompt 1)
+  0540 - 0x04110000 - ADD R1, R1, R0  ; (print_str prompt 1)
+  0544 - 0x0110000A - LDI R1, 10  ; 10
+  0548 - 0x1C100001 - OUT 1, R1  ; (out 1 10)
+  0552 - 0x12000254 - JMP 596  ; (defun wait () (if (= ready 1) 0 (wait)))
+  0556 - 0x01201050 - LDI R2, 4176  ; ready
+  0560 - 0x02220000 - LD R2, R2, 0  ; ready
+  0564 - 0x01300001 - LDI R3, 1  ; 1
+  0568 - 0x0B230000 - CMP R2, R3  ; (defun wait () (if (= ready 1) 0 (wait)))
+  0572 - 0x1400024C - JNZ 588  ; (defun wait () (if (= ready 1) 0 (wait)))
+  0576 - 0x01200000 - LDI R2, 0  ; 0
+  0580 - 0x04120000 - ADD R1, R2, R0  ; (defun wait () (if (= ready 1) 0 (wait)))
+  0584 - 0x12000250 - JMP 592  ; (defun wait () (if (= ready 1) 0 (wait)))
+  0588 - 0x1200022C - JMP 556  ; (defun wait () (if (= ready 1) 0 (wait)))
+  0592 - 0x18000000 - RET  ; (defun wait () (if (= ready 1) 0 (wait)))
+  0596 - 0x1700022C - CALL 556  ; (wait)
+  0600 - 0x04110000 - ADD R1, R1, R0  ; (wait)
+  0604 - 0x1E000000 - DI  ; (di)
+  0608 - 0x01100FF0 - LDI R1, 4080  ; greet
+  0612 - 0x02110000 - LD R1, R1, 0  ; greet
+  0616 - 0x01200001 - LDI R2, 1  ; 1
+  0620 - 0x17000048 - CALL 72  ; (print_str greet 1)
+  0624 - 0x04110000 - ADD R1, R1, R0  ; (print_str greet 1)
+  0628 - 0x01101014 - LDI R1, 4116  ; name
+  0632 - 0x02110000 - LD R1, R1, 0  ; name
+  0636 - 0x01200001 - LDI R2, 1  ; 1
+  0640 - 0x17000048 - CALL 72  ; (print_str name 1)
+  0644 - 0x04110000 - ADD R1, R1, R0  ; (print_str name 1)
+  0648 - 0x01100021 - LDI R1, 33  ; 33
+  0652 - 0x1C100001 - OUT 1, R1  ; (out 1 33)
+  0656 - 0x20000000 - HLT
 
 out_stdout: |-
   What is your name?
@@ -230,120 +265,122 @@ out_log: |-
   [ТАКТ 212] Вход в прерывание: начинаем сохранять PC и PS
   ... пропущено строк: 19 ...
   [ТАКТ 231] PC и PS сохранены в стек, переход на вектор
-  ... пропущено строк: 351 ...
-  [ТАКТ 582] Выход из прерывания (IRET)
-  ... пропущено строк: 113 ...
-  [ТАКТ 695] Процессор вывел в порт 1 символ 'W' (код 87)
-  ... пропущено строк: 89 ...
-  [ТАКТ 784] Процессор вывел в порт 1 символ 'h' (код 104)
-  ... пропущено строк: 16 ...
-  [ТАКТ 800] ВУ прислало символ 'l' (ASCII 108), провод IntRq = 1!
-  ... пропущено строк: 6 ...
-  [ТАКТ 806] Вход в прерывание: начинаем сохранять PC и PS
-  ... пропущено строк: 19 ...
-  [ТАКТ 825] PC и PS сохранены в стек, переход на вектор
-  ... пропущено строк: 360 ...
-  [ТАКТ 1185] Выход из прерывания (IRET)
-  ... пропущено строк: 140 ...
-  [ТАКТ 1325] Процессор вывел в порт 1 символ 'a' (код 97)
-  ... пропущено строк: 75 ...
-  [ТАКТ 1400] ВУ прислало символ 'i' (ASCII 105), провод IntRq = 1!
-  ... пропущено строк: 2 ...
-  [ТАКТ 1402] Вход в прерывание: начинаем сохранять PC и PS
-  ... пропущено строк: 19 ...
-  [ТАКТ 1421] PC и PS сохранены в стек, переход на вектор
-  ... пропущено строк: 360 ...
-  [ТАКТ 1781] Выход из прерывания (IRET)
-  ... пропущено строк: 40 ...
-  [ТАКТ 1821] Процессор вывел в порт 1 символ 't' (код 116)
-  ... пропущено строк: 125 ...
-  [ТАКТ 1946] Процессор вывел в порт 1 символ ' ' (код 32)
-  ... пропущено строк: 54 ...
-  [ТАКТ 2000] ВУ прислало символ 'c' (ASCII 99), провод IntRq = 1!
-  ... пропущено строк: 8 ...
-  [ТАКТ 2008] Вход в прерывание: начинаем сохранять PC и PS
-  ... пропущено строк: 19 ...
-  [ТАКТ 2027] PC и PS сохранены в стек, переход на вектор
-  ... пропущено строк: 360 ...
-  [ТАКТ 2387] Выход из прерывания (IRET)
-  ... пропущено строк: 73 ...
-  [ТАКТ 2460] Процессор вывел в порт 1 символ 'i' (код 105)
-  ... пропущено строк: 116 ...
-  [ТАКТ 2576] Процессор вывел в порт 1 символ 's' (код 115)
+  ... пропущено строк: 545 ...
+  [ТАКТ 776] Выход из прерывания (IRET)
   ... пропущено строк: 24 ...
+  [ТАКТ 800] ВУ прислало символ 'l' (ASCII 108), провод IntRq = 1!
+  ... пропущено строк: 4 ...
+  [ТАКТ 804] Вход в прерывание: начинаем сохранять PC и PS
+  ... пропущено строк: 19 ...
+  [ТАКТ 823] PC и PS сохранены в стек, переход на вектор
+  ... пропущено строк: 536 ...
+  [ТАКТ 1359] Выход из прерывания (IRET)
+  ... пропущено строк: 41 ...
+  [ТАКТ 1400] ВУ прислало символ 'i' (ASCII 105), провод IntRq = 1!
+  [ТАКТ 1400] Вход в прерывание: начинаем сохранять PC и PS
+  ... пропущено строк: 19 ...
+  [ТАКТ 1419] PC и PS сохранены в стек, переход на вектор
+  ... пропущено строк: 545 ...
+  [ТАКТ 1964] Выход из прерывания (IRET)
+  ... пропущено строк: 36 ...
+  [ТАКТ 2000] ВУ прислало символ 'c' (ASCII 99), провод IntRq = 1!
+  ... пропущено строк: 7 ...
+  [ТАКТ 2007] Вход в прерывание: начинаем сохранять PC и PS
+  ... пропущено строк: 19 ...
+  [ТАКТ 2026] PC и PS сохранены в стек, переход на вектор
+  ... пропущено строк: 536 ...
+  [ТАКТ 2562] Выход из прерывания (IRET)
+  ... пропущено строк: 38 ...
   [ТАКТ 2600] ВУ прислало символ 'e' (ASCII 101), провод IntRq = 1!
+  ... пропущено строк: 2 ...
+  [ТАКТ 2602] Процессор вывел в порт 1 символ 'W' (код 87)
   ... пропущено строк: 1 ...
-  [ТАКТ 2601] Вход в прерывание: начинаем сохранять PC и PS
+  [ТАКТ 2603] Вход в прерывание: начинаем сохранять PC и PS
   ... пропущено строк: 19 ...
-  [ТАКТ 2620] PC и PS сохранены в стек, переход на вектор
-  ... пропущено строк: 360 ...
-  [ТАКТ 2980] Выход из прерывания (IRET)
-  ... пропущено строк: 137 ...
-  [ТАКТ 3117] Процессор вывел в порт 1 символ ' ' (код 32)
-  ... пропущено строк: 83 ...
+  [ТАКТ 2622] PC и PS сохранены в стек, переход на вектор
+  ... пропущено строк: 554 ...
+  [ТАКТ 3176] Выход из прерывания (IRET)
+  ... пропущено строк: 24 ...
   [ТАКТ 3200] ВУ прислало символ '\x0a' (ASCII 10), провод IntRq = 1!
-  [ТАКТ 3200] Вход в прерывание: начинаем сохранять PC и PS
+  ... пропущено строк: 7 ...
+  [ТАКТ 3207] Вход в прерывание: начинаем сохранять PC и PS
   ... пропущено строк: 19 ...
-  [ТАКТ 3219] PC и PS сохранены в стек, переход на вектор
-  ... пропущено строк: 322 ...
-  [ТАКТ 3541] Выход из прерывания (IRET)
-  ... пропущено строк: 43 ...
-  [ТАКТ 3584] Процессор вывел в порт 1 символ 'y' (код 121)
-  ... пропущено строк: 134 ...
-  [ТАКТ 3718] Процессор вывел в порт 1 символ 'o' (код 111)
-  ... пропущено строк: 107 ...
-  [ТАКТ 3825] Процессор вывел в порт 1 символ 'u' (код 117)
-  ... пропущено строк: 107 ...
-  [ТАКТ 3932] Процессор вывел в порт 1 символ 'r' (код 114)
-  ... пропущено строк: 107 ...
-  [ТАКТ 4039] Процессор вывел в порт 1 символ ' ' (код 32)
-  ... пропущено строк: 107 ...
-  [ТАКТ 4146] Процессор вывел в порт 1 символ 'n' (код 110)
-  ... пропущено строк: 107 ...
-  [ТАКТ 4253] Процессор вывел в порт 1 символ 'a' (код 97)
-  ... пропущено строк: 107 ...
-  [ТАКТ 4360] Процессор вывел в порт 1 символ 'm' (код 109)
-  ... пропущено строк: 107 ...
-  [ТАКТ 4467] Процессор вывел в порт 1 символ 'e' (код 101)
-  ... пропущено строк: 107 ...
-  [ТАКТ 4574] Процессор вывел в порт 1 символ '?' (код 63)
-  ... пропущено строк: 128 ...
-  [ТАКТ 4702] Процессор вывел в порт 1 символ '\x0a' (код 10)
-  ... пропущено строк: 241 ...
-  [ТАКТ 4943] Процессор вывел в порт 1 символ 'H' (код 72)
+  [ТАКТ 3226] PC и PS сохранены в стек, переход на вектор
+  ... пропущено строк: 374 ...
+  [ТАКТ 3600] Выход из прерывания (IRET)
+  ... пропущено строк: 131 ...
+  [ТАКТ 3731] Процессор вывел в порт 1 символ 'h' (код 104)
   ... пропущено строк: 98 ...
-  [ТАКТ 5041] Процессор вывел в порт 1 символ 'e' (код 101)
+  [ТАКТ 3829] Процессор вывел в порт 1 символ 'a' (код 97)
   ... пропущено строк: 89 ...
-  [ТАКТ 5130] Процессор вывел в порт 1 символ 'l' (код 108)
-  ... пропущено строк: 107 ...
-  [ТАКТ 5237] Процессор вывел в порт 1 символ 'l' (код 108)
-  ... пропущено строк: 107 ...
-  [ТАКТ 5344] Процессор вывел в порт 1 символ 'o' (код 111)
-  ... пропущено строк: 107 ...
-  [ТАКТ 5451] Процессор вывел в порт 1 символ ',' (код 44)
-  ... пропущено строк: 116 ...
-  [ТАКТ 5567] Процессор вывел в порт 1 символ ' ' (код 32)
-  ... пропущено строк: 231 ...
-  [ТАКТ 5798] Процессор вывел в порт 1 символ 'A' (код 65)
+  [ТАКТ 3918] Процессор вывел в порт 1 символ 't' (код 116)
+  ... пропущено строк: 89 ...
+  [ТАКТ 4007] Процессор вывел в порт 1 символ ' ' (код 32)
+  ... пропущено строк: 89 ...
+  [ТАКТ 4096] Процессор вывел в порт 1 символ 'i' (код 105)
   ... пропущено строк: 98 ...
-  [ТАКТ 5896] Процессор вывел в порт 1 символ 'l' (код 108)
+  [ТАКТ 4194] Процессор вывел в порт 1 символ 's' (код 115)
   ... пропущено строк: 107 ...
-  [ТАКТ 6003] Процессор вывел в порт 1 символ 'i' (код 105)
+  [ТАКТ 4301] Процессор вывел в порт 1 символ ' ' (код 32)
   ... пропущено строк: 107 ...
-  [ТАКТ 6110] Процессор вывел в порт 1 символ 'c' (код 99)
+  [ТАКТ 4408] Процессор вывел в порт 1 символ 'y' (код 121)
   ... пропущено строк: 107 ...
-  [ТАКТ 6217] Процессор вывел в порт 1 символ 'e' (код 101)
+  [ТАКТ 4515] Процессор вывел в порт 1 символ 'o' (код 111)
+  ... пропущено строк: 107 ...
+  [ТАКТ 4622] Процессор вывел в порт 1 символ 'u' (код 117)
+  ... пропущено строк: 107 ...
+  [ТАКТ 4729] Процессор вывел в порт 1 символ 'r' (код 114)
+  ... пропущено строк: 107 ...
+  [ТАКТ 4836] Процессор вывел в порт 1 символ ' ' (код 32)
+  ... пропущено строк: 107 ...
+  [ТАКТ 4943] Процессор вывел в порт 1 символ 'n' (код 110)
+  ... пропущено строк: 107 ...
+  [ТАКТ 5050] Процессор вывел в порт 1 символ 'a' (код 97)
+  ... пропущено строк: 107 ...
+  [ТАКТ 5157] Процессор вывел в порт 1 символ 'm' (код 109)
+  ... пропущено строк: 107 ...
+  [ТАКТ 5264] Процессор вывел в порт 1 символ 'e' (код 101)
+  ... пропущено строк: 107 ...
+  [ТАКТ 5371] Процессор вывел в порт 1 символ '?' (код 63)
+  ... пропущено строк: 137 ...
+  [ТАКТ 5508] Процессор вывел в порт 1 символ '\x0a' (код 10)
+  ... пропущено строк: 241 ...
+  [ТАКТ 5749] Процессор вывел в порт 1 символ 'H' (код 72)
+  ... пропущено строк: 98 ...
+  [ТАКТ 5847] Процессор вывел в порт 1 символ 'e' (код 101)
+  ... пропущено строк: 89 ...
+  [ТАКТ 5936] Процессор вывел в порт 1 символ 'l' (код 108)
+  ... пропущено строк: 107 ...
+  [ТАКТ 6043] Процессор вывел в порт 1 символ 'l' (код 108)
+  ... пропущено строк: 107 ...
+  [ТАКТ 6150] Процессор вывел в порт 1 символ 'o' (код 111)
+  ... пропущено строк: 107 ...
+  [ТАКТ 6257] Процессор вывел в порт 1 символ ',' (код 44)
+  ... пропущено строк: 116 ...
+  [ТАКТ 6373] Процессор вывел в порт 1 символ ' ' (код 32)
+  ... пропущено строк: 231 ...
+  [ТАКТ 6604] Процессор вывел в порт 1 символ 'A' (код 65)
+  ... пропущено строк: 98 ...
+  [ТАКТ 6702] Процессор вывел в порт 1 символ 'l' (код 108)
+  ... пропущено строк: 107 ...
+  [ТАКТ 6809] Процессор вывел в порт 1 символ 'i' (код 105)
+  ... пропущено строк: 107 ...
+  [ТАКТ 6916] Процессор вывел в порт 1 символ 'c' (код 99)
+  ... пропущено строк: 107 ...
+  [ТАКТ 7023] Процессор вывел в порт 1 символ 'e' (код 101)
   ... пропущено строк: 110 ...
-  [ТАКТ 6327] Процессор вывел в порт 1 символ '!' (код 33)
-  |  6327  | T2 EXEC   |  524  | 1C100001 | OUT 1, R1              | 16380  |  0100  |  HIT (1)  |  -   |     0    33     6     0     0     5     0     2     0     0     0     0     0     0     0     0 | (out 1 33)
-  |  6328  | T0 FETCH  |  524  | 20000000 | HLT                    | 16380  |  0100  |  HIT (1)  |  -   |     0    33     6     0     0     5     0     2     0     0     0     0     0     0     0     0 |
-  |  6329  | T1 DECODE |  524  | 20000000 | HLT                    | 16380  |  0100  |  HIT (1)  |  -   |     0    33     6     0     0     5     0     2     0     0     0     0     0     0     0     0 |
+  [ТАКТ 7133] Процессор вывел в порт 1 символ '!' (код 33)
+  ... пропущено строк: 8 ...
+  |  7141  | STALL     |  656  | 1C100001 | OUT 1, R1              | 16380  |  0100  | MISS(10)  |  -   |     0    33     6     0     0     5     0     2     0     0     0     0     0     0     0     0 | (out 1 33)
+  |  7142  | STALL     |  656  | 1C100001 | OUT 1, R1              | 16380  |  0100  | MISS(10)  |  -   |     0    33     6     0     0     5     0     2     0     0     0     0     0     0     0     0 | (out 1 33)
+  |  7143  | MEM READY |  656  | 20000000 | HLT                    | 16380  |  0100  | MISS(10)  |  -   |     0    33     6     0     0     5     0     2     0     0     0     0     0     0     0     0 |
+  |  7144  | T1 DECODE |  656  | 20000000 | HLT                    | 16380  |  0100  | MISS(10)  |  -   |     0    33     6     0     0     5     0     2     0     0     0     0     0     0     0     0 |
   ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  Процессор остановлен, выполнено тактов: 6329
-  Выполнено инструкций: 996
+  Процессор остановлен, выполнено тактов: 7144
+  Выполнено инструкций: 1145
   Вывод в порт 1:
   Статистика кеш-попаданий:
-  Попаданий (Hits): 846 | Промахов (Misses): 286 | Hit Rate: 74.73%
+  Попаданий (Hits): 1003 | Промахов (Misses): 310 | Hit Rate: 76.39%
 out_data_hex: |-
   4000 - 0x00000000
   4004 - 0x00000012
