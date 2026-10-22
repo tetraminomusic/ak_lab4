@@ -98,6 +98,17 @@ def test_golden(golden, tmp_path, caplog):
     assert trim_journal(caplog.messages) == golden.out["out_log"]
 
 
+def compile_golden_source(tmp_path, name):
+    case = Path(__file__).with_name("golden") / f"{name}.yml"
+    source = tmp_path / f"{name}.lisp"
+    binary = tmp_path / f"{name}.bin"
+    source.write_text(
+        yaml.safe_load(case.read_text(encoding="utf-8"))["in_source"], encoding="utf-8"
+    )
+    translator.compile_file(str(source), str(binary))
+    return str(binary)
+
+
 @pytest.mark.parametrize(
     ("expression", "expected"),
     [
@@ -111,15 +122,9 @@ def test_golden(golden, tmp_path, caplog):
     ],
 )
 def test_rpn_tokenization_and_validation(tmp_path, expression, expected):
-    case = Path(__file__).with_name("golden") / "infix_to_rpn.yml"
-    source = tmp_path / "rpn.lisp"
-    binary = tmp_path / "rpn.bin"
-    source.write_text(
-        yaml.safe_load(case.read_text(encoding="utf-8"))["in_source"], encoding="utf-8"
-    )
-    translator.compile_file(str(source), str(binary))
+    binary = compile_golden_source(tmp_path, "infix_to_rpn")
     schedule = [(200 + 700 * i, ch) for i, ch in enumerate(expression + "\n")]
-    output, _ = run_simulation(str(binary), schedule, max_ticks=120000)
+    output, _ = run_simulation(binary, schedule, max_ticks=120000)
     assert output == expected
 
 
@@ -135,15 +140,9 @@ def test_rpn_tokenization_and_validation(tmp_path, expression, expected):
     ],
 )
 def test_collatz_input_and_wide_intermediates(tmp_path, number, expected):
-    case = Path(__file__).with_name("golden") / "collatz.yml"
-    source = tmp_path / "collatz.lisp"
-    binary = tmp_path / "collatz.bin"
-    source.write_text(
-        yaml.safe_load(case.read_text(encoding="utf-8"))["in_source"], encoding="utf-8"
-    )
-    translator.compile_file(str(source), str(binary))
+    binary = compile_golden_source(tmp_path, "collatz")
     schedule = [(200 + 1500 * i, ch) for i, ch in enumerate(number + "\n")]
-    output, _ = run_simulation(str(binary), schedule, max_ticks=600000)
+    output, _ = run_simulation(binary, schedule, max_ticks=600000)
     assert output == expected
 
 
@@ -156,27 +155,25 @@ def test_collatz_input_and_wide_intermediates(tmp_path, number, expected):
     ],
 )
 def test_sort_count_and_signed_values(tmp_path, tokens, expected):
-    case = Path(__file__).with_name("golden") / "sort.yml"
-    source = tmp_path / "sort.lisp"
-    binary = tmp_path / "sort.bin"
-    source.write_text(
-        yaml.safe_load(case.read_text(encoding="utf-8"))["in_source"], encoding="utf-8"
-    )
-    translator.compile_file(str(source), str(binary))
+    binary = compile_golden_source(tmp_path, "sort")
     schedule = [(200 + 1500 * i, token) for i, token in enumerate(tokens)]
-    output, ticks = run_simulation(str(binary), schedule, max_ticks=100000)
+    output, ticks = run_simulation(binary, schedule, max_ticks=100000)
     assert output == expected
     assert ticks < 100000
 
 
 def test_name_cannot_write_past_buffer(tmp_path):
-    case = Path(__file__).with_name("golden") / "hello_user_name.yml"
-    source = tmp_path / "hello.lisp"
-    binary = tmp_path / "hello.bin"
-    source.write_text(
-        yaml.safe_load(case.read_text(encoding="utf-8"))["in_source"], encoding="utf-8"
-    )
-    translator.compile_file(str(source), str(binary))
+    binary = compile_golden_source(tmp_path, "hello_user_name")
     schedule = [(200 + 1500 * i, token) for i, token in enumerate("ABCDEFGHIJKLMN\n")]
-    output, _ = run_simulation(str(binary), schedule, max_ticks=100000)
+    output, _ = run_simulation(binary, schedule, max_ticks=100000)
     assert output == "What is your name?\nHello, ABCDEFGHIJKL!"
+
+
+def test_filter_cache_changes_time_but_not_result(tmp_path):
+    binary = compile_golden_source(tmp_path, "linear_filter")
+    cached, cached_ticks = run_simulation(binary, [], max_ticks=40000)
+    uncached, uncached_ticks = run_simulation(
+        binary, [], max_ticks=40000, cache_enabled=False
+    )
+    assert cached == uncached
+    assert cached_ticks < uncached_ticks < 40000
