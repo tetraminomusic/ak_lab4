@@ -170,14 +170,18 @@ def test_name_cannot_write_past_buffer(tmp_path):
     assert output == "What is your name?\nHello, ABCDEFGHIJKL!"
 
 
-def test_cli_reads_name_from_text_file(tmp_path):
+@pytest.mark.parametrize("cache_enabled", [True, False])
+def test_cli_reads_name_from_text_file(tmp_path, cache_enabled):
     binary = compile_golden_source(tmp_path, "hello_user_name")
     input_file = tmp_path / "input.txt"
     input_file.write_text("Alice\n", encoding="utf-8")
     machine_script = Path(__file__).resolve().parents[1] / "src" / "machine.py"
+    args = [sys.executable, str(machine_script), "-c", binary, "-i", str(input_file)]
+    if not cache_enabled:
+        args.append("--no-cache")
     # Запускаем свой CLI фиксированным интерпретатором и тестовыми файлами.
     result = subprocess.run(  # noqa: S603
-        [sys.executable, str(machine_script), "-c", binary, "-i", str(input_file)],
+        args,
         capture_output=True,
         check=True,
         text=True,

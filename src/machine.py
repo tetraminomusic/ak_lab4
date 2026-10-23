@@ -10,6 +10,7 @@ from datapath import DataPath
 from isa import WORD_SIZE
 
 DEFAULT_TICKS = 5000
+DEFAULT_TICKS_AFTER_INPUT = 20000
 TEXT_INPUT_START = 50
 TEXT_INPUT_PERIOD = 1500
 
@@ -178,7 +179,8 @@ def main() -> None:
         "-t",
         "--ticks",
         type=int,
-        help=f"Лимит тактов (по умолчанию {DEFAULT_TICKS} после последнего события)",
+        help=f"Лимит тактов (без ввода {DEFAULT_TICKS}, "
+        f"с вводом {DEFAULT_TICKS_AFTER_INPUT} после последнего события)",
     )
 
     parser.add_argument(
@@ -203,7 +205,11 @@ def main() -> None:
         schedule = load_input_schedule(Path(args.input)) if args.input else []
         max_ticks = args.ticks
         if max_ticks is None:
-            max_ticks = max((tick for tick, _ in schedule), default=0) + DEFAULT_TICKS
+            max_ticks = (
+                max(tick for tick, _ in schedule) + DEFAULT_TICKS_AFTER_INPUT
+                if schedule
+                else DEFAULT_TICKS
+            )
         run_simulation(
             args.code,
             schedule,
