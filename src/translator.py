@@ -529,11 +529,14 @@ def compile_node(node: Node) -> str | None:
             program = []
 
             old_reg = current_reg
+            old_locals = local_vars
             current_reg = 1
+            local_vars = {}
             intr_res = compile_expr(body_expr)
             if intr_res is not None:
                 free_reg()
             current_reg = old_reg
+            local_vars = old_locals
 
             body = program
             program = outer_program

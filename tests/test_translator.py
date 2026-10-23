@@ -247,6 +247,14 @@ def test_vector_table_fallback_iret():
     assert clean_code[1].opcode == Opcode.IRET  # Вектор 1: безопасная заглушка IRET
 
 
+def test_interrupt_handler_cannot_capture_function_argument():
+    code = "(defun f (arg) (progn (definterrupt handler () (print arg)) 0))"
+    ast = parse(tokenize(code))
+    translator.collect_function_signatures(ast)
+    with pytest.raises(NameError, match="необъявленной переменной: 'arg'"):
+        translator.compile_expr(ast)
+
+
 def test_print_builtin():
     """Команда (print expr) должна выводить значение в порт 1 и возвращать его."""
     code = "(print 65)"
