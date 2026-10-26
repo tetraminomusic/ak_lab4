@@ -93,6 +93,7 @@ def test_cache_eviction():
 
 def test_fetch_and_load_commit_when_memory_is_ready():
     dp = DataPath()
+    dp.flag_z = 1
     cu = ControlUnit(dp)
     word = Instruction(Opcode.LD, ["R1", "R0", 128]).encode()
     dp.memory[0] = word
@@ -113,6 +114,7 @@ def test_fetch_and_load_commit_when_memory_is_ready():
     cu.tick()
     assert dp.read_reg("R1") == 123
     assert dp.pc == 4
+    assert dp.flag_z == 1
     assert cu.instruction_counter == 1
 
 

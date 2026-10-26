@@ -159,6 +159,19 @@ class DataPath:
 
         self.registers[idx] = value & 0xFFFF_FFFF
 
+    def effective_address(self, base_reg: str, offset: int) -> int:
+        # Сложение для шины адреса проходит при отключённой записи NZVC.
+        return self.read_reg(base_reg) + offset
+
+    def signal_port_in(self, destination: str) -> None:
+        self.write_reg(destination, self.in_reg)
+        self.dev_signal = 0
+
+    def signal_port_out(self, source: str) -> int:
+        self.out_reg = self.read_reg(source)
+        self.port_1_out.append(self.out_reg)
+        return self.out_reg
+
     # АЛУ
 
     def execute_alu(self, op: Opcode, src1: int, src2: int = 0) -> int:

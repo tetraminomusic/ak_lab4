@@ -209,12 +209,12 @@ class ControlUnit:
             self.finish_instruction()
 
         elif op == Opcode.LD:
-            self.mem_addr = self.dp.read_reg(rs1) + self.imm
+            self.mem_addr = self.dp.effective_address(rs1, self.imm)
             self.mem_op = "read"
             self.step = T3_MEMORY
 
         elif op == Opcode.ST:
-            self.mem_addr = self.dp.read_reg(rs1) + self.imm
+            self.mem_addr = self.dp.effective_address(rs1, self.imm)
             self.mem_value = self.dp.read_reg(rd)
             self.mem_op = "write"
             self.step = T3_MEMORY
@@ -286,10 +286,7 @@ class ControlUnit:
             if self.imm != OUTPUT_PORT:
                 self.halt_with_error(f"Недопустимый порт OUT: {self.imm}")
                 return
-            self.dp.out_reg = self.dp.read_reg(rd)
-            self.dp.port_1_out.append(self.dp.out_reg)
-
-            value = self.dp.out_reg
+            value = self.dp.signal_port_out(rd)
             shown = chr(value) if 32 <= value <= 126 else f"\\x{value:02x}"
             logging.info(
                 "[ТАКТ %d] Процессор вывел в порт 1 символ '%s' (код %d)",
@@ -303,9 +300,7 @@ class ControlUnit:
             if self.imm != INPUT_PORT:
                 self.halt_with_error(f"Недопустимый порт IN: {self.imm}")
                 return
-            self.dp.write_reg(rd, self.dp.in_reg)
-
-            self.dp.dev_signal = 0
+            self.dp.signal_port_in(rd)
             self.finish_instruction()
 
         elif op == Opcode.EI:
