@@ -55,9 +55,9 @@ class DataPath:
         self.dev_signal = 0
 
         self.flag_p = 1  # Процессор работает
-        self.flag_ie = 0  # Прерывания по дефолту разрешены
+        self.flag_ie = 0  # Прерывания запрещены до команды EI
 
-    # Регистр состояния со слайда лекции (NZCV, EI, P)
+    # Регистр состояния со слайда лекции (NZVC, IE, P)
 
     @property  # C
     def flag_c(self) -> int:

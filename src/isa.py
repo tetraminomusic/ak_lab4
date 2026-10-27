@@ -56,7 +56,7 @@ class Opcode(IntEnum):
     OUT = 0x1C  # 0001 1100 - OUT port_num, R1
     EI = 0x1D  # 0001 1101 - Enable Interrupts (разрешить прерывания: IE = 1)
     DI = 0x1E  # 0001 1110 - Disable Interrupts (запретить прерывания: IE = 0)
-    IRET = 0x1F  # 0001 1111 - Возврат из прерывания: Stack -> PC, Stack -> PS
+    IRET = 0x1F  # 0001 1111 - Возврат из прерывания: чтение PS, затем PC из стека
 
     # Прочее
 
