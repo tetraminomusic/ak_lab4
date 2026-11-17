@@ -277,13 +277,13 @@ python3 src/machine.py -c <code.bin> [-i <input.txt>] [-t <max_ticks>] [--no-cac
 | `PC` | Счётчик команд, увеличивается выделенным сумматором `+1` |
 | `SP` | Указатель стека, меняется сумматорами `+1` и `-1` |
 | `IR` | Регистр команды, с него декодер снимает поля `Rd`, `Rs1`, `Rs2`, `imm` |
-| `SR` (`PS`) | Регистр состояния `NZVC`, `IE`, `P` |
+| `SR` (`PS`) | Регистр состояния `NZVC`, `IE` |
 | `ALU` | Арифметика, логика и сдвиги, выставляет флаги |
 | `Cache` | Кеш между процессором и ОЗУ, через него идут и команды, и данные |
 | `RAM` | Единая память на 4096 слов |
 | `In_Reg` / `Out_Reg` | Регистры данных портов 0 и 1 |
 
-Управляющие сигналы: `latch_pc`, `sel_pc`, `addr_sel`, `mem_read`, `mem_write`, `mem_data_sel`, `latch_ir`, `reg_write`, `reg_data_sel`, `alu_op`, `alu_src_sel`, `sp_sel`, `sr_sel`, `sr_write`, `ctrl_ei`, `port_out_write`, `set_p_halt`. Обратно в ControlUnit идут `Opcode`, `SR` и `dev_signal`, а от кеша — `hit/wait`.
+Управляющие сигналы: `latch_pc`, `sel_pc`, `addr_sel`, `mem_read`, `mem_write`, `mem_data_sel`, `latch_ir`, `reg_write`, `reg_data_sel`, `alu_op`, `alu_src_sel`, `sp_sel`, `sr_sel`, `sr_write`, `ctrl_ei`, `port_out_write`. Обратно в ControlUnit идут `Opcode`, `SR` и `dev_signal`, а от кеша — `hit/wait`.
 
 ### ControlUnit
 
@@ -316,9 +316,8 @@ python3 src/machine.py -c <code.bin> [-i <input.txt>] [-t <max_ticks>] [--no-cac
 | 2 | `Z` | Результат равен нулю |
 | 3 | `N` | Результат отрицателен |
 | 5 | `IE` | Прерывания разрешены |
-| 8 | `P` | Процессор работает |
 
-Биты 4, 6 и 7 не используются и оставлены свободными.
+Биты 4 и 6–8 не используются и оставлены свободными.
 
 ### Кеш-память
 

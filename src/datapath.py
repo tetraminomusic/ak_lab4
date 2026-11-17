@@ -54,10 +54,9 @@ class DataPath:
         # Сигнал о запросе прерывания от ВУ
         self.dev_signal = 0
 
-        self.flag_p = 1  # Процессор работает
         self.flag_ie = 0  # Прерывания запрещены до команды EI
 
-    # Регистр состояния со слайда лекции (NZVC, IE, P)
+    # Регистр состояния со слайда лекции (NZVC, IE)
 
     @property  # C
     def flag_c(self) -> int:
@@ -119,17 +118,6 @@ class DataPath:
     @property  # IRQ
     def irq(self) -> int:
         return 1 if (self.dev_signal and self.flag_ie) else 0
-
-    @property  # P (Работа/Останов)
-    def flag_p(self) -> int:
-        return (self.status_register >> 8) & 1
-
-    @flag_p.setter
-    def flag_p(self, val: int) -> None:
-        if val:
-            self.status_register |= 1 << 8
-        else:
-            self.status_register &= ~(1 << 8)
 
     # Регистровые файлы (строго R0..R15)
 

@@ -179,6 +179,27 @@ def test_invalid_machine_operands_stop_execution(caplog, opcode, args, message):
     assert message in caplog.text
 
 
+def test_hlt_stops_without_changing_processor_status():
+    dp = DataPath()
+    dp.flag_z = 1
+    dp.flag_ie = 1
+    status_before = dp.status_register
+    assert status_before & (1 << 8) == 0
+    dp.memory[0] = Instruction(Opcode.HLT).encode()
+
+    cu = ControlUnit(dp)
+    for _ in range(20):
+        cu.tick()
+        if cu.is_halted:
+            break
+
+    assert cu.is_halted
+    assert dp.status_register == status_before
+    tick_after_halt = cu.current_tick
+    cu.tick()
+    assert cu.current_tick == tick_after_halt
+
+
 def test_instruction_log_decodes_third_register():
     word = Instruction(Opcode.ADD, ["R1", "R2", "R3"]).encode()
     assert str(Instruction.decode(word)) == "ADD R1, R2, R3"

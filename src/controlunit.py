@@ -102,8 +102,7 @@ class ControlUnit:
             )
 
     def tick(self) -> None:  # Один такт тактового генератора
-        if self.is_halted or not self.dp.flag_p:
-            self.is_halted = True
+        if self.is_halted:
             return
 
         self.current_tick += 1
@@ -181,7 +180,6 @@ class ControlUnit:
 
         if op_val in (0, Opcode.HLT):
             self.is_halted = True
-            self.dp.flag_p = 0
             return
 
         try:
@@ -336,7 +334,6 @@ class ControlUnit:
         logging.error("[ТАКТ %d] %s", self.current_tick, message)
         self.fault = message
         self.is_halted = True
-        self.dp.flag_p = 0
 
     def check_stack_bottom(self, words: int = 1) -> bool:
         if self.dp.sp + words * WORD_SIZE < len(self.dp.memory) * WORD_SIZE:
