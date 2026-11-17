@@ -6,35 +6,49 @@ from pathlib import Path
 from isa import INPUT_PORT, OUTPUT_PORT, WORD_SIZE, Instruction, Opcode
 from parser import Node, StringLiteral, parse, tokenize
 
-current_reg = 1 # Номер регистра, который мы возьмём следующим
-label_counter = 0   # Счётчик для создания уникальных переменных
-LAST_COMPILER_REG = 10  # Последний регистр, который выделяет транслятор
+# Номер следующего свободного регистра при генерации команд.
+current_reg = 1
+# Счётчик для создания уникальных меток.
+label_counter = 0
+# Последний регистр, который выделяет транслятор.
+LAST_COMPILER_REG = 10
 
-DATA_SEGMENT_START = 4000   # Адрес начала сегмента данных
-STACK_LIMIT = 12400 # Граница между данными и областью стека
+# Байтовый адрес начала сегмента данных.
+DATA_SEGMENT_START = 4000
+# Граница между данными и областью стека.
+STACK_LIMIT = 12400
 
-data_address_counter = DATA_SEGMENT_START   # Следующий сводобный байтовый адрес для размещения данных
+# Следующий свободный байтовый адрес для размещения данных.
+data_address_counter = DATA_SEGMENT_START
 
-interrupt_handler: str | None = None    # Метка обработчика прерываний или None, если не объявляли
+# Метка обработчика прерываний или None, если он не объявлен.
+interrupt_handler: str | None = None
 
-symbol_table: dict[str, int] = {}  # Таблица глобальных переменных
-data_memory: dict[int, int] = {}  # Память данных
-functions: dict[str, int] = {}  # Функции и количество их аргументов
+# Имя глобальной переменной -> её адрес.
+symbol_table: dict[str, int] = {}
+# Байтовый адрес -> начальное значение слова данных.
+data_memory: dict[int, int] = {}
+# Имя функции -> количество её аргументов.
+functions: dict[str, int] = {}
 
-local_vars: dict[str, str] = {} # Имя параметра текущей функции и закрелённый за ним регистр
+# Имя параметра текущей функции -> закреплённый за ним регистр.
+local_vars: dict[str, str] = {}
 
-program: list[Instruction | str] = []   # Сгенерированные команды
+# Сгенерированные команды и символические метки до компоновки.
+program: list[Instruction | str] = []
 
-INVERSE_JUMPS = {   # Переходы, которые срабатывают при ложном сравнении в условии
+# Переходы, которые срабатывают при ложном сравнении в условии.
+INVERSE_JUMPS = {
     "=": Opcode.JNZ,
     "!=": Opcode.JZ,
     "<": Opcode.JGE,
     ">=": Opcode.JL,
 }
 
-COMPARE_OPS = {"=", "!=", "<", "<=", ">", ">="} # Допустимые операции сравнения
+# Допустимые операции сравнения.
+COMPARE_OPS = {"=", "!=", "<", "<=", ">", ">="}
 
-BINARY_OPS = {  
+BINARY_OPS = {
     "+",
     "-",
     "*",
