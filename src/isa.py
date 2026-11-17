@@ -4,6 +4,8 @@ WORD_SIZE = 4  # Размер машинного слова в байтах
 INPUT_PORT = 0
 OUTPUT_PORT = 1
 
+# Список команд + числовые коды
+
 
 class Opcode(IntEnum):
     # Работа с памятью + регистры
@@ -77,6 +79,8 @@ ALU_BINARY_OPS = (
 )
 BRANCH_OPS = (Opcode.JMP, Opcode.JZ, Opcode.JNZ, Opcode.JL, Opcode.JGE)
 
+# Представление одной команды
+
 
 class Instruction:
     def __init__(self, opcode: Opcode, args: list[str | int] | None = None) -> None:
@@ -87,6 +91,8 @@ class Instruction:
     def __repr__(self) -> str:
         args_str = ", ".join(map(str, self.args))
         return f"{self.opcode.name} {args_str}".strip()
+
+    # Восстановление команды из числа
 
     @classmethod
     def decode(cls, word: int) -> "Instruction":
@@ -114,6 +120,8 @@ class Instruction:
         else:
             args = []
         return cls(op, args)
+
+    # Превращение в 32-битное представление для бинарника
 
     def encode(self) -> int:
         op_code_num = int(self.opcode) & 0xFF

@@ -39,8 +39,7 @@ class Cache:
         self.misses = 0
         self.last_status = "NONE"
 
-    # Заполнение строки - это одно обращение к памяти, оно стоит 10 тактов
-    # независимо от того, сколько слов в блоке
+    # Заполнение строки - это одно обращение к памяти, оно стоит 10 тактов, независимо от того, сколько слов в блоке
 
     def fill_cost(self) -> int:
         return 10
@@ -52,18 +51,21 @@ class Cache:
         return block, offset_bytes // WORD_SIZE
 
     def access_latency(self, addr: int, *, write: bool) -> int:
-        """Выставить состояние шины и узнать задержку без чтения или записи."""
         if not self.enabled:
             self.last_status = "OFF (10) "
             return 10
+
         if write:
             self.last_status = "WRITE(10)"
             return 10
+
         block, _ = self.split_address(addr)
         line = self.lines[block % self.num_lines]
+
         if line.valid and line.tag == block:
             self.last_status = "HIT (1)"
             return 1
+
         ticks = self.fill_cost()
         self.last_status = f"MISS({ticks})"
         return ticks
@@ -100,7 +102,7 @@ class Cache:
 
         return line.data[offset], wait_ticks
 
-    # сквозная запись. Возвращает затраченное время на запись
+    # Сквозная запись. Возвращает затраченное время на запись
 
     def write(self, addr: int, val: int) -> int:
         if not self.enabled:

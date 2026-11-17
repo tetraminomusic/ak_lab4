@@ -30,7 +30,9 @@ def trim_journal(messages: list) -> str:
 
     keep = set(range(JOURNAL_HEAD))
     keep.update(range(len(lines) - JOURNAL_TAIL, len(lines)))
-    keep.update(i for i, line in enumerate(lines) if line.startswith("[ТАКТ"))
+    keep.update(
+        i for i, line in enumerate(lines) if line.casefold().startswith("[такт")
+    )
 
     journal = []
     previous = -1
@@ -44,10 +46,16 @@ def trim_journal(messages: list) -> str:
     return "\n".join(journal)
 
 
+def test_trim_journal_keeps_lowercase_tick_events():
+    messages = ["строка"] * 40 + ["[такт 7] событие"] + ["строка"] * 40
+    assert "[такт 7] событие" in trim_journal(messages)
+
+
 @pytest.mark.golden_test("golden/*.yml")
 def test_golden(golden, tmp_path, caplog):
 
-    # Интеграционный Golden-тест с автообновлением эталонов.
+    # Golden-тест
+
     lisp_code = golden["in_source"]
     schedule = [(int(tick), char) for tick, char in golden.get("in_schedule", [])]
     max_ticks = golden.get("in_ticks", 5000)
@@ -58,22 +66,26 @@ def test_golden(golden, tmp_path, caplog):
     source_file.write_text(lisp_code, encoding="utf-8")
 
     # Компиляция
+
     translator.compile_file(str(source_file), str(bin_file), str(listing_file))
     listing_content = listing_file.read_text(encoding="utf-8").strip()
     sources = load_sources(str(listing_file))
 
-    # Проверяем сам бинарник: листинг соответствует секции кода, а .data
-    # берём из образа памяти, который действительно получит симулятор.
+    # Проверяем сам бинарник: листинг соответствует секции кода, а .data берём из образа памяти, который получит симулятор.
+
     image = bin_file.read_bytes()
     code_words = [
         int(line.split(" - ", 2)[1], 16) for line in listing_content.splitlines()
     ]
+
     code_end = len(code_words) * 4
     data_start = translator.DATA_SEGMENT_START
     data_end = translator.data_address_counter
+
     assert [
         word for (word,) in struct.iter_unpack(">I", image[:code_end])
     ] == code_words
+
     assert not any(image[code_end:data_start])
     assert not any(image[data_end:])
     data_dump = "\n".join(
@@ -84,6 +96,7 @@ def test_golden(golden, tmp_path, caplog):
     )
 
     # Симуляция
+
     with caplog.at_level(logging.DEBUG):
         output, _ = run_simulation(
             str(bin_file),
@@ -93,6 +106,7 @@ def test_golden(golden, tmp_path, caplog):
         )
 
     # Сверка с эталоном
+
     assert listing_content == golden.out["out_code_hex"]
     assert data_dump == golden.out["out_data_hex"]
     assert output == golden.out["out_stdout"]
@@ -103,6 +117,7 @@ def compile_golden_source(tmp_path, name):
     case = Path(__file__).with_name("golden") / f"{name}.yml"
     source = tmp_path / f"{name}.lisp"
     binary = tmp_path / f"{name}.bin"
+
     source.write_text(
         yaml.safe_load(case.read_text(encoding="utf-8"))["in_source"], encoding="utf-8"
     )
@@ -123,9 +138,11 @@ def compile_golden_source(tmp_path, name):
     ],
 )
 def test_rpn_tokenization_and_validation(tmp_path, expression, expected):
+
     binary = compile_golden_source(tmp_path, "infix_to_rpn")
     schedule = [(200 + 700 * i, ch) for i, ch in enumerate(expression + "\n")]
     output, _ = run_simulation(binary, schedule, max_ticks=120000)
+
     assert output == expected
 
 
@@ -144,6 +161,7 @@ def test_collatz_input_and_wide_intermediates(tmp_path, number, expected):
     binary = compile_golden_source(tmp_path, "collatz")
     schedule = [(200 + 1500 * i, ch) for i, ch in enumerate(number + "\n")]
     output, _ = run_simulation(binary, schedule, max_ticks=600000)
+
     assert output == expected
 
 
@@ -159,6 +177,7 @@ def test_sort_count_and_signed_values(tmp_path, tokens, expected):
     binary = compile_golden_source(tmp_path, "sort")
     schedule = [(200 + 1500 * i, token) for i, token in enumerate(tokens)]
     output, ticks = run_simulation(binary, schedule, max_ticks=100000)
+
     assert output == expected
     assert ticks < 100000
 
@@ -167,6 +186,7 @@ def test_name_cannot_write_past_buffer(tmp_path):
     binary = compile_golden_source(tmp_path, "hello_user_name")
     schedule = [(200 + 1500 * i, token) for i, token in enumerate("ABCDEFGHIJKLMN\n")]
     output, _ = run_simulation(binary, schedule, max_ticks=100000)
+
     assert output == "What is your name?\nHello, ABCDEFGHIJKL!"
 
 
@@ -174,18 +194,23 @@ def test_name_cannot_write_past_buffer(tmp_path):
 def test_cli_reads_name_from_text_file(tmp_path, cache_enabled):
     binary = compile_golden_source(tmp_path, "hello_user_name")
     input_file = tmp_path / "input.txt"
+
     input_file.write_text("Alice\n", encoding="utf-8")
     machine_script = Path(__file__).resolve().parents[1] / "src" / "machine.py"
     args = [sys.executable, str(machine_script), "-c", binary, "-i", str(input_file)]
+
     if not cache_enabled:
         args.append("--no-cache")
-    # Запускаем свой CLI фиксированным интерпретатором и тестовыми файлами.
+
+    # Запускаем свой CLI
+
     result = subprocess.run(  # noqa: S603
         args,
         capture_output=True,
         check=True,
         text=True,
     )
+
     assert "Hello, Alice!" in result.stdout
     assert "затёрло" not in result.stderr
 

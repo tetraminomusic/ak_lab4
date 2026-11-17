@@ -38,25 +38,30 @@ class DataPath:
 
         self.memory = [0] * memory_size  # RAM
 
-        # Чистый регистровый файл: строго R0..R15! R0 заземлен на 0
-        self.registers = [0] * 16  # REG (R0 - R15)
+        # Чистый регистровый файл
 
-        # Служебные регистры вынесены ОТДЕЛЬНО (как просил лектор!)
-        self.pc = 0  # Счётчик команд (PC)
-        self.sp = (memory_size - 1) * WORD_SIZE  # Вершина стека (SP, 16380)
-        self.cr = 0  # Регистр команд (CR / IR)
-        self.status_register = 0  # Регистр состояния процессора (PS)
+        self.registers = [0] * 16  # REG
+
+        # Служебные регистры
+
+        self.pc = 0  # Счётчик команд
+        self.sp = (memory_size - 1) * WORD_SIZE  # Вершина стека
+        self.cr = 0  # Регистр команд
+        self.status_register = 0  # Регистр состояния процессора
+
+        # Ввод-вывод
 
         self.in_reg = 0
         self.out_reg = 0
         self.port_1_out: list[int] = []  # Буфер вывода на экран
 
         # Сигнал о запросе прерывания от ВУ
+
         self.dev_signal = 0
 
         self.flag_ie = 0  # Прерывания запрещены до команды EI
 
-    # Регистр состояния со слайда лекции (NZVC, IE)
+    # Регистр состояния
 
     @property  # C
     def flag_c(self) -> int:
@@ -119,7 +124,7 @@ class DataPath:
     def irq(self) -> int:
         return 1 if (self.dev_signal and self.flag_ie) else 0
 
-    # Регистровые файлы (строго R0..R15)
+    # Регистровые файлы
 
     def get_reg_idx(
         self,
@@ -209,8 +214,10 @@ class DataPath:
 
         if op in (Opcode.ADD, Opcode.INC):  # V
             self.flag_v = 1 if (~(src1 ^ src2) & (src1 ^ res) & 0x80000000) != 0 else 0
+
         elif op in (Opcode.SUB, Opcode.CMP, Opcode.DEC):
             self.flag_v = 1 if ((src1 ^ src2) & (src1 ^ res) & 0x80000000) != 0 else 0
+
         else:
             self.flag_v = 0
 

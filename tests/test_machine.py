@@ -6,6 +6,7 @@ import sys
 import pytest
 
 # Добавляем путь к папке src
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
 import translator
@@ -13,9 +14,10 @@ from cache import Cache
 from isa import Instruction, Opcode
 from machine import ControlUnit, DataPath, load_input_schedule, run_simulation
 
+# Задержки: промах = 10 тактов на блок из 4 слов, а попадание 1 такт
+
 
 def test_cache_hit_and_miss_latencies():
-    """Задержки: промах = 10 тактов на блок из 4 слов, попадание = 1 такт."""
     memory = [0] * 4096
     memory[25] = 42  # слово по байтовому адресу 100
     cache = Cache(memory, num_lines=8, block_size=4)
@@ -33,16 +35,17 @@ def test_cache_hit_and_miss_latencies():
     assert cache.hits == 1
 
 
+# Промах тянет весь блок, поэтому соседние адреса читаются уже из кеша.
+
+
 def test_cache_block_gives_spatial_locality():
-    """Промах тянет весь блок, поэтому соседние адреса читаются уже из кеша."""
     memory = [0] * 4096
     for addr in (96, 100, 104, 108):
         memory[addr // 4] = addr
 
     cache = Cache(memory, num_lines=8, block_size=4)
 
-    # Байтовые адреса 96..111 лежат в одном блоке из 16 байт:
-    # платим только за первое обращение
+    # Байтовые адреса лежат в одном блоке из 16 байт, мы платим только за первое обращение
     _, ticks = cache.read(96)
     assert ticks == 10
 
@@ -55,12 +58,15 @@ def test_cache_block_gives_spatial_locality():
     assert cache.hits == 3
 
     # Адрес 112 уже в следующем блоке, за него платим снова
+
     _, ticks = cache.read(112)
     assert ticks == 10
 
 
+# Сквозная запись: пишет и в память, и обновляет строку кэша.
+
+
 def test_cache_write_through():
-    """Сквозная запись: пишет и в память, и обновляет строку кэша."""
     memory = [0] * 4096
     cache = Cache(memory, num_lines=8, block_size=4)
 
@@ -74,19 +80,21 @@ def test_cache_write_through():
     assert read_ticks == 1
 
 
+# Вытеснение кэша, то есть у нас 8 строк, 9 блок должен перезаписать 1
+
+
 def test_cache_eviction():
-    """Вытеснение кэша (Eviction): 8 строк, 9-й блок должен перезаписать 1-й."""
     memory = [0] * 4096
     cache = Cache(memory, num_lines=8, block_size=4)
 
-    # Заполняем все 8 строк кэша блоками 0..7 (адреса 0, 16, 32, ... 112)
+    # Заполняем все 8 строк кэша блоками 0..7
     for block in range(8):
         cache.read(block * 16)
 
-    # Блок 8 ложится в строку 8 % 8 = 0 и вытесняет блок 0
+    # Блок 8 ложится в строку и вытесняет блок 0
     cache.read(128)
 
-    # Снова читаем адрес 0 — должен быть промах, строка была вытеснена
+    # Снова читаем адрес 0. Должен быть промах, строка была вытеснена
     _, ticks = cache.read(0)
     assert ticks == 10
 
@@ -94,24 +102,32 @@ def test_cache_eviction():
 def test_fetch_and_load_commit_when_memory_is_ready():
     dp = DataPath()
     dp.flag_z = 1
+
     cu = ControlUnit(dp)
+
     word = Instruction(Opcode.LD, ["R1", "R0", 128]).encode()
     dp.memory[0] = word
     dp.memory[32] = 123
 
     for _ in range(9):
         cu.tick()
+
     assert dp.cr == 0
     assert not cu.cache.lines[0].valid
+
     cu.tick()
+
     assert dp.cr == word
     assert cu.cache.lines[0].valid
 
     for _ in range(11):
         cu.tick()
+
     assert dp.read_reg("R1") == 0
     assert dp.pc == 0
+
     cu.tick()
+
     assert dp.read_reg("R1") == 123
     assert dp.pc == 4
     assert dp.flag_z == 1
@@ -127,22 +143,28 @@ def test_interrupt_during_store_wait_uses_next_instruction_boundary():
 
     for _ in range(21):
         cu.tick()
+
     assert dp.memory[32] == 0
     assert dp.pc == 0
+
     cu.tick()
+
     assert dp.memory[32] == 65
     assert dp.pc == 4
 
     cu.tick()
+
     assert cu.int_active
     assert not dp.flag_ie
     assert dp.memory[-1] == 0
     for _ in range(9):
         cu.tick()
+
     assert dp.memory[-1] == 4
     assert dp.memory[-2] == 0
     for _ in range(10):
         cu.tick()
+
     assert dp.memory[-2] & (1 << 5)
     assert dp.sp == 16372
     assert cu.instruction_counter == 1
@@ -208,6 +230,7 @@ def test_instruction_log_decodes_third_register():
 def test_text_input_preserves_line_ending(tmp_path):
     path = tmp_path / "input.txt"
     path.write_text(" []\n", encoding="utf-8")
+
     assert load_input_schedule(path) == [
         (50, " "),
         (1550, "["),
@@ -258,49 +281,56 @@ def test_machine_fault_is_reported_to_cli(tmp_path, monkeypatch, capsys, word, e
     assert error in capsys.readouterr().err
 
 
+# Проверка выставления флагов NZCV
+
+
 def test_alu_flags_nzcv():
-    """Проверка выставления флагов NZCV."""
     dp = DataPath()
 
-    # Флаг Z (Zero)
+    # Флаг Z
     dp.execute_alu(Opcode.SUB, 10, 10)
     assert dp.flag_z == 1
     assert dp.flag_n == 0
 
-    # Флаг N (Negative)
+    # Флаг N
     dp.execute_alu(Opcode.SUB, 5, 10)
     assert dp.flag_n == 1
     assert dp.flag_z == 0
 
-    # Флаг C (Carry)
+    # Флаг C
     dp.execute_alu(Opcode.ADD, 0xFFFFFFFF, 1)
     assert dp.flag_c == 1
 
-    # Флаг V (Overflow)
+    # Флаг V
     dp.execute_alu(Opcode.ADD, 0x7FFFFFFF, 1)
     assert dp.flag_v == 1
 
 
+# Защита от деления на ноль в АЛУ
+
+
 def test_alu_division_by_zero():
-    """Защита от деления на ноль в АЛУ."""
     dp = DataPath()
     res = dp.execute_alu(Opcode.DIV, 100, 0)
     assert res == 0
 
 
+# Регистр R0 невозможно перезаписать
+
+
 def test_r0_hardwired_zero():
-    """Регистр R0 невозможно перезаписать (всегда 0)."""
     dp = DataPath()
     dp.write_reg("R0", 999)
     assert dp.read_reg("R0") == 0
 
 
+# Тест выполнения арифметических инструкций процессором
+
+
 def test_arithmetic_execution(tmp_path):
-    """Тест выполнения арифметических инструкций процессором."""
     source_file = tmp_path / "math.lisp"
     bin_file = tmp_path / "math.bin"
 
-    # 65 + 5 - 4 = 66 (буква 'B')
     source_file.write_text(
         """
     (progn
@@ -316,12 +346,13 @@ def test_arithmetic_execution(tmp_path):
     assert output == "B"
 
 
+# Тест рекурсии с аккумулятором (Tail Recursion) через аппаратный стек.
+
+
 def test_functions_and_recursion_execution(tmp_path):
-    """Тест рекурсии с аккумулятором (Tail Recursion) через аппаратный стек."""
     source_file = tmp_path / "fact.lisp"
     bin_file = tmp_path / "fact.bin"
 
-    # Считаем сумму чисел 3 + 2 + 1 = 6. Начинаем с 60: итог 66 ('B')
     source_file.write_text(
         """
     (progn
@@ -342,8 +373,10 @@ def test_functions_and_recursion_execution(tmp_path):
     assert output == "B"
 
 
+# Тест чтения строки через команду aref
+
+
 def test_pascal_string_traversal_with_aref(tmp_path):
-    """Тест чтения Pascal-строки через команду aref."""
     source_file = tmp_path / "str.lisp"
     bin_file = tmp_path / "str.bin"
 
@@ -363,8 +396,10 @@ def test_pascal_string_traversal_with_aref(tmp_path):
     assert output == "OK"
 
 
+# Стек должен расти вниз и выдерживать глубокую рекурсию.
+
+
 def test_deep_recursion_stack_growth(tmp_path):
-    """Стек должен расти вниз и выдерживать глубокую рекурсию."""
     source_file = tmp_path / "deep.lisp"
     bin_file = tmp_path / "deep.bin"
 
@@ -386,8 +421,10 @@ def test_deep_recursion_stack_growth(tmp_path):
     assert output == "A"
 
 
+# Если буфер порта 0 пуст, чтение возвращает 0
+
+
 def test_input_buffer_empty():
-    """Если буфер порта 0 пуст, чтение возвращает 0."""
     dp = DataPath()
     cu = ControlUnit(dp)
 
@@ -414,12 +451,15 @@ def test_interrupt_preserves_registers_across_function_call(tmp_path):
         """,
         encoding="utf-8",
     )
+
     translator.compile_file(str(source_file), str(bin_file))
     dp = DataPath()
+
     dp.memory[:] = [word for (word,) in struct.iter_unpack(">I", bin_file.read_bytes())]
     cu = ControlUnit(dp, schedule=[(220, "X")])
     for _ in range(219):
         cu.tick()
+
     dp.write_reg("R2", 65)
     before = dp.registers.copy()
     entered = False
@@ -427,6 +467,7 @@ def test_interrupt_preserves_registers_across_function_call(tmp_path):
         cu.tick()
         if entered and not cu.int_active:
             break
+
         entered |= cu.int_active
 
     assert entered
@@ -457,8 +498,10 @@ def test_lisp_evaluation_semantics(tmp_path, source_text, expected):
     assert output == expected
 
 
+# Остановка симулятора по превышению лимита тактов
+
+
 def test_timeout_execution(tmp_path):
-    """Остановка симулятора по превышению лимита тактов (бесконечный цикл)."""
     source_file = tmp_path / "inf.lisp"
     bin_file = tmp_path / "inf.bin"
 
@@ -477,8 +520,10 @@ def test_timeout_execution(tmp_path):
     assert ticks == 150
 
 
+# Хвостовая рекурсия на 2000 витков не должна переполнять стек
+
+
 def test_tail_recursion_does_not_grow_stack(tmp_path):
-    """Хвостовая рекурсия на 2000 витков не должна переполнять стек."""
     source_file = tmp_path / "tail.lisp"
     bin_file = tmp_path / "tail.bin"
 
@@ -500,8 +545,10 @@ def test_tail_recursion_does_not_grow_stack(tmp_path):
     assert output == "A"
 
 
+# С выключенным кешем любое обращение в память стоит 10 тактов
+
+
 def test_cache_can_be_disabled():
-    """С выключенным кешем любое обращение в память стоит 10 тактов."""
     memory = [0] * 4096
     memory[25] = 42  # слово по байтовому адресу 100
     cache = Cache(memory, num_lines=8, enabled=False)

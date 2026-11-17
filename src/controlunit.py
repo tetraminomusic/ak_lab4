@@ -84,7 +84,7 @@ class ControlUnit:
 
             if self.dp.dev_signal:
                 logging.warning(
-                    "[ТАКТ %d] ВУ затёрло непрочитанный байт в порту 0!",
+                    "[такт %d] ВУ затёрло непрочитанный байт в порту 0!",
                     self.current_tick,
                 )
 
@@ -94,8 +94,9 @@ class ControlUnit:
             char_repr = (
                 chr(ascii_code) if 32 <= ascii_code <= 126 else f"\\x{ascii_code:02x}"
             )
+
             logging.info(
-                "[ТАКТ %d] ВУ прислало символ '%s' (ASCII %d), провод IntRq = 1!",
+                "[такт %d] ВУ прислало символ '%s' (ASCII %d), провод IntRq = 1!",
                 self.current_tick,
                 char_repr,
                 ascii_code,
@@ -123,28 +124,35 @@ class ControlUnit:
 
         if self.step == T0_FETCH:
             self.instruction_fetch()
+
         elif self.step == T1_DECODE:
             self.instruction_decode()
+
         elif self.step == T2_EXECUTE:
             self.execute()
+
         elif self.step == T3_MEMORY:
             self.memory_access()
+
         elif self.step == T4_INTERRUPT:
             self.interrupt_fetch()
+
         elif self.step == T4_SAVE_PS:
             self.start_memory_access(self.dp.sp, write=True, value=self.saved_ps)
+
         elif self.step == T3_RESTORE_PC:
             self.start_memory_access(self.dp.sp + 2 * WORD_SIZE)
 
     def __repr__(self) -> str:
-        """Возвращает строку с текущими значениями для табличного вывода."""
         nzcv = f"{self.dp.status_register & 0xF:04b}"
 
         word = self.dp.cr
         try:
             instr_str = str(Instruction.decode(word))
+
         except ValueError:
             instr_str = "DATA"
+
         hex_str = f"{word:08X}"
 
         registers = " ".join(f"{value:>5}" for value in self.dp.registers)
@@ -284,20 +292,24 @@ class ControlUnit:
             if self.imm != OUTPUT_PORT:
                 self.halt_with_error(f"Недопустимый порт OUT: {self.imm}")
                 return
+
             value = self.dp.signal_port_out(rd)
             shown = chr(value) if 32 <= value <= 126 else f"\\x{value:02x}"
+
             logging.info(
-                "[ТАКТ %d] Процессор вывел в порт 1 символ '%s' (код %d)",
+                "[такт %d] Процессор вывел в порт 1 символ '%s' (код %d)",
                 self.current_tick,
                 shown,
                 value,
             )
+
             self.finish_instruction()
 
         elif op == Opcode.IN:
             if self.imm != INPUT_PORT:
                 self.halt_with_error(f"Недопустимый порт IN: {self.imm}")
                 return
+
             self.dp.signal_port_in(rd)
             self.finish_instruction()
 
@@ -325,13 +337,15 @@ class ControlUnit:
         if not 0 <= addr < len(self.dp.memory) * WORD_SIZE:
             self.halt_with_error(f"Обращение по адресу {addr} за пределами памяти")
             return False
+
         if addr % WORD_SIZE:
             self.halt_with_error(f"Невыровненный адрес слова: {addr}")
             return False
+
         return True
 
     def halt_with_error(self, message: str) -> None:
-        logging.error("[ТАКТ %d] %s", self.current_tick, message)
+        logging.error("[такт %d] %s", self.current_tick, message)
         self.fault = message
         self.is_halted = True
 
@@ -345,20 +359,26 @@ class ControlUnit:
     def branch_taken(self, op: Opcode) -> bool:
         if op == Opcode.JMP:
             return True
+
         if op == Opcode.JZ:
             return self.dp.flag_z == 1
+
         if op == Opcode.JNZ:
             return self.dp.flag_z == 0
+
         if op == Opcode.JL:
             return self.dp.flag_n != self.dp.flag_v
+
         if op == Opcode.JGE:
             return self.dp.flag_n == self.dp.flag_v
+
         return False
 
     def memory_access(self) -> None:
         if self.op == Opcode.IRET:
             if self.check_stack_bottom(2):
                 self.start_memory_access(self.dp.sp + WORD_SIZE)
+
             return
         self.start_memory_access(
             self.mem_addr, write=self.mem_op == "write", value=self.mem_value
@@ -369,10 +389,12 @@ class ControlUnit:
     ) -> None:
         if not self.check_address(addr):
             return
+
         self.mem_addr = addr
         self.mem_value = value
         self.mem_op = "write" if write else "read"
         self.stall_ticks = self.cache.access_latency(addr, write=write) - 1
+
         if self.stall_ticks == 0:
             self.complete_memory_access()
 
@@ -384,17 +406,21 @@ class ControlUnit:
                 Opcode.CALL,
             ):
                 self.dp.sp -= WORD_SIZE
+
             if self.step == T4_INTERRUPT:
                 self.step = T4_SAVE_PS
+
             elif self.step == T4_SAVE_PS:
                 self.dp.pc = WORD_SIZE
                 self.step = T0_FETCH
                 logging.info(
-                    "[ТАКТ %d] PC и PS сохранены в стек, переход на вектор",
+                    "[такт %d] PC и PS сохранены в стек, переход на вектор",
                     self.current_tick,
                 )
+
             else:
                 self.finish_instruction()
+
         else:
             value, _ = self.cache.read(self.mem_addr)
             self.complete_memory_read(value)
@@ -405,40 +431,46 @@ class ControlUnit:
             self.current_addr = self.mem_addr
             self.next_pc = self.dp.pc + WORD_SIZE
             self.step = T1_DECODE
+
         elif self.step == T3_RESTORE_PC:
             self.dp.sp += 2 * WORD_SIZE
             self.dp.status_register = self.saved_ps
             self.next_pc = value
             self.int_active = False
-            logging.info("[ТАКТ %d] Выход из прерывания (IRET)", self.current_tick)
+            logging.info("[такт %d] Выход из прерывания с IRET", self.current_tick)
             self.finish_instruction()
+
         elif self.op == Opcode.IRET:
             self.saved_ps = value
             self.step = T3_RESTORE_PC
+
         else:
             if self.op in (Opcode.POP, Opcode.RET):
                 self.dp.sp += WORD_SIZE
+
             if self.op in (Opcode.LD, Opcode.POP):
                 self.dp.write_reg(f"R{self.rd_idx}", value)
+
             elif self.op == Opcode.RET:
                 self.next_pc = value
+
             self.finish_instruction()
 
     def finish_instruction(self) -> None:
         self.instruction_counter += 1
         self.dp.pc = self.next_pc
-
         self.step = T4_INTERRUPT if self.dp.irq and not self.int_active else T0_FETCH
 
     def interrupt_fetch(self) -> None:
         if not self.check_stack(2):
             return
+
         self.saved_ps = self.dp.status_register
         self.dp.flag_ie = 0
         self.int_active = True
 
         logging.info(
-            "[ТАКТ %d] Вход в прерывание: начинаем сохранять PC и PS",
+            "[такт %d] Вход в прерывание",
             self.current_tick,
         )
         self.start_memory_access(self.dp.sp, write=True, value=self.dp.pc)

@@ -25,24 +25,30 @@ def reset_translator():
     translator.interrupt_handler = None
 
 
+# Забытая закрывающая скобка
+
+
 def test_unclosed_parenthesis():
-    """Ошибка: забытая закрывающая скобка."""
     code = "(+ 1 (* 2 3)"
     with pytest.raises(SyntaxError, match="Ожидалась закрывающая скобка"):
         parse(tokenize(code))
 
 
+# Лишняя закрывающая скобка.
+
+
 def test_extra_closing_parenthesis():
-    """Ошибка: лишняя закрывающая скобка."""
     code = "(+ 1 2) )"
     tokens = tokenize(code)
     parse(tokens)  # спарсили (+ 1 2)
     with pytest.raises(SyntaxError, match="Неожиданная закрывающая скобка"):
-        parse(tokens)  # наткнулись на лишнюю ')'
+        parse(tokens)  # наткнулись на лишнюю )
+
+
+# Точка с запятой внутри строки в кавычках не должна считаться комментарием.
 
 
 def test_semicolon_inside_string():
-    """Точка с запятой внутри строки в кавычках НЕ должна считаться комментарием."""
     code = '(setq text "hello;world")'
     tokens = tokenize(code)
     ast = parse(tokens)
@@ -62,6 +68,7 @@ def test_unclosed_string():
 def test_compile_rejects_trailing_expression(tmp_path):
     source = tmp_path / "source.lisp"
     source.write_text("(print 65) (print 66)", encoding="utf-8")
+
     with pytest.raises(SyntaxError, match="лишние токены"):
         translator.compile_file(str(source), str(tmp_path / "out.bin"))
 
@@ -69,12 +76,14 @@ def test_compile_rejects_trailing_expression(tmp_path):
 def test_compile_rejects_ei_without_handler(tmp_path):
     source = tmp_path / "source.lisp"
     source.write_text("(ei)", encoding="utf-8")
+
     with pytest.raises(SyntaxError, match="нужен обработчик"):
         translator.compile_file(str(source), str(tmp_path / "out.bin"))
 
 
 @pytest.mark.parametrize("code", ["(in 1)", "(out 0 65)"])
 def test_ports_respect_direction(code):
+
     with pytest.raises(ValueError, match="только порт"):
         translator.compile_expr(parse(tokenize(code)))
 
@@ -98,8 +107,10 @@ def test_pascal_string_rejects_multibyte_characters():
         translator.allocate_pstr("ёж")
 
 
+# Пустая строка Pascal должна иметь длину 0
+
+
 def test_empty_string_literal():
-    """Пустая строка Pascal должна иметь длину 0."""
     code = '(setq empty "")'
     ast = parse(tokenize(code))
     translator.compile_expr(ast)
@@ -107,14 +118,19 @@ def test_empty_string_literal():
     assert translator.data_memory[104] == 0
 
 
+# Глубокая вложенность скобок
+
+
 def test_deeply_nested_expressions():
-    """Глубокая вложенность скобок (в пределах лимита регистров)."""
     code = "(+ 1 (+ 2 (+ 3 (+ 4 5))))"
     ast = parse(tokenize(code))
     res_reg = translator.compile_expr(ast)
     assert (
         res_reg == "R1"
-    )  # Благодаря освобождению регистров всё должно свернуться в R1
+    )  # Благодаря освобождению регистров всё должно свернуться в R1 пупупу
+
+
+# Девочки и мальчики, сладкие, как карамельки А на них большие башмаки, это бар-бар-бар-барики Лёгкие, как мотыльки, а в глазах горят фонарики А на них большие башмаки, это барбарики
 
 
 def test_if_with_variable_predicate():
@@ -129,7 +145,8 @@ def test_if_with_variable_predicate():
     translator.compile_expr(ast)
     clean_code = translator.link_program(translator.program)
 
-    # Проверяем, что сгенерировалась команда сравнения переменной с нулем R0: CMP reg, R0
+    # Проверяем, что сгенерировалась команда сравнения переменной с нулем R0
+
     cmp_with_zero = [
         instr
         for instr in clean_code
@@ -138,17 +155,20 @@ def test_if_with_variable_predicate():
     assert len(cmp_with_zero) == 1, "Ожидалось сравнение переменной p с нулем R0"
 
     # Проверяем, что для перехода в else используется команда JZ
+
     jz_jumps = [instr for instr in clean_code if instr.opcode == Opcode.JZ]
     assert len(jz_jumps) == 1, "Ожидался прыжок в else по команде JZ"
 
 
 def test_if_with_number_literal_predicate():
     code = "(if 1 100 200)"
+
     ast = parse(tokenize(code))
     _ = translator.compile_expr(ast)
     clean_code = translator.link_program(translator.program)
 
     # Условие-число должно сравниться с нулем и сгенерировать JZ
+
     assert Opcode.CMP in [instr.opcode for instr in clean_code]
     assert Opcode.JZ in [instr.opcode for instr in clean_code]
     assert clean_code[-1].opcode == Opcode.HLT
@@ -156,25 +176,29 @@ def test_if_with_number_literal_predicate():
 
 def test_variadic_addition():
     code = "(+ 1 2 3 4 5)"
+
     ast = parse(tokenize(code))
     res_reg = translator.compile_expr(ast)
     clean_code = translator.link_program(translator.program)
 
     # Должно сгенерироваться 4 инструкции ADD
+
     adds = [instr for instr in clean_code if instr.opcode == Opcode.ADD]
     assert len(adds) == 4
     assert res_reg == "R1"
 
 
 def test_binary_op_wrong_arity():
-    code = "(- 1 2 3)"  # Заменили '+' на '-'
+    code = "(- 1 2 3)"
     ast = parse(tokenize(code))
     with pytest.raises(SyntaxError, match="требует ровно 2 операнда"):
         translator.compile_expr(ast)
 
 
+# Aref должен генерировать ADD и LD из памяти.
+
+
 def test_aref_read_pascal_string():
-    """Aref должен генерировать ADD (смещение) и LD (чтение) из памяти."""
     code = """
     (progn
         (setq s "ITMO")
@@ -187,12 +211,15 @@ def test_aref_read_pascal_string():
     clean_code = translator.link_program(translator.program)
 
     # Проверяем, что сгенерировались инструкции LD для чтения со смещением
+
     loads = [instr for instr in clean_code if instr.opcode == Opcode.LD]
     assert len(loads) >= 2
 
 
+# Aset должен вычислять адрес через ADD и записывать значение через ST
+
+
 def test_aset_modify_memory():
-    """Aset должен вычислять адрес через ADD и записывать значение через ST."""
     code = """
     (progn
         (setq s "ABC")
@@ -207,13 +234,11 @@ def test_aset_modify_memory():
     assert len(stores) >= 2  # запись переменной и запись через aset
 
 
-def test_definterrupt_and_vector_table_linking():
-    """Проверка адресной карты векторов.
+# Проверка адресной карты векторов
 
-    Адрес 0000 -> JMP _start
-    Адрес 0001 -> JMP на обработчик прерывания
-    Тело обработчика завершается командой IRET.
-    """
+
+def test_definterrupt_and_vector_table_linking():
+
     code = """
     (progn
         (definterrupt on_key ()
@@ -227,24 +252,29 @@ def test_definterrupt_and_vector_table_linking():
     clean_code = translator.link_program(translator.program)
 
     # Адрес 0 обязан быть безусловным прыжком JMP на начало программы
+
     assert clean_code[0].opcode == Opcode.JMP
 
     # Адрес 1 обязан быть прыжком JMP на обработчик прерывания
     assert clean_code[1].opcode == Opcode.JMP
 
     # В коде обязана присутствовать инструкция возврата из прерывания IRET
+
     assert Opcode.IRET in [instr.opcode for instr in clean_code]
 
 
+# Если definterrupt не объявлен, по адресу 0001 должна стоять заглушка IRET.
+
+
 def test_vector_table_fallback_iret():
-    """Если definterrupt не объявлен, по адресу 0001 должна стоять заглушка IRET."""
     code = "(setq a 42)"
+
     ast = parse(tokenize(code))
     translator.compile_expr(ast)
     clean_code = translator.link_program(translator.program)
 
-    assert clean_code[0].opcode == Opcode.JMP  # Вектор 0: JMP _start
-    assert clean_code[1].opcode == Opcode.IRET  # Вектор 1: безопасная заглушка IRET
+    assert clean_code[0].opcode == Opcode.JMP
+    assert clean_code[1].opcode == Opcode.IRET
 
 
 def test_interrupt_handler_cannot_capture_function_argument():
@@ -255,21 +285,26 @@ def test_interrupt_handler_cannot_capture_function_argument():
         translator.compile_expr(ast)
 
 
+# Команда print expr должна выводить значение в порт 1 и возвращать его
+
+
 def test_print_builtin():
-    """Команда (print expr) должна выводить значение в порт 1 и возвращать его."""
     code = "(print 65)"
     ast = parse(tokenize(code))
     res_reg = translator.compile_expr(ast)
     clean_code = translator.link_program(translator.program)
 
     # Проверяем наличие команды OUT в порт 1
+
     out_instrs = [i for i in clean_code if i.opcode == Opcode.OUT and i.args[0] == 1]
     assert len(out_instrs) == 1
     assert res_reg == "R1"
 
 
+# Проверка генерации машинных команд INC и DEC.
+
+
 def test_inc_and_dec_opcodes():
-    """Проверка генерации машинных команд INC и DEC."""
     code = """
     (progn
         (setq a 10)
@@ -286,8 +321,10 @@ def test_inc_and_dec_opcodes():
     assert Opcode.DEC in opcodes
 
 
+# Валидация количества аргументов у aref и aset
+
+
 def test_aref_and_aset_syntax_errors():
-    """Валидация количества аргументов у aref и aset."""
     parse_tree = parse(tokenize("(aref s)"))
     with pytest.raises(SyntaxError, match="Команда 'aref' требует 2 аргумента"):
         translator.compile_expr(parse_tree)
@@ -297,8 +334,10 @@ def test_aref_and_aset_syntax_errors():
         translator.compile_expr(parse_tree)
 
 
+# Хвостовой самовызов должен превратиться в JMP, а не в CALL
+
+
 def test_tail_recursion_compiles_to_jump():
-    """Хвостовой самовызов должен превратиться в JMP, а не в CALL."""
     code = """
     (progn
         (defun count (n)
@@ -317,8 +356,10 @@ def test_tail_recursion_compiles_to_jump():
     assert len(calls) == 1, "Остаться должен только вызов из основной программы"
 
 
+# Вызов не в хвостовой позиции оптимизировать нельзя, он остаётся CALL
+
+
 def test_non_tail_recursion_keeps_call():
-    """Вызов не в хвостовой позиции оптимизировать нельзя, он остаётся CALL."""
     code = """
     (progn
         (defun fact (n)
@@ -337,8 +378,10 @@ def test_non_tail_recursion_keeps_call():
     assert len(calls) == 2, "Рекурсивный вызов внутри (* n ...) должен остаться вызовом"
 
 
+# Сравнение вне условия должно давать 1 или 0, а не ошибку трансляции
+
+
 def test_comparison_as_value():
-    """Сравнение вне условия должно давать 1 или 0, а не ошибку трансляции."""
     code = "(setq flag (= 1 1))"
     ast = parse(tokenize(code))
     res_reg = translator.compile_expr(ast)
@@ -347,17 +390,21 @@ def test_comparison_as_value():
     assert res_reg is not None
 
     # Сравнение разворачивается в CMP, условный переход и две загрузки константы
+
     assert Opcode.CMP in [instr.opcode for instr in clean_code]
     assert Opcode.JNZ in [instr.opcode for instr in clean_code]
 
 
+# В условии if сравнение остаётся переходом и не превращается в 1/0
+
+
 def test_if_does_not_materialize_condition():
-    """В условии if сравнение остаётся переходом и не превращается в 1/0."""
     code = "(if (= 1 2) 10 20)"
     ast = parse(tokenize(code))
     translator.compile_expr(ast)
     clean_code = translator.link_program(translator.program)
 
     # Одно сравнение и один условный переход, лишних загрузок единицы нет
+
     assert len([i for i in clean_code if i.opcode == Opcode.CMP]) == 1
     assert len([i for i in clean_code if i.opcode == Opcode.JNZ]) == 1
