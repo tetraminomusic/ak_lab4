@@ -46,6 +46,9 @@ def parse_atom(token: str) -> Node:
     return token
 
 
+# Парсинг токено в дерево
+
+
 def parse(tokens: list[str]) -> Node:
     if len(tokens) == 0:
         raise SyntaxError("Код оборвался раньше вреемни")
@@ -58,12 +61,12 @@ def parse(tokens: list[str]) -> Node:
             sub_tree.append(parse(tokens))
 
         if len(tokens) == 0:
-            raise SyntaxError("Ожидалась закрывающая скобка ')'")
+            raise SyntaxError("Ожидалась закрывающая скобка )")
 
         tokens.pop(0)
         return sub_tree
 
     if token == ")":
-        raise SyntaxError("Неожиданная закрывающая скобка ')'")
+        raise SyntaxError("Неожиданная закрывающая скобка )")
 
     return parse_atom(token)
