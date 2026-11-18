@@ -274,7 +274,7 @@ python3 src/machine.py -c <code.bin> [-i <input.txt>] [-t <max_ticks>] [--no-cac
 
 ### DataPath
 
-![DataPath](scheme/datapath.jpg)
+![DataPath](scheme/DataPath.drawio.png)
 
 | Элемент | Назначение |
 |---------|------------|
@@ -292,7 +292,7 @@ python3 src/machine.py -c <code.bin> [-i <input.txt>] [-t <max_ticks>] [--no-cac
 
 ### ControlUnit
 
-![ControlUnit](scheme/controlunit.jpg)
+![ControlUnit](scheme/ControlUnit.drawio.png)
 
 Устройство управления построено на жёсткой логике. `Instruction Decoder` разбирает опкод на признаки (`is_alu`, `is_branch`, `is_load`, `is_store`, `is_call`, `is_io`, `is_sys` и прочие), `Step Counter` хранит номер шага, а `Combination Decoder` по паре «признак команды + номер шага» выдаёт управляющие сигналы.
 
