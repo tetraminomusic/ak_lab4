@@ -3,9 +3,15 @@ from isa import WORD_SIZE, Opcode
 STACK_LIMIT = 12400
 
 
+# Приводит число к знаковому 32-битному
+
+
 def to_signed(value: int) -> int:
     value &= 0xFFFF_FFFF
     return value - (1 << 32) if value & (1 << 31) else value
+
+
+# Производит деление числа с округлением к 0. Например: -7 / 3 = -2, чтоб по канонам
 
 
 def signed_div(src1: int, src2: int) -> int:
@@ -17,6 +23,9 @@ def signed_div(src1: int, src2: int) -> int:
 
     quotient = abs(left) // abs(right)
     return -quotient if (left < 0) != (right < 0) else quotient
+
+
+# Производит остаток от деления на основе деления, которое я описал выше
 
 
 def signed_mod(src1: int, src2: int) -> int:
@@ -126,11 +135,15 @@ class DataPath:
 
     # Регистровые файлы
 
+    # Получение идекса регистра по его имени
+
     def get_reg_idx(
         self,
         reg_name: str,
     ) -> int:  # Превращает имя регистра в индекс 0..15
         return int(reg_name.replace("R", ""))
+
+    # Чтение регистра
 
     def read_reg(
         self,
@@ -138,6 +151,8 @@ class DataPath:
     ) -> int:  # Возвращает 32-битное значение из регистра
         idx = self.get_reg_idx(reg_name)
         return self.registers[idx]
+
+    # Запись в регистр
 
     def write_reg(
         self,
@@ -152,13 +167,18 @@ class DataPath:
 
         self.registers[idx] = value & 0xFFFF_FFFF
 
+    # Вычисление эффективного адреса для косвенной адресации
+
     def effective_address(self, base_reg: str, offset: int) -> int:
-        # Сложение для шины адреса проходит при отключённой записи NZVC.
         return self.read_reg(base_reg) + offset
+
+    # Значение из внешнего устройства пишет в выбранный регистр
 
     def signal_port_in(self, destination: str) -> None:
         self.write_reg(destination, self.in_reg)
         self.dev_signal = 0
+
+    # Значение из конкретного регистра записывает в ВУ
 
     def signal_port_out(self, source: str) -> int:
         self.out_reg = self.read_reg(source)

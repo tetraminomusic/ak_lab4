@@ -27,5 +27,5 @@ jobs:
       - name: Run type checker (Mypy)
         run: mypy src/
         
-      - name: Run tests (Pytest)
-        run: pytest -v
+      - name: Run golden tests (Pytest)
+        run: pytest -v -m golden_test tests/test_golden.py
