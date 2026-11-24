@@ -215,14 +215,17 @@ def scale_index(idx_reg: str) -> None:
     free_reg()
 
 
-# Компилирует выражение и требует, чтоб было возвращаемое значение, иначе выкенет ошибку.
+# Для форм без собственного значения загружает 0, если результат используется.
 
 
 def compile_value(node: Node) -> str:
-    reg = compile_expr(node)
+    reg = compile_expr(node, value_required=True)
 
     if reg is None:
-        raise SyntaxError(f"Выражение не возвращает значения: {node}")
+        reg = allocate_reg()
+        instruction = Instruction(Opcode.LDI, [reg, 0])
+        instruction.source = node_to_text(node)
+        program.append(instruction)
 
     return reg
 
@@ -313,10 +316,12 @@ def compile_condition(condition_node: Node) -> Opcode:
 
     if (
         isinstance(condition_node, list)
-        and len(condition_node) == 3
+        and condition_node
         and condition_node[0] in ("=", "!=", "<", "<=", ">", ">=")
     ):
         op = condition_node[0]
+        if len(condition_node) != 3:
+            raise SyntaxError(f"Операция {op} требует ровно 2 операнда")
         left = condition_node[1]
         right = condition_node[2]
 
@@ -412,9 +417,9 @@ def node_to_text(node: Node) -> str:
 # Обрётка над compile_node, которая к новым командам добавляет эквивалент (не знаю как правильно назвать) команды на лиспе, опять таки, нужно для отладочного листа
 
 
-def compile_expr(node: Node) -> str | None:
+def compile_expr(node: Node, *, value_required: bool = False) -> str | None:
     start = len(program)
-    result_reg = compile_node(node)
+    result_reg = compile_node(node, value_required=value_required)
     text = node_to_text(node)
 
     for item in program[start:]:
@@ -427,7 +432,7 @@ def compile_expr(node: Node) -> str | None:
 # Главная функция для трансляции из кода лисп в машинный
 
 
-def compile_node(node: Node) -> str | None:
+def compile_node(node: Node, *, value_required: bool = False) -> str | None:
     global local_vars, current_reg, interrupt_handler, program
 
     # Проверяем, может это простое число
@@ -545,12 +550,12 @@ def compile_node(node: Node) -> str | None:
         # Последовательное выполнение progn, где у первых выражений освобождаем регистры, а у последнего вызываем выполнения expr
 
         if op == "progn":
-            last_reg = None
-            for expr in node[1:]:
-                if last_reg is not None:
+            if len(node) == 1:
+                return None
+            for expr in node[1:-1]:
+                if compile_expr(expr) is not None:
                     free_reg()
-                last_reg = compile_expr(expr)
-            return last_reg
+            return compile_value(node[-1]) if value_required else compile_expr(node[-1])
 
         # Объявление обработчика прерывания
 
@@ -740,6 +745,7 @@ def compile_node(node: Node) -> str | None:
             condition = node[1]
             then_branch = node[2]
             else_branch = node[3]
+            compile_branch = compile_value if value_required else compile_expr
 
             # Создаём на будущее метки
 
@@ -754,7 +760,7 @@ def compile_node(node: Node) -> str | None:
             program.append(Instruction(jump_to_else_op, [label_else]))
 
             # THEN
-            then_reg = compile_expr(then_branch)
+            then_reg = compile_branch(then_branch)
             if then_reg is not None:
                 program.append(Instruction(Opcode.ADD, [result_reg, then_reg, "R0"]))
                 free_reg()
@@ -762,7 +768,7 @@ def compile_node(node: Node) -> str | None:
 
             # ELSE
             program.append(f"{label_else}:")
-            else_reg = compile_expr(else_branch)
+            else_reg = compile_branch(else_branch)
             if else_reg is not None:
                 program.append(Instruction(Opcode.ADD, [result_reg, else_reg, "R0"]))
                 free_reg()
@@ -952,6 +958,12 @@ def compile_node(node: Node) -> str | None:
     return None
 
 
+# Экранируем обратную косую черту и все разделители строк из str.splitlines().
+LISTING_ESCAPES = {
+    ord(char): repr(char)[1:-1] for char in "\\\n\r\v\f\x1c\x1d\x1e\x85\u2028\u2029"
+}
+
+
 # Вывод адреса, машинного слова в 16-ричке, название команды с аргументами и исходное Lisp выражение из source
 
 
@@ -961,7 +973,9 @@ def generate_listing(instructions: list[Instruction]) -> str:
         addr = index * WORD_SIZE
         if isinstance(instr, Instruction):
             hex_code = f"0x{instr.encode():08X}"
-            source = f"  ; {instr.source}" if instr.source else ""
+            source = (
+                f"  ; {instr.source.translate(LISTING_ESCAPES)}" if instr.source else ""
+            )
             lines.append(f"{addr:04d} - {hex_code} - {instr}{source}")
         elif isinstance(instr, int):
             hex_code = f"0x{instr:08X}"

@@ -190,6 +190,7 @@ class DataPath:
     def execute_alu(self, op: Opcode, src1: int, src2: int = 0) -> int:
 
         res = 0
+        carry = False
 
         # Арифметика
 
@@ -197,6 +198,7 @@ class DataPath:
             res = src1 + src2
         elif op in (Opcode.SUB, Opcode.CMP):
             res = src1 - src2
+            carry = res < 0
         elif op == Opcode.MUL:
             res = src1 * src2
         elif op == Opcode.DIV:
@@ -207,6 +209,7 @@ class DataPath:
             res = src1 + 1
         elif op == Opcode.DEC:
             res = src1 - 1
+            carry = res < 0
 
         # Логические операции
 
@@ -222,15 +225,19 @@ class DataPath:
         # Сдвиги
 
         elif op == Opcode.LSL:
-            res = (src1 << (src2 & 31)) & 0xFFFF_FFFF
+            shift = src2 & 31
+            res = (src1 << shift) & 0xFFFF_FFFF
+            carry = shift > 0 and bool((src1 >> (32 - shift)) & 1)
         elif op == Opcode.LSR:
-            res = (src1 & 0xFFFF_FFFF) >> (src2 & 31)
+            shift = src2 & 31
+            res = (src1 & 0xFFFF_FFFF) >> shift
+            carry = shift > 0 and bool((src1 >> (shift - 1)) & 1)
 
         # NZVC
 
         self.flag_n = 1 if (res & (1 << 31)) != 0 else 0  # N
         self.flag_z = 1 if (res & 0xFFFF_FFFF) == 0 else 0  # Z
-        self.flag_c = 1 if (res > 0xFFFF_FFFF) else 0  # C
+        self.flag_c = int(carry or res > 0xFFFF_FFFF)  # C
 
         if op in (Opcode.ADD, Opcode.INC):  # V
             self.flag_v = 1 if (~(src1 ^ src2) & (src1 ^ res) & 0x80000000) != 0 else 0
